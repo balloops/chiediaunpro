@@ -1042,6 +1042,102 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
               </div>
            </div>
         )}
+        
+        {/* Job Details Modal for Pros (New Implementation) */}
+        {viewingJobDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+             <div className="bg-white w-full max-w-2xl rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                {/* Header */}
+                <div className="p-6 border-b border-slate-100 flex justify-between items-start">
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center border border-indigo-100">
+                         <FileText size={24} />
+                      </div>
+                      <div>
+                         <h3 className="text-xl font-black text-slate-900">Dettaglio Richiesta</h3>
+                         <p className="text-slate-500 font-medium text-sm">{viewingJobDetails.category} • {viewingJobDetails.clientName}</p>
+                      </div>
+                   </div>
+                   <button 
+                      onClick={() => setViewingJobDetails(null)}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+                   >
+                      <X size={24} />
+                   </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                   {/* Description */}
+                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Descrizione Progetto</label>
+                      <p className="text-slate-800 font-medium leading-relaxed text-sm">{viewingJobDetails.description}</p>
+                   </div>
+
+                   {/* Grid: Budget & Location */}
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="border border-slate-100 p-5 rounded-2xl flex items-start gap-4 hover:border-indigo-100 transition-colors">
+                         <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl shrink-0"><Wallet size={20} /></div>
+                         <div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Budget</div>
+                            <div className="font-black text-slate-900 text-lg">{viewingJobDetails.budget}</div>
+                         </div>
+                      </div>
+                      <div className="border border-slate-100 p-5 rounded-2xl flex items-start gap-4 hover:border-indigo-100 transition-colors">
+                         <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl shrink-0"><MapPin size={20} /></div>
+                         <div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Località</div>
+                            <div className="font-black text-slate-900 text-lg">{viewingJobDetails.location?.city || 'Remoto'}</div>
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Technical Specs */}
+                   {viewingJobDetails.details && Object.keys(viewingJobDetails.details).length > 0 && (
+                      <div>
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Specifiche Tecniche</label>
+                         <div className="flex flex-wrap gap-2">
+                             {Object.entries(viewingJobDetails.details).map(([key, val]) => (
+                                <div key={key} className="px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium text-slate-700 shadow-sm">
+                                   <span className="text-slate-400 mr-2 font-normal">{key}:</span> 
+                                   <span className="font-bold">{Array.isArray(val) ? val.join(', ') : val}</span>
+                                </div>
+                             ))}
+                         </div>
+                      </div>
+                   )}
+
+                   {/* Date */}
+                   <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                      <Clock size={14} />
+                      <span>Pubblicato il {new Date(viewingJobDetails.createdAt).toLocaleDateString()}</span>
+                   </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+                   <button 
+                      onClick={() => setViewingJobDetails(null)}
+                      className="px-6 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-white hover:border-slate-300 transition-all text-sm"
+                   >
+                      Chiudi
+                   </button>
+                   <button 
+                      onClick={() => {
+                         setQuoteMessage('');
+                         setQuotePrice('');
+                         setQuoteTimeline('');
+                         setShowQuoteModal(viewingJobDetails);
+                         setViewingJobDetails(null);
+                      }}
+                      className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all text-sm flex items-center gap-2"
+                   >
+                      Rispondi a questa richiesta <Send size={16} />
+                   </button>
+                </div>
+             </div>
+          </div>
+        )}
 
         {/* Send Quote Modal (Pro Side) */}
         {showQuoteModal && (
