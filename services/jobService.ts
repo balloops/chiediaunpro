@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseClient';
 import { JobRequest, Quote, User, ServiceCategory, JobLocation } from '../types';
 import { notificationService } from './notificationService';
@@ -73,9 +72,6 @@ export const jobService = {
     // Safety check for user
     if (!params.clientId) throw new Error("ID Cliente mancante. Effettua nuovamente il login.");
 
-    const tags = [params.category];
-    if (params.details.platform) tags.push(params.details.platform);
-
     const newJob = {
       client_id: params.clientId,
       client_name: params.clientName,
@@ -86,7 +82,7 @@ export const jobService = {
       budget: params.budget,
       location: params.location || null,
       status: 'OPEN',
-      tags: tags
+      // Rimosso tags che causava errore PGRST204 perché non esiste la colonna sul DB
     };
 
     console.log("Attempting to create job with payload:", newJob);
@@ -107,7 +103,7 @@ export const jobService = {
       clientId: data.client_id,
       clientName: data.client_name,
       createdAt: data.created_at,
-      tags: tags
+      tags: [data.category] // Return local tags for UI consistency
     };
   },
 

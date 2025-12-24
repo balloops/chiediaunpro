@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { FormDefinition, FormField } from '../types';
-import { Sparkles, Check, ChevronDown } from 'lucide-react';
+import { Sparkles, ChevronDown } from 'lucide-react';
 
 interface ServiceFormProps {
   formDefinition: FormDefinition;
@@ -154,22 +153,11 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           </div>
           <div>
              <h4 className="text-xl font-black text-slate-900 leading-tight uppercase tracking-tight">Dettagli del Progetto</h4>
-             <p className="text-base text-slate-500 font-medium mt-1">Descrivi la tua idea liberamente. L'AI può aiutarti a migliorarla.</p>
+             <p className="text-base text-slate-500 font-medium mt-1">Descrivi la tua idea liberamente.</p>
           </div>
         </div>
         
         <div className="relative group bg-white rounded-[24px] border-2 border-slate-200 p-2 focus-within:border-indigo-600 focus-within:shadow-[0_0_0_4px_rgba(79,70,229,0.1)] transition-all shadow-sm hover:border-slate-300">
-          <div className="absolute -top-4 right-8 bg-slate-900 p-0.5 rounded-xl shadow-xl group-focus-within:scale-105 transition-transform z-10">
-            <button 
-              onClick={onRefine}
-              disabled={isRefining || !description}
-              className={`flex items-center space-x-2 bg-slate-900 px-5 py-2.5 rounded-[10px] text-white font-black text-[10px] uppercase tracking-widest transition-all border border-white/20 ${isRefining ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800'}`}
-            >
-              <Sparkles size={14} className={`text-indigo-400 ${isRefining ? 'animate-spin' : ''}`} />
-              <span>{isRefining ? 'Ottimizzazione...' : 'Migliora con AI'}</span>
-            </button>
-          </div>
-          
           <textarea 
             rows={8}
             value={description}
@@ -178,11 +166,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
             placeholder={formDefinition.descriptionPlaceholder || "Descrivi il tuo progetto qui..."}
           />
           
-          <div className="p-4 bg-slate-50 rounded-b-[24px] border-t border-slate-100 flex items-center justify-between">
-            <div className="flex items-center space-x-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-4">
-              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
-              <span>L'AI può aiutarti a scrivere meglio</span>
-            </div>
+          <div className="p-4 bg-slate-50 rounded-b-[24px] border-t border-slate-100 flex items-center justify-end">
             <div className="text-[10px] text-slate-400 font-mono mr-4 font-bold bg-white px-2 py-1 rounded-md border border-slate-200">
               {description.length} caratteri
             </div>
