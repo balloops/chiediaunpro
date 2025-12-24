@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory, NotificationType, PlanType, FormDefinition, JobLocation } from '../types';
 import { 
-  LayoutGrid, FileText, Send, Settings, Plus, Search, Clock, CheckCircle, MessageSquare, Sparkles, TrendingUp, Filter, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, ArrowRight, ChevronRight, MapPin, Tag, Briefcase, Globe, CreditCard, Mail, Zap, Star, Trophy, Coins, History, CalendarDays, User as UserIcon, XCircle, AlertTriangle, ExternalLink, ShieldCheck, CreditCard as BillingIcon, Crown, Building2, Check, Eye, X, Phone, Download, Save, Lock, Image as ImageIcon, Edit3, Trash2, RefreshCcw, UserCheck, Upload, HelpCircle, Box, Wallet
+  LayoutGrid, FileText, Send, Settings, Plus, Search, Clock, CheckCircle, MessageSquare, Sparkles, TrendingUp, Filter, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, ArrowRight, ChevronRight, MapPin, Tag, Briefcase, Globe, CreditCard, Mail, Zap, Star, Trophy, Coins, History, CalendarDays, User as UserIcon, XCircle, AlertTriangle, ExternalLink, ShieldCheck, CreditCard as BillingIcon, Crown, Building2, Check, Eye, X, Phone, Download, Save, Lock, Image as ImageIcon, Edit3, Trash2, RefreshCcw, UserCheck, Upload, HelpCircle, Box, Wallet, Calendar
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { geminiService } from '../services/geminiService';
@@ -622,24 +622,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
               <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
                 <div>
                   <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
-                    {activeTab === 'leads' ? 'Opportunità' : 
+                    {activeTab === 'leads' ? 'Opportunità per te' : 
                      activeTab === 'quotes' ? 'Preventivi Inviati' :
                      activeTab === 'won' ? 'I tuoi Successi' :
                      activeTab === 'settings' ? `${user.brandName || user.name}` :
                      activeTab === 'billing' ? 'Crediti' : 'Dashboard'}
                   </h1>
                   <p className="text-slate-400 font-medium text-lg">
-                      {activeTab === 'leads' ? 'Trova nuovi clienti e invia proposte.' :
-                       activeTab === 'quotes' ? 'Bentornato Pro. Fai crescere il tuo business.' :
-                       activeTab === 'won' ? 'Bentornato Pro. Fai crescere il tuo business.' :
+                      {activeTab === 'leads' ? 'Bentornato Pro. Fai crescere il tuo business.' :
+                       activeTab === 'quotes' ? 'Monitora le tue proposte attive.' :
+                       activeTab === 'won' ? 'Ottimo lavoro! Ecco i tuoi successi.' :
                        activeTab === 'settings' ? 'Professionista Verificato' :
                        isLoadingData ? 'Caricamento dati in corso...' : 'Dati aggiornati.'}
                   </p>
                 </div>
 
-                {(activeTab === 'quotes' || activeTab === 'won') && (
-                   <div className="bg-white px-6 py-3 rounded-[20px] border border-slate-100 shadow-sm flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                {/* Credit Widget for Pros in Opportunity Tab and other Pro tabs */}
+                {isPro && (activeTab === 'leads' || activeTab === 'quotes' || activeTab === 'won') && (
+                   <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center space-x-4 min-w-[200px]">
+                      <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
                          <Coins size={20} />
                       </div>
                       <div>
@@ -657,58 +658,73 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
             ) : (
                 activeTab === 'leads' ? (
                     <div className="space-y-6">
+                        {/* Search Bar */}
+                        <div className="flex justify-end mb-4">
+                           <div className="relative w-full max-w-sm">
+                              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                              <input 
+                                type="text" 
+                                placeholder="Cerca opportunità..." 
+                                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:border-indigo-500 transition-all shadow-sm"
+                              />
+                           </div>
+                        </div>
+
                         {matchedLeads.map(({ job, matchScore }) => (
-                          <div key={job.id} className="group bg-white p-8 rounded-[24px] border border-slate-100 hover:border-indigo-100 transition-all shadow-sm">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                              <div className="flex items-start space-x-6">
-                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
-                                   {getCategoryIcon(job.category)}
-                                </div>
-                                <div>
-                                  <div className="flex items-center space-x-3 mb-2">
-                                    <h3 className="text-xl font-black text-slate-900">{job.category}</h3>
-                                    <div className="flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
-                                      <TrendingUp size={12} />
-                                      <span className="text-[10px] font-black uppercase tracking-wider">{matchScore}% Match</span>
-                                    </div>
+                          <div key={job.id} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-100 transition-all shadow-sm flex flex-col md:flex-row gap-6 items-start">
+                            {/* Icon */}
+                            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
+                               {getCategoryIcon(job.category)}
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="flex-grow">
+                               <div className="flex items-center gap-3 mb-1">
+                                  <h3 className="text-lg font-black text-slate-900">{job.category}</h3>
+                                  <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center gap-1">
+                                     <TrendingUp size={10} /> {matchScore}% MATCH
+                                  </span>
+                               </div>
+                               
+                               <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium leading-relaxed">
+                                  {job.description}
+                               </p>
+                               
+                               <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  <div className="flex items-center gap-1.5">
+                                     <MapPin size={12} /> <span>{job.location?.city || 'Remoto'}</span>
                                   </div>
-                                  <p className="text-slate-600 text-sm mb-4 line-clamp-2 max-w-2xl font-medium leading-relaxed">{job.description}</p>
-                                  <div className="flex flex-wrap gap-3">
-                                    <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                      <MapPin size={14} />
-                                      <span>{job.location?.city || 'Remoto'}</span>
-                                    </div>
-                                    <div className="w-1 h-1 bg-slate-200 rounded-full my-auto"></div>
-                                    <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                      <CreditCard size={14} />
-                                      <span>Budget: {job.budget}</span>
-                                    </div>
+                                  <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
+                                  <div className="flex items-center gap-1.5">
+                                     <Wallet size={12} /> <span>Budget: {job.budget}</span>
                                   </div>
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
-                                <button 
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); setViewingJobDetails(job); }}
-                                  className="w-full sm:w-auto px-6 py-4 bg-white border-2 border-slate-100 text-slate-600 font-bold rounded-2xl hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center"
-                                >
-                                  <Eye size={18} className="mr-2" /> Dettagli
-                                </button>
-                                <button 
-                                  type="button"
-                                  onClick={(e) => {
+                                  <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
+                                  <div className="flex items-center gap-1.5">
+                                     <Clock size={12} /> <span>Pubblicato: {new Date(job.createdAt).toLocaleDateString()}</span>
+                                  </div>
+                               </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto shrink-0 justify-end md:justify-center">
+                               <button 
+                                 onClick={(e) => { e.stopPropagation(); setViewingJobDetails(job); }}
+                                 className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all text-sm flex items-center justify-center gap-2"
+                               >
+                                  <Eye size={16} /> Dettagli
+                               </button>
+                               <button 
+                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setQuoteMessage('');
                                     setQuotePrice('');
                                     setQuoteTimeline('');
                                     setShowQuoteModal(job);
-                                  }}
-                                  className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center"
-                                >
-                                  Invia Proposta <Send className="ml-2" size={18} />
-                                </button>
-                              </div>
+                                 }}
+                                 className="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all text-sm flex items-center justify-center gap-2"
+                               >
+                                  Invia Proposta <Send size={16} />
+                               </button>
                             </div>
                           </div>
                         ))}
@@ -1139,17 +1155,77 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
           </div>
         )}
 
-        {/* Send Quote Modal (Pro Side) */}
+        {/* Send Quote Modal (Pro Side) - Redesigned */}
         {showQuoteModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl">
-                <div className="bg-white p-10 rounded-[24px] max-w-2xl w-full">
-                    <h3 className="text-2xl font-black mb-4">Invia Preventivo</h3>
-                    <input type="number" placeholder="Prezzo (€)" value={quotePrice} onChange={e=>setQuotePrice(e.target.value)} className="w-full p-4 border rounded-xl mb-4 font-bold" />
-                    <textarea placeholder="Messaggio per il cliente..." value={quoteMessage} onChange={e=>setQuoteMessage(e.target.value)} className="w-full p-4 border rounded-xl mb-4 text-sm" rows={4} />
-                    <input type="text" placeholder="Tempistiche (es. 2 settimane)" value={quoteTimeline} onChange={e=>setQuoteTimeline(e.target.value)} className="w-full p-4 border rounded-xl mb-4 font-bold" />
-                    <div className="flex gap-4">
-                        <button onClick={()=>setShowQuoteModal(null)} className="flex-1 py-3 border rounded-xl font-bold">Annulla</button>
-                        <button onClick={handleSendQuote} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg">Invia Proposta</button>
+                <div className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                    {/* Header */}
+                    <div className="p-8 border-b border-slate-100 flex justify-between items-start">
+                       <div>
+                          <h3 className="text-3xl font-black text-slate-900 mb-1">Invia Preventivo</h3>
+                          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">LEAD: {showQuoteModal.category}</p>
+                       </div>
+                       <button onClick={()=>setShowQuoteModal(null)} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={24}/></button>
+                    </div>
+
+                    <div className="p-8 overflow-y-auto custom-scrollbar space-y-8">
+                       
+                       {/* Grid Inputs */}
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-3">
+                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Prezzo Proposto (€)</label>
+                             <div className="relative">
+                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-indigo-600 font-black text-lg">€</span>
+                                <input 
+                                  type="number" 
+                                  placeholder="0.00" 
+                                  value={quotePrice} 
+                                  onChange={e=>setQuotePrice(e.target.value)} 
+                                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-[20px] py-4 pl-10 pr-6 text-lg font-black text-slate-900 focus:border-indigo-600 outline-none transition-all placeholder:text-slate-300" 
+                                />
+                             </div>
+                          </div>
+                          <div className="space-y-3">
+                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Tempistiche Stimati</label>
+                             <div className="relative">
+                                <CalendarDays className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <input 
+                                  type="text" 
+                                  placeholder="Seleziona durata..." 
+                                  value={quoteTimeline} 
+                                  onChange={e=>setQuoteTimeline(e.target.value)} 
+                                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-[20px] py-4 pl-12 pr-6 text-sm font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all" 
+                                />
+                             </div>
+                          </div>
+                       </div>
+
+                       {/* Message Area */}
+                       <div className="space-y-3">
+                          <div className="flex justify-between items-center px-1">
+                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Messaggio di Presentazione</label>
+                          </div>
+                          <textarea 
+                             placeholder="Scrivi qui il tuo messaggio persuasivo per il cliente..." 
+                             value={quoteMessage} 
+                             onChange={e=>setQuoteMessage(e.target.value)} 
+                             className="w-full bg-slate-50 border-2 border-slate-200 rounded-[24px] p-6 text-sm font-medium text-slate-900 focus:border-indigo-600 outline-none transition-all resize-none h-48 leading-relaxed placeholder:text-slate-400" 
+                          />
+                       </div>
+                    </div>
+
+                    {/* Footer Action */}
+                    <div className="p-8 border-t border-slate-50 bg-slate-50/50 text-center">
+                        <button 
+                           onClick={handleSendQuote} 
+                           className="w-full py-5 bg-indigo-400 text-white font-black rounded-[24px] hover:bg-indigo-600 shadow-xl shadow-indigo-200 transition-all text-xl flex items-center justify-center gap-3 mb-4"
+                        >
+                           <span>Invia Proposta (1 Credito)</span>
+                           <Send size={22} className="rotate-0" />
+                        </button>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                           Hai {user.credits} crediti rimanenti
+                        </div>
                     </div>
                 </div>
             </div>

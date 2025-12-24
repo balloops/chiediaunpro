@@ -34,7 +34,7 @@ export const authService = {
         vat_number: userData.vatNumber,
         offered_services: userData.offeredServices,
         skills: userData.skills || [],
-        credits: userData.role === 'PROFESSIONAL' ? 5 : 0, // Free credits for pros
+        credits: userData.role === 'PROFESSIONAL' ? 100 : 0, // 100 Free credits for pros
         plan: 'FREE'
       }
     ]);
