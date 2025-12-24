@@ -133,6 +133,23 @@ export const jobService = {
     };
   },
 
+  async updateJobDetails(jobId: string, updates: {
+    description?: string;
+    details?: Record<string, any>;
+    budget?: string;
+    location?: JobLocation;
+  }): Promise<void> {
+    const dbUpdates: any = {};
+    if (updates.description) dbUpdates.description = updates.description;
+    if (updates.details) dbUpdates.details = updates.details;
+    if (updates.budget) dbUpdates.budget = updates.budget;
+    if (updates.location) dbUpdates.location = updates.location;
+
+    const { error } = await supabase.from('jobs').update(dbUpdates).eq('id', jobId);
+    
+    if (error) throw new Error(`Errore aggiornamento job: ${error.message}`);
+  },
+
   async sendQuote(params: {
     jobId: string;
     proId: string;

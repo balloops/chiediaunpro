@@ -56,6 +56,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
   const [budget, setBudget] = useState('');
   const [locationCity, setLocationCity] = useState('');
+  const [editingJobId, setEditingJobId] = useState<string | null>(null); // NEW: Track editing job
   
   const [isRefining, setIsRefining] = useState(false);
   const [creatingJob, setCreatingJob] = useState(false);
@@ -73,6 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   const [matchedLeads, setMatchedLeads] = useState<{ job: JobRequest; matchScore: number }[]>([]);
   const [myJobs, setMyJobs] = useState<JobRequest[]>([]);
   const [sentQuotes, setSentQuotes] = useState<Quote[]>([]);
+  const [clientQuotes, setClientQuotes] = useState<Quote[]>([]); // NEW: Store all quotes for client's jobs
   const [currentJobQuotes, setCurrentJobQuotes] = useState<Quote[]>([]);
   const [allJobsForQuotes, setAllJobsForQuotes] = useState<JobRequest[]>([]); // To resolve job details for quotes
   const [isLoadingData, setIsLoadingData] = useState(false);
@@ -102,7 +104,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
             setSentQuotes(allQuotes.filter(q => q.proId === user.id));
         } else {
             const allJobs = await jobService.getJobs();
-            setMyJobs(allJobs.filter(j => j.clientId === user.id));
+            const myJobsFiltered = allJobs.filter(j => j.clientId === user.id);
+            setMyJobs(myJobsFiltered);
+            
+            // Fetch all quotes to determine status and counts for My Requests
+            const allQuotes = await jobService.getQuotes();
+            // Filter quotes that belong to any of my jobs
+            const myJobIds = new Set(myJobsFiltered.map(j => j.id));
+            setClientQuotes(allQuotes.filter(q => myJobIds.has(q.jobId)));
         }
     } catch (e) {
         console.error(e);
@@ -162,23 +171,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
     if (!selectedCategory || !budget) return;
     setCreatingJob(true);
     try {
-      await jobService.createJob({
-        clientId: user.id,
-        clientName: user.name,
-        category: selectedCategory,
-        description: jobDescription,
-        details: jobDetails,
-        budget: budget,
-        location: locationCity ? { city: locationCity } : undefined
-      });
+      if (editingJobId) {
+         // Update existing job
+         await jobService.updateJobDetails(editingJobId, {
+            description: jobDescription,
+            details: jobDetails,
+            budget: budget,
+            location: locationCity ? { city: locationCity } : undefined
+         });
+         alert("Richiesta aggiornata con successo!");
+      } else {
+         // Create new job
+         await jobService.createJob({
+            clientId: user.id,
+            clientName: user.name,
+            category: selectedCategory,
+            description: jobDescription,
+            details: jobDetails,
+            budget: budget,
+            location: locationCity ? { city: locationCity } : undefined
+         });
+      }
       
       setShowNewJobModal(false);
-      setModalStep('category');
-      setSelectedCategory(null);
-      setJobDescription('');
-      setJobDetails({});
-      setBudget('');
-      setLocationCity('');
+      resetJobForm();
       await refreshData();
     } catch (e: any) {
       console.error(e);
@@ -186,6 +202,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
     } finally {
       setCreatingJob(false);
     }
+  };
+
+  const resetJobForm = () => {
+      setModalStep('category');
+      setSelectedCategory(null);
+      setJobDescription('');
+      setJobDetails({});
+      setBudget('');
+      setLocationCity('');
+      setEditingJobId(null);
+  };
+
+  const handleEditJob = (job: JobRequest) => {
+     setEditingJobId(job.id);
+     setSelectedCategory(job.category);
+     const def = contentService.getFormDefinition(job.category);
+     setFormDefinition(def);
+     
+     setJobDescription(job.description);
+     setJobDetails(job.details || {});
+     setBudget(job.budget || '');
+     setLocationCity(job.location?.city || '');
+     
+     setModalStep('details'); // Skip category selection for edit
+     setShowNewJobModal(true);
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+     if(window.confirm("Sei sicuro di voler eliminare questa richiesta? L'azione è irreversibile.")) {
+        await jobService.deleteJob(jobId);
+        refreshData();
+     }
   };
 
   const handleSendQuote = async () => {
@@ -733,47 +781,138 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                 ) : activeTab === 'my-requests' ? (
                     // My Requests logic handled in sub-render function previously, moved here for clarity
                     <div className="space-y-8 animate-in fade-in">
-                       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                       <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-8">
                           <div>
-                             <h2 className="text-3xl font-black text-slate-900 mb-2">Le Mie Richieste</h2>
-                             <p className="text-slate-500 font-medium">Monitora le tue richieste di preventivo.</p>
+                             <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">Le Mie Richieste</h1>
+                             <p className="text-slate-400 font-medium text-lg">Monitora le tue richieste di preventivo.</p>
                           </div>
-                          <div className="flex items-center gap-4">
-                              <button 
-                                onClick={() => { setModalStep('category'); setShowNewJobModal(true); }}
-                                className="px-6 py-4 bg-indigo-600 text-white font-bold rounded-[20px] hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center"
-                              >
-                                <Plus className="mr-2" size={20} /> Chiedi un preventivo
-                              </button>
+                          <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center space-x-4 min-w-[200px]">
+                             <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
+                                <TrendingUp size={20} />
+                             </div>
+                             <div>
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progetti Attivi</div>
+                                <div className="text-xl font-black text-slate-900 leading-none mt-1">{myJobs.filter(j => j.status === 'OPEN' || j.status === 'IN_PROGRESS').length}</div>
+                             </div>
                           </div>
-                       </div>
+                       </header>
+
+                       <button 
+                          onClick={() => { resetJobForm(); setShowNewJobModal(true); }}
+                          className="w-full md:w-auto px-6 py-4 bg-indigo-600 text-white font-bold rounded-[20px] hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center justify-center ml-auto"
+                        >
+                          <Plus className="mr-2" size={20} /> Chiedi un preventivo
+                        </button>
+
+                       {/* No Responses Banner - Check if any open job has 0 quotes */}
+                       {myJobs.some(job => {
+                          const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
+                          return job.status === 'OPEN' && quoteCount === 0;
+                       }) && (
+                          <div className="bg-amber-50 border border-amber-100 rounded-[24px] p-6 flex items-start gap-4">
+                             <div className="p-2 bg-amber-100 text-amber-600 rounded-xl shrink-0"><AlertTriangle size={20} /></div>
+                             <div className="flex-grow pr-8">
+                                <h4 className="font-bold text-slate-900 text-sm mb-1">Richieste senza risposte</h4>
+                                <p className="text-slate-600 text-xs font-medium">Alcuni tuoi progetti non hanno ancora ricevuto preventivi. Prova a migliorare la descrizione con l'AI!</p>
+                             </div>
+                             <button className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+                          </div>
+                       )}
+
                        <div className="grid gap-6">
                           {myJobs.length === 0 ? (
                              <div className="text-center py-20 bg-white rounded-[24px] border border-dashed border-slate-200">
                                  <h3 className="text-lg font-bold text-slate-900 mb-1">Nessuna richiesta attiva</h3>
-                                 <button onClick={() => { setModalStep('category'); setShowNewJobModal(true); }} className="text-indigo-600 font-bold hover:underline">Crea Richiesta</button>
+                                 <button onClick={() => { resetJobForm(); setShowNewJobModal(true); }} className="text-indigo-600 font-bold hover:underline">Crea Richiesta</button>
                              </div>
                           ) : (
-                             myJobs.map(job => (
-                               <div key={job.id} className="bg-white p-6 md:p-8 rounded-[24px] border border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm hover:border-indigo-100 transition-all">
-                                  <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
-                                     {getCategoryIcon(job.category)}
-                                  </div>
-                                  <div className="flex-grow">
-                                     <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-xl font-bold text-slate-900">{job.category}</h3>
-                                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${job.status === 'OPEN' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>{job.status}</span>
-                                     </div>
-                                     <p className="text-slate-500 text-sm line-clamp-2 max-w-2xl mb-4 font-medium leading-relaxed">{job.description}</p>
-                                     <div className="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-wide">
-                                        <div className="flex items-center gap-1.5"><Clock size={14} /><span>{new Date(job.createdAt).toLocaleDateString()}</span></div>
-                                     </div>
-                                  </div>
-                                  <div className="flex items-center gap-3 w-full md:w-auto">
-                                     <button onClick={() => setViewingJobQuotes(job)} className="w-full md:w-auto px-6 py-3 bg-white border-2 border-slate-100 text-slate-700 font-bold rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center">Gestisci <ChevronRight size={16} className="ml-2" /></button>
-                                  </div>
-                               </div>
-                             ))
+                             myJobs.map(job => {
+                                const quotesForThisJob = clientQuotes.filter(q => q.jobId === job.id);
+                                const quoteCount = quotesForThisJob.length;
+                                const acceptedQuote = quotesForThisJob.find(q => q.status === 'ACCEPTED');
+                                
+                                return (
+                                 <div key={job.id} className={`bg-white p-6 rounded-[24px] border transition-all shadow-sm flex flex-col md:flex-row items-start gap-6 ${acceptedQuote ? 'border-emerald-200' : 'border-slate-100 hover:border-indigo-100'}`}>
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${acceptedQuote ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                       {getCategoryIcon(job.category)}
+                                    </div>
+                                    
+                                    <div className="flex-grow w-full">
+                                       <div className="flex flex-wrap items-center gap-3 mb-2">
+                                          <h3 className="text-lg font-black text-slate-900">{job.category}</h3>
+                                          {acceptedQuote ? (
+                                             <span className="bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                                Preventivo Accettato
+                                             </span>
+                                          ) : (
+                                             <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                                Aperta
+                                             </span>
+                                          )}
+                                          {quoteCount > 0 && !acceptedQuote && (
+                                             <span className="bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                                Nuove Risposte
+                                             </span>
+                                          )}
+                                       </div>
+                                       
+                                       <p className="text-slate-500 text-sm line-clamp-1 max-w-2xl mb-4 font-medium leading-relaxed">{job.description}</p>
+                                       
+                                       <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                                          <div className="flex items-center gap-1.5"><Clock size={12} /><span>Pubblicata {new Date(job.createdAt).toLocaleDateString()}</span></div>
+                                          <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
+                                          <div className="flex items-center gap-1.5">
+                                             <MessageSquare size={12} className={quoteCount > 0 ? 'text-indigo-500' : ''} />
+                                             <span className={quoteCount > 0 ? 'text-indigo-600' : ''}>{quoteCount} Preventivi</span>
+                                          </div>
+                                       </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-3 w-full md:w-auto shrink-0 mt-2 md:mt-0">
+                                       {acceptedQuote ? (
+                                          <button 
+                                             onClick={() => setViewingJobQuotes(job)}
+                                             className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all text-sm flex items-center justify-center gap-2"
+                                          >
+                                             Gestisci Progetto <ChevronRight size={16} />
+                                          </button>
+                                       ) : (
+                                          <button 
+                                             onClick={() => setViewingJobQuotes(job)}
+                                             className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all text-sm flex items-center justify-center gap-2"
+                                          >
+                                             Gestisci Progetto <ChevronRight size={16} />
+                                          </button>
+                                       )}
+                                       
+                                       <div className="flex gap-2">
+                                          <button 
+                                             onClick={() => handleEditJob(job)}
+                                             className="flex-1 px-4 py-2 bg-slate-50 text-slate-600 border border-slate-100 font-bold rounded-xl hover:bg-slate-100 transition-all text-xs flex items-center justify-center gap-1.5"
+                                          >
+                                             <Edit3 size={12} /> Modifica
+                                          </button>
+                                          
+                                          {quoteCount === 0 ? (
+                                             <button 
+                                                onClick={() => handleDeleteJob(job.id)}
+                                                className="flex-1 px-4 py-2 bg-slate-50 text-slate-400 border border-slate-100 font-bold rounded-xl hover:bg-red-50 hover:text-red-500 transition-all text-xs flex items-center justify-center gap-1.5"
+                                             >
+                                                <Trash2 size={12} /> Elimina
+                                             </button>
+                                          ) : (
+                                             <button 
+                                                onClick={() => handleCloseJob(job.id)}
+                                                className="flex-1 px-4 py-2 bg-slate-50 text-slate-400 border border-slate-100 font-bold rounded-xl hover:bg-slate-100 hover:text-slate-600 transition-all text-xs flex items-center justify-center gap-1.5"
+                                             >
+                                                <XCircle size={12} /> Chiudi Richiesta
+                                             </button>
+                                          )}
+                                       </div>
+                                    </div>
+                                 </div>
+                                );
+                             })
                           )}
                        </div>
                     </div>
@@ -889,11 +1028,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                 <div className="p-8 border-b border-slate-100 flex justify-between items-center">
                    <div>
                       <h3 className="text-2xl font-black text-slate-900">
-                         {modalStep === 'category' ? 'Nuova Richiesta' : selectedCategory}
+                         {editingJobId ? 'Modifica Richiesta' : (modalStep === 'category' ? 'Nuova Richiesta' : selectedCategory)}
                       </h3>
                       <p className="text-slate-500 text-sm font-medium">Passaggio {modalStep === 'category' ? '1' : modalStep === 'details' ? '2' : '3'} di 3</p>
                    </div>
-                   <button onClick={() => setShowNewJobModal(false)} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-red-500">
+                   <button onClick={() => { setShowNewJobModal(false); resetJobForm(); }} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-red-500">
                       <X size={24} />
                    </button>
                 </div>
@@ -989,7 +1128,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                          disabled={!budget || creatingJob}
                          className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg disabled:opacity-50 flex items-center"
                       >
-                         {creatingJob ? 'Pubblicazione...' : 'Pubblica Richiesta'}
+                         {creatingJob ? 'Salvataggio...' : (editingJobId ? 'Salva Modifiche' : 'Pubblica Richiesta')}
                       </button>
                    )}
                 </div>
