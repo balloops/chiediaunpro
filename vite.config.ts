@@ -15,6 +15,14 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       sourcemap: false,
       chunkSizeWarningLimit: 1600,
+      rollupOptions: {
+        external: ['@google/genai'],
+        output: {
+          globals: {
+            '@google/genai': 'GoogleGenAI'
+          }
+        }
+      }
     },
   };
 });
