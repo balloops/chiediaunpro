@@ -24,37 +24,62 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    // 1. Check active session on startup
-    const checkSession = async () => {
+    let mounted = true;
+    let authListener: any = null;
+
+    // Safety timeout to prevent infinite loading screen
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && auth.isLoading) {
+        console.warn("Auth check timed out, forcing load.");
+        setAuth(prev => ({ ...prev, isLoading: false }));
+      }
+    }, 3000); // 3 seconds max wait
+
+    const initializeAuth = async () => {
       try {
+        // 1. Check current session
         const user = await authService.getCurrentUser();
-        if (user) {
-          setAuth({ user, isAuthenticated: true, isLoading: false });
-        } else {
-          setAuth({ user: null, isAuthenticated: false, isLoading: false });
+        
+        if (mounted) {
+           setAuth({
+             user,
+             isAuthenticated: !!user,
+             isLoading: false
+           });
         }
       } catch (error) {
         console.error("Session check failed", error);
-        setAuth({ user: null, isAuthenticated: false, isLoading: false });
+        if (mounted) {
+          setAuth({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      } finally {
+        clearTimeout(loadingTimeout);
       }
+
+      // 2. Setup listener
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return;
+
+        // Only react to explicit SIGN_IN or SIGN_OUT to avoid race conditions with initial load
+        if (event === 'SIGNED_IN' && session) {
+           // We need to fetch the full profile again to get role/name etc.
+           const user = await authService.getCurrentUser();
+           setAuth({ user, isAuthenticated: true, isLoading: false });
+        } else if (event === 'SIGNED_OUT') {
+           setAuth({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      });
+      authListener = data.subscription;
     };
 
-    checkSession();
-
-    // 2. Listen for auth changes (Login, Logout, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        const user = await authService.getCurrentUser();
-        setAuth({ user, isAuthenticated: true, isLoading: false });
-      } else if (event === 'SIGNED_OUT') {
-        setAuth({ user: null, isAuthenticated: false, isLoading: false });
-      }
-    });
+    initializeAuth();
 
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
+      clearTimeout(loadingTimeout);
+      if (authListener) authListener.unsubscribe();
     };
-  }, []);
+  }, []); // Run once
 
   const handleLogout = async () => {
     await authService.signOut();
@@ -72,8 +97,9 @@ const App: React.FC = () => {
 
   if (auth.isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-slate-50 flex-col space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p className="text-slate-400 text-sm font-medium animate-pulse">Caricamento ChiediUnPro...</p>
       </div>
     );
   }
