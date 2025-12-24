@@ -82,7 +82,6 @@ export const jobService = {
       budget: params.budget,
       location: params.location || null,
       status: 'OPEN'
-      // IMPORTANTE: Non inseriamo 'tags' qui perché la colonna non esiste nel DB
     };
 
     console.log("Attempting to create job with payload:", newJob);
@@ -97,6 +96,9 @@ export const jobService = {
       console.error('SUPABASE ERROR creating job:', error);
       throw new Error(`Errore database: ${error.message} (Code: ${error.code})`);
     }
+
+    // Notify pros (simulated broadcast logic could go here)
+    // For this demo, we rely on the Pro dashboard polling or refreshing
 
     return {
       ...data,
@@ -114,13 +116,15 @@ export const jobService = {
     price: number;
     message: string;
     timeline: string;
+    clientOwnerId?: string; // Optional for notification
+    category?: string; // Optional for notification
   }): Promise<Quote | null> {
     
-    // 1. Deduct Credit (Logic should be server side, but client-side for MVP)
+    // 1. Deduct Credit
     const { data: pro } = await supabase.from('profiles').select('credits, plan').eq('id', params.proId).single();
     
     if (pro && pro.plan !== 'AGENCY') {
-        if ((pro.credits || 0) <= 0) throw new Error("Crediti insufficienti");
+        if ((pro.credits || 0) <= 0) throw new Error("Crediti insufficienti. Ricarica il tuo profilo.");
         await supabase.from('profiles').update({ credits: pro.credits - 1 }).eq('id', params.proId);
     }
 
@@ -152,18 +156,18 @@ export const jobService = {
     };
   },
 
-  async updateQuoteStatus(quoteId: string, status: Quote['status']): Promise<void> {
-    await supabase.from('quotes').update({ status }).eq('id', quoteId);
+  async updateQuoteStatus(quote: Quote, status: Quote['status'], jobTitle?: string): Promise<void> {
+    // Update DB
+    await supabase.from('quotes').update({ status }).eq('id', quote.id);
     
-    // Notify logic would typically go here or via Supabase Realtime
+    if (status === 'ACCEPTED') {
+       // Close the job as well
+       await this.updateJobStatus(quote.jobId, 'IN_PROGRESS');
+    }
   },
 
   async updateJobStatus(jobId: string, status: JobRequest['status']): Promise<void> {
     await supabase.from('jobs').update({ status }).eq('id', jobId);
-  },
-
-  async completeProject(jobId: string): Promise<void> {
-    await this.updateJobStatus(jobId, 'COMPLETED');
   },
 
   async deleteJob(jobId: string): Promise<void> {
@@ -174,8 +178,6 @@ export const jobService = {
     let creditsToAdd = 0;
     if (plan === 'PRO') creditsToAdd = 20;
     
-    // Fetch current credits to add to them or set fixed? Let's just update plan for now.
-    // In a real app, this happens via Stripe Webhook.
     const { data: user } = await supabase.from('profiles').select('credits').eq('id', userId).single();
     const newCredits = plan === 'AGENCY' ? 9999 : (user?.credits || 0) + creditsToAdd;
 
@@ -185,13 +187,24 @@ export const jobService = {
     }).eq('id', userId);
   },
 
-  // Helper for matching (Client side filtering for now)
+  async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
+      // Map frontend keys to DB keys
+      const dbUpdates: any = {};
+      if (updates.name) dbUpdates.name = updates.name;
+      if (updates.brandName) dbUpdates.brand_name = updates.brandName;
+      if (updates.location) dbUpdates.location = updates.location;
+      if (updates.bio) dbUpdates.bio = updates.bio;
+      if (updates.offeredServices) dbUpdates.offered_services = updates.offeredServices;
+
+      const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', userId);
+      if (error) throw error;
+  },
+
+  // Helper for matching
   async getMatchesForPro(pro: User): Promise<{ job: JobRequest; matchScore: number }[]> {
-    // 1. Get all OPEN jobs
     const { data: allJobs } = await supabase.from('jobs').select('*').eq('status', 'OPEN');
     if (!allJobs) return [];
 
-    // 2. Get quotes sent by this pro to filter them out
     const { data: myQuotes } = await supabase.from('quotes').select('job_id').eq('pro_id', pro.id);
     const quotedJobIds = new Set(myQuotes?.map((q: any) => q.job_id));
 
