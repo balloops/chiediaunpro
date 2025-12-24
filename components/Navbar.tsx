@@ -92,17 +92,15 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
       <div className={`${isBackend ? 'w-full' : 'max-w-[1250px] mx-auto'} flex items-center justify-between`}>
         <Link to={logoLink} className="flex items-center space-x-2">
           {content.branding.logoUrl ? (
-             <img src={content.branding.logoUrl} alt={content.branding.platformName} className="h-10 w-auto object-contain" />
+             <img src={content.branding.logoUrl} alt="Logo" className="h-10 w-auto object-contain rounded-lg" />
           ) : (
-            <>
-              <div className="bg-indigo-600 text-white p-1.5 rounded-lg">
-                <LayoutDashboard size={24} />
-              </div>
-              <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">
-                {content.branding.platformName}
-              </span>
-            </>
+            <div className="bg-indigo-600 text-white p-1.5 rounded-lg">
+              <LayoutDashboard size={24} />
+            </div>
           )}
+          <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">
+            {content.branding.platformName}
+          </span>
         </Link>
 
         {/* Hide central menu items if in backend (Dashboard/Admin) */}

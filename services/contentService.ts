@@ -99,79 +99,31 @@ const defaultContent: SiteContent = {
 };
 
 const defaultPlans: PricingPlan[] = [
-  { 
-    id: 'FREE', 
-    name: 'Free Starter', 
-    price: 0, 
-    credits: 3, 
-    features: ['Profilo Pro Base', 'Accesso Lead Standard', 'Supporto Community'] 
+  {
+    id: 'FREE',
+    name: 'Starter',
+    price: 0,
+    credits: 3,
+    features: ['3 Preventivi/mese', 'Profilo Base', 'Supporto Email'],
   },
-  { 
-    id: 'PRO', 
-    name: 'Professional', 
-    price: 29, 
-    credits: 20, 
-    features: ['Badge Pro Verificato', 'Miglioramento AI', 'Lead Prioritari', 'Statistiche Avanzate'],
-    isPopular: true
+  {
+    id: 'PRO',
+    name: 'Pro',
+    price: 29,
+    credits: 20,
+    features: ['20 Preventivi/mese', 'Profilo in Evidenza', 'Badge "Verificato"', 'Supporto Prioritario'],
+    isPopular: true,
   },
-  { 
-    id: 'AGENCY', 
-    name: 'Digital Agency', 
-    price: 89, 
-    credits: 'UNLIMITED', 
-    features: ['Multi-account', 'Analisi Concorrenza', 'Manager Dedicato', 'Lead Exclusive'] 
+  {
+    id: 'AGENCY',
+    name: 'Agency',
+    price: 99,
+    credits: 'UNLIMITED',
+    features: ['Preventivi Illimitati', 'Multi-account', 'API Access', 'Account Manager Dedicato'],
   }
 ];
 
-const defaultForms: FormDefinition[] = [
-  {
-    categoryId: ServiceCategory.WEBSITE,
-    budgetOptions: ['< 500€', '500 - 2k€', '2k - 5k€', '5k€+'],
-    askLocation: true,
-    descriptionPlaceholder: "Descrivi il tuo sito web ideale...",
-    fields: [
-      {
-        id: 'siteType',
-        label: 'Che tipo di sito hai in mente?',
-        type: 'select',
-        options: ['Landing Page', 'Sito Vetrina', 'E-commerce', 'Blog / Magazine'],
-        required: true
-      },
-      {
-        id: 'contentReady',
-        label: 'Hai già i contenuti (Testi/Foto)?',
-        type: 'checkbox_group',
-        options: ['Sì, pronti', 'No, da creare']
-      },
-      {
-        id: 'integrations',
-        label: 'Funzionalità Extra',
-        type: 'multiselect',
-        options: ['Newsletter', 'Pagamenti', 'Prenotazioni', 'SEO Pro', 'Social Feed', 'Multilingua']
-      }
-    ]
-  },
-  {
-    categoryId: ServiceCategory.ECOMMERCE,
-    budgetOptions: ['1k - 3k€', '3k - 10k€', '10k€+'],
-    askLocation: false,
-    descriptionPlaceholder: "Cosa vuoi vendere online?",
-    fields: [
-      {
-        id: 'platform',
-        label: 'Piattaforma Preferita',
-        type: 'select',
-        options: ['Shopify', 'WooCommerce', 'Magento', 'Custom', 'Consigliami tu']
-      },
-      {
-        id: 'productCount',
-        label: 'Numero di prodotti stimato',
-        type: 'select',
-        options: ['1 - 10', '10 - 100', '100 - 500', '500+']
-      }
-    ]
-  }
-];
+const defaultForms: FormDefinition[] = [];
 
 // In-memory cache to prevent frequent fetches
 let cachedContent: SiteContent = defaultContent;
@@ -218,7 +170,11 @@ export const contentService = {
 
   getPlans(): PricingPlan[] {
     const data = localStorage.getItem(PLANS_KEY);
-    return data ? JSON.parse(data) : defaultPlans;
+    try {
+        return data ? JSON.parse(data) : defaultPlans;
+    } catch (e) {
+        return defaultPlans;
+    }
   },
 
   savePlans(plans: PricingPlan[]) {
@@ -227,7 +183,11 @@ export const contentService = {
 
   getCategories(): string[] {
     const data = localStorage.getItem(CATEGORIES_KEY);
-    return data ? JSON.parse(data) : Object.values(ServiceCategory);
+    try {
+        return data ? JSON.parse(data) : Object.values(ServiceCategory);
+    } catch (e) {
+        return Object.values(ServiceCategory);
+    }
   },
 
   saveCategories(categories: string[]) {
@@ -267,9 +227,13 @@ export const contentService = {
 
   getFormDefinition(categoryId: string): FormDefinition {
     const data = localStorage.getItem(FORMS_KEY);
-    const forms: FormDefinition[] = data ? JSON.parse(data) : defaultForms;
-    const found = forms.find(f => f.categoryId === categoryId);
-    if (found) return found;
+    try {
+        const forms: FormDefinition[] = data ? JSON.parse(data) : defaultForms;
+        const found = forms.find(f => f.categoryId === categoryId);
+        if (found) return found;
+    } catch (e) {
+        // Fallback if local storage is corrupt
+    }
     return {
       categoryId,
       budgetOptions: ['< 500€', '500 - 2k€', '2k - 5k€', '5k€+'],
@@ -281,7 +245,11 @@ export const contentService = {
 
   saveFormDefinition(definition: FormDefinition) {
     const data = localStorage.getItem(FORMS_KEY);
-    const forms: FormDefinition[] = data ? JSON.parse(data) : defaultForms;
+    let forms: FormDefinition[] = defaultForms;
+    try {
+        forms = data ? JSON.parse(data) : defaultForms;
+    } catch(e) {}
+
     const index = forms.findIndex(f => f.categoryId === definition.categoryId);
     if (index !== -1) {
       forms[index] = definition;
