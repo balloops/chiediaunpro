@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
@@ -8,7 +7,7 @@ const FORMS_KEY = 'chiediunpro_forms';
 
 const defaultContent: SiteContent = {
   branding: {
-    platformName: 'ChiediaunPro',
+    platformName: 'ChiediUnPro',
     logoUrl: ''
   },
   home: {
@@ -73,7 +72,7 @@ const defaultContent: SiteContent = {
     items: [
       {
         question: "È gratuito pubblicare una richiesta?",
-        answer: "Assolutamente sì. Pubblicare una richiesta su ChiediaunPro è completamente gratuito per i clienti.",
+        answer: "Assolutamente sì. Pubblicare una richiesta su ChiediUnPro è completamente gratuito per i clienti.",
         category: 'general'
       },
       {
