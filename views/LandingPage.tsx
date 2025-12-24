@@ -139,7 +139,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 className="group bg-white p-8 rounded-[24px] border border-slate-100 hover:border-indigo-500 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 cursor-pointer text-left block"
               >
                 <div className="mb-6 p-4 rounded-2xl bg-slate-50 inline-block group-hover:bg-indigo-50 transition-colors">
-                  {React.cloneElement(getCategoryIcon(cat) as React.ReactElement, { size: 32 })}
+                  {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
+                  {React.cloneElement(getCategoryIcon(cat) as React.ReactElement<any>, { size: 32 })}
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">{cat}</h3>
                 <div className="text-sm text-slate-500 mb-4">Esperti Disponibili</div>

@@ -228,7 +228,8 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                       className="group p-10 rounded-[24px] border-2 border-slate-100 bg-white hover:border-indigo-600 hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all text-left flex flex-col justify-between h-72"
                     >
                       <div className={`w-16 h-16 rounded-[22px] bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all ${info.color} shadow-sm group-hover:scale-110`}>
-                        {React.cloneElement(info.icon as React.ReactElement, { size: 32 })}
+                        {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
+                        {React.cloneElement(info.icon as React.ReactElement<any>, { size: 32 })}
                       </div>
                       <div className="mt-8">
                         <div className="font-black text-slate-900 text-2xl group-hover:text-indigo-600 transition-colors leading-tight">{cat}</div>

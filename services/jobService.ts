@@ -81,8 +81,8 @@ export const jobService = {
       details: params.details,
       budget: params.budget,
       location: params.location || null,
-      status: 'OPEN',
-      // Rimosso tags che causava errore PGRST204 perché non esiste la colonna sul DB
+      status: 'OPEN'
+      // IMPORTANTE: Non inseriamo 'tags' qui perché la colonna non esiste nel DB
     };
 
     console.log("Attempting to create job with payload:", newJob);

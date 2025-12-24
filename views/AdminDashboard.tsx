@@ -356,7 +356,8 @@ const AdminDashboard: React.FC = () => {
               ].map((s, idx) => (
                 <div key={idx} className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm">
                   <div className={`w-12 h-12 ${s.color} rounded-2xl flex items-center justify-center mb-4`}>
-                    {React.cloneElement(s.icon as React.ReactElement, { size: 24 })}
+                    {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
+                    {React.cloneElement(s.icon as React.ReactElement<any>, { size: 24 })}
                   </div>
                   <div className="text-3xl font-black text-slate-900 mb-1">{s.value}</div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">{s.label}</div>
