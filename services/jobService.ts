@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { JobRequest, Quote, User, ServiceCategory, JobLocation } from '../types';
+import { JobRequest, Quote, User, ServiceCategory, JobLocation, UserRole } from '../types';
 import { notificationService } from './notificationService';
 
 export const jobService = {
@@ -59,6 +59,33 @@ export const jobService = {
     }));
   },
 
+  // NEW METHOD for contact details
+  async getUserProfile(userId: string): Promise<User | null> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      role: data.role as UserRole,
+      avatar: data.avatar,
+      brandName: data.brand_name,
+      location: data.location,
+      bio: data.bio,
+      phoneNumber: data.phone_number, // Ensure this column exists in DB or is handled
+      isVerified: data.is_verified,
+      offeredServices: data.offered_services,
+      credits: data.credits,
+      plan: data.plan
+    };
+  },
+
   async createJob(params: {
     clientId: string;
     clientName: string;
@@ -97,15 +124,12 @@ export const jobService = {
       throw new Error(`Errore database: ${error.message} (Code: ${error.code})`);
     }
 
-    // Notify pros (simulated broadcast logic could go here)
-    // For this demo, we rely on the Pro dashboard polling or refreshing
-
     return {
       ...data,
       clientId: data.client_id,
       clientName: data.client_name,
       createdAt: data.created_at,
-      tags: [data.category] // Return local tags for UI consistency
+      tags: [data.category] 
     };
   },
 
@@ -116,8 +140,8 @@ export const jobService = {
     price: number;
     message: string;
     timeline: string;
-    clientOwnerId?: string; // Optional for notification
-    category?: string; // Optional for notification
+    clientOwnerId?: string; 
+    category?: string; 
   }): Promise<Quote | null> {
     
     // 1. Deduct Credit

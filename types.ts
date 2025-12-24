@@ -123,6 +123,7 @@ export interface User {
   role: UserRole;
   avatar?: string;
   skills?: string[];
+  phoneNumber?: string; // Added phone number
   isVerified?: boolean; // New field for admin verification
   // Professional specific fields
   brandName?: string;

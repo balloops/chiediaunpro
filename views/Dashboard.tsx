@@ -44,6 +44,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   const [viewingJobDetails, setViewingJobDetails] = useState<JobRequest | null>(null);
   const [viewingJobQuotes, setViewingJobQuotes] = useState<JobRequest | null>(null);
   
+  // Quote Detail Full View State
+  const [viewingQuoteDetail, setViewingQuoteDetail] = useState<{ quote: Quote, job: JobRequest } | null>(null);
+  const [contactInfo, setContactInfo] = useState<User | null>(null);
+
   // Job Form State
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -120,6 +124,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
       loadQuotes();
     }
   }, [viewingJobQuotes]);
+
+  // Fetch Contact Info when viewing Quote Detail
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (viewingQuoteDetail && viewingQuoteDetail.quote.status === 'ACCEPTED') {
+        const targetUserId = isPro ? viewingQuoteDetail.job.clientId : viewingQuoteDetail.quote.proId;
+        const profile = await jobService.getUserProfile(targetUserId);
+        setContactInfo(profile);
+      } else {
+        setContactInfo(null);
+      }
+    };
+    fetchContacts();
+  }, [viewingQuoteDetail, isPro]);
 
   // --- Actions ---
 
@@ -257,6 +275,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
     }
   };
 
+  const handleOpenQuoteDetail = (quote: Quote) => {
+    const job = isPro ? allJobsForQuotes.find(j => j.id === quote.jobId) : myJobs.find(j => j.id === quote.jobId);
+    // If client, job is in myJobs or we have viewingJobQuotes
+    const jobData = job || (viewingJobQuotes?.id === quote.jobId ? viewingJobQuotes : null);
+    
+    if (jobData) {
+      setViewingQuoteDetail({ quote, job: jobData });
+      setViewingJobQuotes(null); // Close modal if open
+    } else {
+      console.error("Job data missing for quote detail");
+    }
+  };
+
   // Helper for icons
   const getCategoryIcon = (name: string) => {
     switch(name) {
@@ -301,6 +332,165 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
         <div className="text-[10px] font-bold text-slate-400">70% Profilo Completato</div>
      </div>
   );
+
+  const renderQuoteDetailView = () => {
+    if (!viewingQuoteDetail) return null;
+    const { quote, job } = viewingQuoteDetail;
+    const isAccepted = quote.status === 'ACCEPTED';
+    
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-300">
+        <header className="mb-8">
+           <button 
+             onClick={() => { setViewingQuoteDetail(null); setContactInfo(null); }}
+             className="flex items-center space-x-2 text-slate-400 hover:text-indigo-600 mb-4 transition-colors font-bold text-sm"
+           >
+              <ArrowLeft size={16} />
+              <span>Torna indietro</span>
+           </button>
+           <h1 className="text-3xl font-black text-slate-900 mb-2">Dettaglio Preventivo</h1>
+           <p className="text-slate-400 font-medium text-lg">
+             {isAccepted ? 'Ottime notizie! Ecco i dettagli per iniziare a lavorare.' : 'Riepilogo della tua proposta.'}
+           </p>
+        </header>
+        
+        <div className="flex items-center space-x-4 mb-8">
+           <div className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-mono text-slate-500">ID: {quote.id.substring(0,8)}</div>
+           {isAccepted && <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-black uppercase tracking-wider">Accettato</span>}
+           {quote.status === 'PENDING' && <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-xs font-black uppercase tracking-wider">In Attesa</span>}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+           {/* Left Col: Job Request */}
+           <div className="bg-white p-8 rounded-[24px] border border-slate-100 h-fit">
+              <div className="flex items-center gap-3 mb-6">
+                 <FileText className="text-slate-400" size={24} />
+                 <h3 className="font-black text-lg text-slate-900">Richiesta del Cliente</h3>
+              </div>
+              
+              <div className="space-y-6">
+                 <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Categoria</label>
+                    <div className="font-bold text-slate-900 text-lg">{job.category}</div>
+                 </div>
+                 <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Descrizione</label>
+                    <p className="text-slate-600 text-sm leading-relaxed">{job.description}</p>
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 p-4 rounded-xl">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Budget Stimato</label>
+                       <div className="font-bold text-slate-900">{job.budget}</div>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Città</label>
+                       <div className="font-bold text-slate-900">{job.location?.city || 'Remoto'}</div>
+                    </div>
+                 </div>
+                 {job.details && Object.keys(job.details).length > 0 && (
+                    <div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Dettagli Tecnici</label>
+                       <div className="flex flex-wrap gap-2">
+                          {Object.entries(job.details).map(([key, val]) => (
+                             <span key={key} className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 bg-white">
+                                <span className="text-slate-400 mr-1">{key}:</span> {Array.isArray(val) ? val.join(', ') : val}
+                             </span>
+                          ))}
+                       </div>
+                    </div>
+                 )}
+              </div>
+           </div>
+
+           {/* Right Col: Contact & Quote */}
+           <div className="space-y-8">
+              {/* Contact Card (Only if Accepted) */}
+              {isAccepted ? (
+                 <div className="bg-emerald-50 p-8 rounded-[24px] border border-emerald-100">
+                    <div className="flex items-center gap-3 mb-6">
+                       <UserIcon className="text-emerald-600" size={24} />
+                       <h3 className="font-black text-lg text-emerald-900">Contatti {isPro ? 'del Cliente' : 'del Professionista'}</h3>
+                    </div>
+                    
+                    {contactInfo ? (
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div>
+                             <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1 block">Nome {isPro ? 'Cliente' : 'Pro'}</label>
+                             <div className="font-bold text-emerald-950 text-lg">{contactInfo.brandName || contactInfo.name}</div>
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1 block">Email</label>
+                             <div className="font-bold text-emerald-950 text-sm break-all underline decoration-emerald-300 underline-offset-2">{contactInfo.email}</div>
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1 block">Telefono</label>
+                             <div className="font-bold text-emerald-950 flex items-center gap-2">
+                                <Phone size={14} className="text-emerald-600" />
+                                {contactInfo.phoneNumber || 'Non disponibile'}
+                             </div>
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1 block">Contratto</label>
+                             <button className="flex items-center text-emerald-700 font-bold text-sm hover:underline">
+                                <Download size={14} className="mr-1" /> Scarica Bozza
+                             </button>
+                          </div>
+                       </div>
+                    ) : (
+                       <div className="flex items-center justify-center py-4 text-emerald-700">
+                          <div className="animate-spin mr-2 w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full"></div>
+                          Caricamento contatti...
+                       </div>
+                    )}
+                 </div>
+              ) : (
+                <div className="bg-slate-100 p-6 rounded-[24px] text-center border border-slate-200">
+                   <Lock className="mx-auto text-slate-400 mb-2" size={24} />
+                   <h3 className="font-bold text-slate-600">Contatti Nascosti</h3>
+                   <p className="text-xs text-slate-400 mt-1">I dati di contatto saranno visibili solo dopo l'accettazione del preventivo.</p>
+                </div>
+              )}
+
+              {/* Quote Summary */}
+              <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                 
+                 <div className="flex items-center gap-3 mb-6 relative z-10">
+                    <Send className="text-indigo-600" size={24} />
+                    <h3 className="font-black text-lg text-slate-900">{isPro ? 'Il tuo Preventivo' : 'Preventivo Ricevuto'}</h3>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-8 mb-6 relative z-10">
+                    <div>
+                       <label className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-1 block">Prezzo Offerto</label>
+                       <div className="text-3xl font-black text-indigo-600">{quote.price} €</div>
+                    </div>
+                    <div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Tempistiche</label>
+                       <div className="text-xl font-bold text-slate-900">{quote.timeline}</div>
+                    </div>
+                 </div>
+
+                 <div className="relative z-10">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Messaggio al Cliente</label>
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-sm text-slate-600 italic">
+                       "{quote.message}"
+                    </div>
+                 </div>
+                 
+                 {quote.status === 'ACCEPTED' && (
+                    <div className="mt-6 flex justify-end relative z-10">
+                       <span className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center">
+                          <Check size={14} className="mr-1" /> Accettato il {new Date().toLocaleDateString()}
+                       </span>
+                    </div>
+                 )}
+              </div>
+           </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderQuotesTab = (filter: 'ALL' | 'WON') => {
     const quotesToShow = filter === 'WON' 
@@ -370,7 +560,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                       </div>
 
                       <div className="w-full md:w-auto flex justify-end">
-                         <button className="px-5 py-2.5 border-2 border-slate-100 rounded-xl font-bold text-slate-600 text-sm hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center">
+                         <button 
+                            onClick={() => handleOpenQuoteDetail(quote)}
+                            className="px-5 py-2.5 border-2 border-slate-100 rounded-xl font-bold text-slate-600 text-sm hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center"
+                         >
                             <Eye size={16} className="mr-2" /> Dettagli
                          </button>
                       </div>
@@ -399,8 +592,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
           .map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id as any); setViewingJobQuotes(null); setViewingJobDetails(null); }}
-              className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600 font-medium'}`}
+              onClick={() => { setActiveTab(item.id as any); setViewingJobQuotes(null); setViewingJobDetails(null); setViewingQuoteDetail(null); }}
+              className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all ${activeTab === item.id && !viewingQuoteDetail ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600 font-medium'}`}
             >
               <div className="flex items-center space-x-3">
                  <div className="shrink-0">{item.icon}</div>
@@ -419,248 +612,256 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
 
       {/* Main Content */}
       <main className="flex-grow p-8 lg:p-12 overflow-x-hidden">
-        {activeTab !== 'my-requests' && (
-          <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
-                {activeTab === 'leads' ? 'Opportunità' : 
-                 activeTab === 'quotes' ? 'Preventivi Inviati' :
-                 activeTab === 'won' ? 'I tuoi Successi' :
-                 activeTab === 'settings' ? `${user.brandName || user.name}` :
-                 activeTab === 'billing' ? 'Crediti' : 'Dashboard'}
-              </h1>
-              <p className="text-slate-400 font-medium text-lg">
-                  {activeTab === 'leads' ? 'Trova nuovi clienti e invia proposte.' :
-                   activeTab === 'quotes' ? 'Bentornato Pro. Fai crescere il tuo business.' :
-                   activeTab === 'won' ? 'Bentornato Pro. Fai crescere il tuo business.' :
-                   activeTab === 'settings' ? 'Professionista Verificato' :
-                   isLoadingData ? 'Caricamento dati in corso...' : 'Dati aggiornati.'}
-              </p>
-            </div>
-
-            {(activeTab === 'quotes' || activeTab === 'won') && (
-               <div className="bg-white px-6 py-3 rounded-[20px] border border-slate-100 shadow-sm flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                     <Coins size={20} />
-                  </div>
-                  <div>
-                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Crediti Disponibili</div>
-                     <div className="text-xl font-black text-slate-900 leading-none mt-1">{user.credits}</div>
-                  </div>
-               </div>
-            )}
-          </header>
-        )}
-
-        {/* Content Render Logic */}
-        {isLoadingData && matchedLeads.length === 0 && myJobs.length === 0 ? (
-            <div className="py-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div></div>
+        {viewingQuoteDetail ? (
+           // Full Page Detail View
+           renderQuoteDetailView()
         ) : (
-            activeTab === 'leads' ? (
-                <div className="space-y-6">
-                    {matchedLeads.map(({ job, matchScore }) => (
-                      <div key={job.id} className="group bg-white p-8 rounded-[24px] border border-slate-100 hover:border-indigo-100 transition-all shadow-sm">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                          <div className="flex items-start space-x-6">
-                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
-                               {getCategoryIcon(job.category)}
-                            </div>
-                            <div>
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="text-xl font-black text-slate-900">{job.category}</h3>
-                                <div className="flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
-                                  <TrendingUp size={12} />
-                                  <span className="text-[10px] font-black uppercase tracking-wider">{matchScore}% Match</span>
-                                </div>
-                              </div>
-                              <p className="text-slate-600 text-sm mb-4 line-clamp-2 max-w-2xl font-medium leading-relaxed">{job.description}</p>
-                              <div className="flex flex-wrap gap-3">
-                                <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                  <MapPin size={14} />
-                                  <span>{job.location?.city || 'Remoto'}</span>
-                                </div>
-                                <div className="w-1 h-1 bg-slate-200 rounded-full my-auto"></div>
-                                <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                  <CreditCard size={14} />
-                                  <span>Budget: {job.budget}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
-                            <button 
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setViewingJobDetails(job); }}
-                              className="w-full sm:w-auto px-6 py-4 bg-white border-2 border-slate-100 text-slate-600 font-bold rounded-2xl hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center"
-                            >
-                              <Eye size={18} className="mr-2" /> Dettagli
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setQuoteMessage('');
-                                setQuotePrice('');
-                                setQuoteTimeline('');
-                                setShowQuoteModal(job);
-                              }}
-                              className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center"
-                            >
-                              Invia Proposta <Send className="ml-2" size={18} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {matchedLeads.length === 0 && <div className="text-center py-10 text-slate-400">Nessuna opportunità al momento.</div>}
+           // Standard Dashboard Views
+           <>
+              {activeTab !== 'my-requests' && (
+              <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
+                    {activeTab === 'leads' ? 'Opportunità' : 
+                     activeTab === 'quotes' ? 'Preventivi Inviati' :
+                     activeTab === 'won' ? 'I tuoi Successi' :
+                     activeTab === 'settings' ? `${user.brandName || user.name}` :
+                     activeTab === 'billing' ? 'Crediti' : 'Dashboard'}
+                  </h1>
+                  <p className="text-slate-400 font-medium text-lg">
+                      {activeTab === 'leads' ? 'Trova nuovi clienti e invia proposte.' :
+                       activeTab === 'quotes' ? 'Bentornato Pro. Fai crescere il tuo business.' :
+                       activeTab === 'won' ? 'Bentornato Pro. Fai crescere il tuo business.' :
+                       activeTab === 'settings' ? 'Professionista Verificato' :
+                       isLoadingData ? 'Caricamento dati in corso...' : 'Dati aggiornati.'}
+                  </p>
                 </div>
-            ) : activeTab === 'my-requests' ? (
-                // My Requests logic handled in sub-render function previously, moved here for clarity
-                <div className="space-y-8 animate-in fade-in">
-                   <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+
+                {(activeTab === 'quotes' || activeTab === 'won') && (
+                   <div className="bg-white px-6 py-3 rounded-[20px] border border-slate-100 shadow-sm flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                         <Coins size={20} />
+                      </div>
                       <div>
-                         <h2 className="text-3xl font-black text-slate-900 mb-2">Le Mie Richieste</h2>
-                         <p className="text-slate-500 font-medium">Monitora le tue richieste di preventivo.</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                          <button 
-                            onClick={() => { setModalStep('category'); setShowNewJobModal(true); }}
-                            className="px-6 py-4 bg-indigo-600 text-white font-bold rounded-[20px] hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center"
-                          >
-                            <Plus className="mr-2" size={20} /> Chiedi un preventivo
-                          </button>
+                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Crediti Disponibili</div>
+                         <div className="text-xl font-black text-slate-900 leading-none mt-1">{user.credits}</div>
                       </div>
                    </div>
-                   <div className="grid gap-6">
-                      {myJobs.length === 0 ? (
-                         <div className="text-center py-20 bg-white rounded-[24px] border border-dashed border-slate-200">
-                             <h3 className="text-lg font-bold text-slate-900 mb-1">Nessuna richiesta attiva</h3>
-                             <button onClick={() => { setModalStep('category'); setShowNewJobModal(true); }} className="text-indigo-600 font-bold hover:underline">Crea Richiesta</button>
-                         </div>
-                      ) : (
-                         myJobs.map(job => (
-                           <div key={job.id} className="bg-white p-6 md:p-8 rounded-[24px] border border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm hover:border-indigo-100 transition-all">
-                              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
-                                 {getCategoryIcon(job.category)}
+                )}
+              </header>
+            )}
+
+            {/* Content Render Logic */}
+            {isLoadingData && matchedLeads.length === 0 && myJobs.length === 0 ? (
+                <div className="py-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div></div>
+            ) : (
+                activeTab === 'leads' ? (
+                    <div className="space-y-6">
+                        {matchedLeads.map(({ job, matchScore }) => (
+                          <div key={job.id} className="group bg-white p-8 rounded-[24px] border border-slate-100 hover:border-indigo-100 transition-all shadow-sm">
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                              <div className="flex items-start space-x-6">
+                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
+                                   {getCategoryIcon(job.category)}
+                                </div>
+                                <div>
+                                  <div className="flex items-center space-x-3 mb-2">
+                                    <h3 className="text-xl font-black text-slate-900">{job.category}</h3>
+                                    <div className="flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
+                                      <TrendingUp size={12} />
+                                      <span className="text-[10px] font-black uppercase tracking-wider">{matchScore}% Match</span>
+                                    </div>
+                                  </div>
+                                  <p className="text-slate-600 text-sm mb-4 line-clamp-2 max-w-2xl font-medium leading-relaxed">{job.description}</p>
+                                  <div className="flex flex-wrap gap-3">
+                                    <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                      <MapPin size={14} />
+                                      <span>{job.location?.city || 'Remoto'}</span>
+                                    </div>
+                                    <div className="w-1 h-1 bg-slate-200 rounded-full my-auto"></div>
+                                    <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                      <CreditCard size={14} />
+                                      <span>Budget: {job.budget}</span>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex-grow">
-                                 <div className="flex items-center gap-3 mb-2">
-                                    <h3 className="text-xl font-bold text-slate-900">{job.category}</h3>
-                                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${job.status === 'OPEN' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>{job.status}</span>
-                                 </div>
-                                 <p className="text-slate-500 text-sm line-clamp-2 max-w-2xl mb-4 font-medium leading-relaxed">{job.description}</p>
-                                 <div className="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-wide">
-                                    <div className="flex items-center gap-1.5"><Clock size={14} /><span>{new Date(job.createdAt).toLocaleDateString()}</span></div>
-                                 </div>
+                              
+                              <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
+                                <button 
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setViewingJobDetails(job); }}
+                                  className="w-full sm:w-auto px-6 py-4 bg-white border-2 border-slate-100 text-slate-600 font-bold rounded-2xl hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center"
+                                >
+                                  <Eye size={18} className="mr-2" /> Dettagli
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setQuoteMessage('');
+                                    setQuotePrice('');
+                                    setQuoteTimeline('');
+                                    setShowQuoteModal(job);
+                                  }}
+                                  className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center"
+                                >
+                                  Invia Proposta <Send className="ml-2" size={18} />
+                                </button>
                               </div>
-                              <div className="flex items-center gap-3 w-full md:w-auto">
-                                 <button onClick={() => setViewingJobQuotes(job)} className="w-full md:w-auto px-6 py-3 bg-white border-2 border-slate-100 text-slate-700 font-bold rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center">Gestisci <ChevronRight size={16} className="ml-2" /></button>
-                              </div>
-                           </div>
-                         ))
-                      )}
-                   </div>
-                </div>
-            ) : activeTab === 'billing' ? (
-                <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
-                    <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">Bilancio Crediti</div>
-                    <div className="text-7xl font-black mb-2 tracking-tighter">
-                        {user.credits && user.credits >= 999 ? '∞' : (user.credits ?? 0)}
+                            </div>
+                          </div>
+                        ))}
+                        {matchedLeads.length === 0 && <div className="text-center py-10 text-slate-400">Nessuna opportunità al momento.</div>}
                     </div>
-                    <button onClick={() => handleUpgrade('PRO')} className="mt-4 bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold">Ricarica</button>
-                </div>
-            ) : activeTab === 'settings' ? (
-                <div className="max-w-4xl space-y-8 animate-in fade-in">
-                   {/* Profile Header Card */}
-                   <div className="bg-white p-8 rounded-[24px] border border-slate-100 flex items-center gap-6">
-                      <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-[24px] flex items-center justify-center font-black text-2xl">
-                         {user.brandName ? user.brandName.substring(0,2).toUpperCase() : user.name.substring(0,2).toUpperCase()}
-                      </div>
-                      <div>
-                         <h2 className="text-2xl font-black text-slate-900">{user.brandName || user.name}</h2>
-                         <div className="text-slate-500 text-sm font-medium mt-1">Professionista Verificato</div>
-                      </div>
-                      <div className="ml-auto">
-                         <button 
-                            onClick={handleSaveProfile} 
-                            disabled={isSavingProfile}
-                            className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2"
-                         >
-                            {isSavingProfile ? <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></div> : <Save size={18} />}
-                            <span>Salva Modifiche</span>
-                         </button>
-                      </div>
-                   </div>
+                ) : activeTab === 'my-requests' ? (
+                    // My Requests logic handled in sub-render function previously, moved here for clarity
+                    <div className="space-y-8 animate-in fade-in">
+                       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                          <div>
+                             <h2 className="text-3xl font-black text-slate-900 mb-2">Le Mie Richieste</h2>
+                             <p className="text-slate-500 font-medium">Monitora le tue richieste di preventivo.</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                              <button 
+                                onClick={() => { setModalStep('category'); setShowNewJobModal(true); }}
+                                className="px-6 py-4 bg-indigo-600 text-white font-bold rounded-[20px] hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center"
+                              >
+                                <Plus className="mr-2" size={20} /> Chiedi un preventivo
+                              </button>
+                          </div>
+                       </div>
+                       <div className="grid gap-6">
+                          {myJobs.length === 0 ? (
+                             <div className="text-center py-20 bg-white rounded-[24px] border border-dashed border-slate-200">
+                                 <h3 className="text-lg font-bold text-slate-900 mb-1">Nessuna richiesta attiva</h3>
+                                 <button onClick={() => { setModalStep('category'); setShowNewJobModal(true); }} className="text-indigo-600 font-bold hover:underline">Crea Richiesta</button>
+                             </div>
+                          ) : (
+                             myJobs.map(job => (
+                               <div key={job.id} className="bg-white p-6 md:p-8 rounded-[24px] border border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm hover:border-indigo-100 transition-all">
+                                  <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
+                                     {getCategoryIcon(job.category)}
+                                  </div>
+                                  <div className="flex-grow">
+                                     <div className="flex items-center gap-3 mb-2">
+                                        <h3 className="text-xl font-bold text-slate-900">{job.category}</h3>
+                                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${job.status === 'OPEN' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>{job.status}</span>
+                                     </div>
+                                     <p className="text-slate-500 text-sm line-clamp-2 max-w-2xl mb-4 font-medium leading-relaxed">{job.description}</p>
+                                     <div className="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-wide">
+                                        <div className="flex items-center gap-1.5"><Clock size={14} /><span>{new Date(job.createdAt).toLocaleDateString()}</span></div>
+                                     </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 w-full md:w-auto">
+                                     <button onClick={() => setViewingJobQuotes(job)} className="w-full md:w-auto px-6 py-3 bg-white border-2 border-slate-100 text-slate-700 font-bold rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center">Gestisci <ChevronRight size={16} className="ml-2" /></button>
+                                  </div>
+                               </div>
+                             ))
+                          )}
+                       </div>
+                    </div>
+                ) : activeTab === 'billing' ? (
+                    <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
+                        <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">Bilancio Crediti</div>
+                        <div className="text-7xl font-black mb-2 tracking-tighter">
+                            {user.credits && user.credits >= 999 ? '∞' : (user.credits ?? 0)}
+                        </div>
+                        <button onClick={() => handleUpgrade('PRO')} className="mt-4 bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold">Ricarica</button>
+                    </div>
+                ) : activeTab === 'settings' ? (
+                    <div className="max-w-4xl space-y-8 animate-in fade-in">
+                       {/* Profile Header Card */}
+                       <div className="bg-white p-8 rounded-[24px] border border-slate-100 flex items-center gap-6">
+                          <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-[24px] flex items-center justify-center font-black text-2xl">
+                             {user.brandName ? user.brandName.substring(0,2).toUpperCase() : user.name.substring(0,2).toUpperCase()}
+                          </div>
+                          <div>
+                             <h2 className="text-2xl font-black text-slate-900">{user.brandName || user.name}</h2>
+                             <div className="text-slate-500 text-sm font-medium mt-1">Professionista Verificato</div>
+                          </div>
+                          <div className="ml-auto">
+                             <button 
+                                onClick={handleSaveProfile} 
+                                disabled={isSavingProfile}
+                                className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2"
+                             >
+                                {isSavingProfile ? <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></div> : <Save size={18} />}
+                                <span>Salva Modifiche</span>
+                             </button>
+                          </div>
+                       </div>
 
-                   {/* Edit Form */}
-                   <div className="bg-white p-8 rounded-[24px] border border-slate-100 space-y-6">
-                      <div>
-                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Nome Completo</label>
-                         <input 
-                           type="text" 
-                           value={profileForm.name} 
-                           onChange={e => setProfileForm({...profileForm, name: e.target.value})}
-                           className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
-                         />
-                      </div>
-                      <div>
-                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Nome Brand / Agenzia</label>
-                         <input 
-                           type="text" 
-                           value={profileForm.brandName || ''} 
-                           onChange={e => setProfileForm({...profileForm, brandName: e.target.value})}
-                           className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
-                         />
-                      </div>
-                      <div>
-                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Email (Non modificabile)</label>
-                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                            <input 
-                              type="text" 
-                              value={profileForm.email} 
-                              disabled
-                              className="w-full pl-12 p-4 bg-slate-100 border border-slate-200 rounded-2xl font-medium text-slate-500 cursor-not-allowed"
-                            />
-                         </div>
-                      </div>
-                      <div>
-                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Località</label>
-                         <div className="relative">
-                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                            <input 
-                              type="text" 
-                              value={profileForm.location || ''} 
-                              onChange={e => setProfileForm({...profileForm, location: e.target.value})}
-                              className="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
-                            />
-                         </div>
-                      </div>
-                   </div>
+                       {/* Edit Form */}
+                       <div className="bg-white p-8 rounded-[24px] border border-slate-100 space-y-6">
+                          <div>
+                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Nome Completo</label>
+                             <input 
+                               type="text" 
+                               value={profileForm.name} 
+                               onChange={e => setProfileForm({...profileForm, name: e.target.value})}
+                               className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
+                             />
+                          </div>
+                          <div>
+                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Nome Brand / Agenzia</label>
+                             <input 
+                               type="text" 
+                               value={profileForm.brandName || ''} 
+                               onChange={e => setProfileForm({...profileForm, brandName: e.target.value})}
+                               className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
+                             />
+                          </div>
+                          <div>
+                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Email (Non modificabile)</label>
+                             <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <input 
+                                  type="text" 
+                                  value={profileForm.email} 
+                                  disabled
+                                  className="w-full pl-12 p-4 bg-slate-100 border border-slate-200 rounded-2xl font-medium text-slate-500 cursor-not-allowed"
+                                />
+                             </div>
+                          </div>
+                          <div>
+                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Località</label>
+                             <div className="relative">
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <input 
+                                  type="text" 
+                                  value={profileForm.location || ''} 
+                                  onChange={e => setProfileForm({...profileForm, location: e.target.value})}
+                                  className="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
+                                />
+                             </div>
+                          </div>
+                       </div>
 
-                   {/* Support Banner */}
-                   <div className="bg-white p-6 rounded-[24px] border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-                            <HelpCircle size={24} />
-                         </div>
-                         <div>
-                            <h3 className="font-bold text-slate-900">Supporto & Assistenza</h3>
-                            <p className="text-xs text-slate-500">Hai domande? Trova le risposte nella nostra Knowledge Base.</p>
-                         </div>
-                      </div>
-                      <Link to="/help" className="px-5 py-2.5 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2">
-                         <span>Vai al Centro Assistenza</span>
-                         <ArrowRight size={16} />
-                      </Link>
-                   </div>
-                </div>
-            ) : activeTab === 'quotes' ? (
-               renderQuotesTab('ALL')
-            ) : activeTab === 'won' ? (
-               renderQuotesTab('WON')
-            ) : null
+                       {/* Support Banner */}
+                       <div className="bg-white p-6 rounded-[24px] border border-slate-100 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                                <HelpCircle size={24} />
+                             </div>
+                             <div>
+                                <h3 className="font-bold text-slate-900">Supporto & Assistenza</h3>
+                                <p className="text-xs text-slate-500">Hai domande? Trova le risposte nella nostra Knowledge Base.</p>
+                             </div>
+                          </div>
+                          <Link to="/help" className="px-5 py-2.5 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2">
+                             <span>Vai al Centro Assistenza</span>
+                             <ArrowRight size={16} />
+                          </Link>
+                       </div>
+                    </div>
+                ) : activeTab === 'quotes' ? (
+                   renderQuotesTab('ALL')
+                ) : activeTab === 'won' ? (
+                   renderQuotesTab('WON')
+                ) : null
+            )}
+           </>
         )}
 
         {/* --- MODALS --- */}
@@ -819,7 +1020,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                              <div className="flex gap-4">
                                 <button className="flex-1 py-3 border-2 border-slate-200 rounded-xl font-bold hover:bg-slate-50">Chatta</button>
                                 {quote.status === 'ACCEPTED' ? (
-                                    <button disabled className="flex-1 py-3 bg-emerald-100 text-emerald-700 rounded-xl font-bold">Preventivo Accettato</button>
+                                    <button 
+                                      onClick={() => handleOpenQuoteDetail(quote)}
+                                      className="flex-1 py-3 bg-emerald-100 text-emerald-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-200 transition-colors"
+                                    >
+                                       <Eye size={18} /> Vedi Dettagli & Contatti
+                                    </button>
                                 ) : (
                                     <button 
                                       onClick={() => handleAcceptQuote(quote)}
