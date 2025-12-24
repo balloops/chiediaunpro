@@ -1,3 +1,4 @@
+// @ts-ignore - Ignora il controllo TypeScript perché usiamo la versione CDN definita in index.html
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.API_KEY;
