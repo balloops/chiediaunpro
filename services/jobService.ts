@@ -230,9 +230,8 @@ export const jobService = {
   },
 
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
-      // Map frontend keys to DB keys
+      // 1. Update Public Profile Table
       const dbUpdates: any = {};
-      // Use undefined check to allow clearing fields (e.g. empty string)
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
       if (updates.location !== undefined) dbUpdates.location = updates.location;
@@ -242,6 +241,17 @@ export const jobService = {
 
       const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', userId);
       if (error) throw error;
+
+      // 2. Update Auth Metadata (Sync to prevent data disappearing on reload if profile fetch fails)
+      const metaUpdates: any = {};
+      if (updates.name) metaUpdates.name = updates.name;
+      if (updates.brandName) metaUpdates.brand_name = updates.brandName;
+      // We only sync critical identity fields to auth metadata
+      
+      if (Object.keys(metaUpdates).length > 0) {
+          const { error: authError } = await supabase.auth.updateUser({ data: metaUpdates });
+          if (authError) console.warn("Could not sync auth metadata", authError);
+      }
   },
 
   // Helper for matching

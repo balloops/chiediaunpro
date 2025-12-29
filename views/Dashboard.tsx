@@ -92,7 +92,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const myQuote = isPro ? quotes.find(q => q.proId === user.id) : null;
 
     return (
-        <div className="max-w-[1250px] mx-auto w-full">
+        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full">
             <button 
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
                 className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
@@ -285,7 +285,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     const isAccepted = quote.status === 'ACCEPTED';
 
     return (
-        <div className="max-w-[1250px] mx-auto w-full">
+        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full">
              <button 
                 // Back button goes to the specific tab
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
@@ -479,8 +479,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     if (showLoading) setIsLoadingData(true);
     setFetchError(false);
     
+    // Increased timeout to 15 seconds to handle cold starts better
     const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 8000)
+        setTimeout(() => reject(new Error('Timeout')), 15000)
     );
 
     try {
@@ -766,7 +767,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 {currentTab === 'leads' && (
                     <div className="space-y-6">
                         {matchedLeads.map(({ job, matchScore }) => (
-                            <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
+                            <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                 <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     {getCategoryIcon(job.category)}
                                 </div>
@@ -836,7 +837,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                              const job = allJobsCache.find(j => j.id === quote.jobId);
                              const category = job?.category || 'Servizio';
                              return (
-                                 <div key={quote.id} onClick={() => navigate(`/dashboard/quote/${quote.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
+                                 <div key={quote.id} onClick={() => navigate(`/dashboard/quote/${quote.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                         {getCategoryIcon(category)}
                                      </div>

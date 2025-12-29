@@ -1,7 +1,8 @@
+
 {
   "name": "chiediunpro-platform",
   "private": true,
-  "version": "1.2.4",
+  "version": "1.2.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +16,8 @@
     "@supabase/supabase-js": "^2.39.0",
     "lucide-react": "^0.344.0",
     "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0"
+    "tailwind-merge": "^2.2.0",
+    "@google/genai": "^0.1.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
