@@ -45,14 +45,12 @@ export const notificationService = {
       if (error) throw error;
 
       // 2. Pulizia (Logica FIFO migliorata)
-      // Recupera TUTTI gli ID di questo utente ordinati per data (dal più recente)
       const { data: allUserNotifs } = await supabase
         .from('notifications')
         .select('id')
         .eq('user_id', notification.userId)
         .order('created_at', { ascending: false });
 
-      // Se ce ne sono più di 8, prendi quelli dal nono in poi (index 8+) ed eliminali
       if (allUserNotifs && allUserNotifs.length > 8) {
         const idsToDelete = allUserNotifs.slice(8).map(x => x.id);
         
@@ -60,7 +58,7 @@ export const notificationService = {
           await supabase
             .from('notifications')
             .delete()
-            .in('id', idsToDelete); // Metodo più sicuro e diretto
+            .in('id', idsToDelete);
         }
       }
 
@@ -83,18 +81,15 @@ export const notificationService = {
       .eq('user_id', userId);
   },
 
-  // Helpers to trigger specific notifications
+  // Helpers to trigger specific notifications with NEW Routing links
   async notifyNewOpportunity(proId: string, category: string, jobId: string): Promise<void> {
     await this.addNotification({
       userId: proId,
       type: NotificationType.NEW_OPPORTUNITY,
       title: 'Nuova Opportunità!',
       message: `È stata pubblicata una nuova richiesta per: ${category}.`,
-      link: '/dashboard',
-      metadata: {
-        jobId,
-        targetTab: 'leads'
-      }
+      link: `/dashboard/job/${jobId}`, // Direct link to Job Detail
+      metadata: { jobId }
     });
   },
 
@@ -104,11 +99,8 @@ export const notificationService = {
       type: NotificationType.NEW_QUOTE,
       title: 'Nuovo Preventivo Ricevuto',
       message: `${proName} ha inviato una proposta per il tuo progetto ${category}.`,
-      link: '/dashboard',
-      metadata: {
-        jobId,
-        targetTab: 'my-requests'
-      }
+      link: `/dashboard/job/${jobId}`, // Client goes to Job Detail to see quotes
+      metadata: { jobId }
     });
   },
 
@@ -118,11 +110,8 @@ export const notificationService = {
       type: NotificationType.QUOTE_ACCEPTED,
       title: 'Congratulazioni! Proposta Accettata',
       message: `${clientName} ha scelto la tua proposta. Inizia a collaborare!`,
-      link: '/dashboard',
-      metadata: {
-        quoteId,
-        targetTab: 'won'
-      }
+      link: `/dashboard/quote/${quoteId}`, // Pro goes to Quote Detail to see contact info
+      metadata: { quoteId }
     });
   },
 
@@ -132,11 +121,8 @@ export const notificationService = {
       type: NotificationType.QUOTE_REJECTED,
       title: 'Aggiornamento Proposta',
       message: `Ci dispiace, ${clientName} ha deciso di non procedere con la tua proposta.`,
-      link: '/dashboard',
-      metadata: {
-        quoteId,
-        targetTab: 'quotes'
-      }
+      link: `/dashboard/quote/${quoteId}`,
+      metadata: { quoteId }
     });
   }
 };

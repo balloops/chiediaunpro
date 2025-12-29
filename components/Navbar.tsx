@@ -23,21 +23,18 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const isBackend = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    // Fetch latest content on mount and route change (in case admin updated it)
     contentService.fetchContent().then(setContent);
   }, [location]);
 
   useEffect(() => {
     if (!user) return;
 
-    // 1. Initial Load
     const loadNotifs = async () => {
       const data = await notificationService.getNotifications(user.id);
       setNotifications(data);
     };
     loadNotifs();
 
-    // 2. Realtime Subscription
     const channel = supabase
       .channel('public:notifications')
       .on(
@@ -49,7 +46,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          // Map snake_case from DB to camelCase for UI
           const newNotif = {
               ...payload.new,
               userId: payload.new.user_id,
@@ -57,15 +53,10 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               createdAt: payload.new.created_at
           } as Notification;
           
-          // Prepend new notification and limit to 8 locally
           setNotifications(prev => [newNotif, ...prev].slice(0, 8));
         }
       )
-      .subscribe((status) => {
-        if (status === 'CHANNEL_ERROR') {
-          console.warn("⚠️ Errore connessione Realtime: Verifica di aver abilitato la Replication sulla tabella 'notifications' su Supabase.");
-        }
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -85,7 +76,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const handleMarkAsRead = async (id: string) => {
-    // Optimistic update
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     await notificationService.markAsRead(id);
   };
@@ -94,21 +84,16 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     await handleMarkAsRead(notification.id);
     setShowNotifDropdown(false);
     
-    if (notification.metadata) {
-      navigate('/dashboard', { 
-        state: { 
-          fromNotification: true,
-          ...notification.metadata
-        } 
-      });
-    } else if (notification.link) {
+    // Direct navigation using the link from DB
+    if (notification.link) {
       navigate(notification.link);
+    } else {
+      navigate('/dashboard');
     }
   };
 
   const handleMarkAllAsRead = async () => {
     if (user) {
-      // Optimistic update
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       await notificationService.markAllAsRead(user.id);
     }
@@ -121,7 +106,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  // Determine logo destination based on context
   const logoLink = isBackend 
     ? (user?.role === UserRole.ADMIN ? '/admin' : '/dashboard') 
     : '/';
@@ -142,7 +126,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           </span>
         </Link>
 
-        {/* Hide central menu items if in backend (Dashboard/Admin) */}
         {!isBackend && (
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Home</Link>
@@ -211,11 +194,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                           <p className="text-sm text-slate-400 font-medium">Ancora nessuna notifica</p>
                         </div>
                       )}
-                    </div>
-                    <div className="p-4 bg-slate-50/50 border-t border-slate-50 text-center">
-                      <Link to="/dashboard" onClick={() => setShowNotifDropdown(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors">
-                        Vai alla Dashboard
-                      </Link>
                     </div>
                   </div>
                 )}
