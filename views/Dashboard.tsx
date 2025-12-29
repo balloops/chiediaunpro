@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory, NotificationType, PlanType, FormDefinition, JobLocation } from '../types';
 import { 
-  LayoutGrid, FileText, Send, Settings, Plus, Search, Clock, CheckCircle, MessageSquare, Sparkles, TrendingUp, Filter, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, ArrowRight, ChevronRight, MapPin, Tag, Briefcase, Globe, CreditCard, Mail, Zap, Star, Trophy, Coins, History, CalendarDays, User as UserIcon, XCircle, AlertTriangle, ExternalLink, ShieldCheck, CreditCard as BillingIcon, Crown, Building2, Check, Eye, X, Phone, Download, Save, Lock, Image as ImageIcon, Edit3, Trash2, RefreshCcw, UserCheck, Upload, HelpCircle, Box, Wallet, Calendar
+  LayoutGrid, FileText, Send, Settings, Plus, Search, Clock, CheckCircle, MessageSquare, Sparkles, TrendingUp, Filter, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, ArrowRight, ChevronRight, MapPin, Tag, Briefcase, Globe, CreditCard, Mail, Zap, Star, Trophy, Coins, History, CalendarDays, User as UserIcon, XCircle, AlertTriangle, ExternalLink, ShieldCheck, CreditCard as BillingIcon, Crown, Building2, Check, Eye, X, Phone, Download, Save, Lock, Image as ImageIcon, Edit3, Trash2, RefreshCcw, UserCheck, Upload, HelpCircle, Box, Wallet, Calendar, Euro
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { geminiService } from '../services/geminiService';
@@ -1067,6 +1067,302 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
            </>
         )}
       </main>
+
+      {/* --- MODALS (Overlays) --- */}
+
+      {/* New Job Modal (Client) */}
+      {showNewJobModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowNewJobModal(false)}></div>
+          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
+               <h3 className="text-xl font-black text-slate-900">
+                  {modalStep === 'category' ? 'Nuova Richiesta' : selectedCategory}
+               </h3>
+               <button onClick={() => setShowNewJobModal(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                  <X size={24} />
+               </button>
+            </div>
+            
+            <div className="p-6 md:p-8 space-y-8">
+               {modalStep === 'category' ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                     {availableCategories.map(cat => (
+                        <button 
+                           key={cat} 
+                           onClick={() => handleCategorySelect(cat)}
+                           className="p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-50 text-left transition-all group"
+                        >
+                           <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center mb-3 transition-colors">
+                              {getCategoryIcon(cat)}
+                           </div>
+                           <div className="font-bold text-slate-900 text-sm group-hover:text-indigo-700">{cat}</div>
+                        </button>
+                     ))}
+                  </div>
+               ) : (
+                  <>
+                    {formDefinition && (
+                       <ServiceForm 
+                          formDefinition={formDefinition}
+                          description={jobDescription}
+                          setDescription={setJobDescription}
+                          details={jobDetails}
+                          setDetails={setJobDetails}
+                          onRefine={handleRefineDescription}
+                          isRefining={isRefining}
+                       />
+                    )}
+                    
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                       <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Budget Stimato</label>
+                       <div className="grid grid-cols-2 gap-3">
+                          {formDefinition?.budgetOptions.map(b => (
+                             <button
+                                key={b}
+                                onClick={() => setBudget(b)}
+                                className={`py-3 px-4 rounded-xl text-xs font-bold border transition-all ${budget === b ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300'}`}
+                             >
+                                {b}
+                             </button>
+                          ))}
+                       </div>
+                    </div>
+
+                    {formDefinition?.askLocation && (
+                       <div className="space-y-4">
+                          <label className="text-xs font-black text-slate-500 uppercase tracking-widest block ml-1">Città (Opzionale)</label>
+                          <input 
+                             type="text" 
+                             value={locationCity}
+                             onChange={e => setLocationCity(e.target.value)}
+                             placeholder="es. Milano, Remoto..."
+                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-indigo-600"
+                          />
+                       </div>
+                    )}
+                  </>
+               )}
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-[32px] flex justify-between items-center sticky bottom-0">
+               {modalStep === 'details' ? (
+                  <>
+                     <button onClick={() => setModalStep('category')} className="text-slate-500 font-bold text-sm hover:text-slate-800">Indietro</button>
+                     <button 
+                        onClick={handleCreateJob}
+                        disabled={creatingJob || !jobDescription || !budget}
+                        className="px-8 py-3 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all disabled:opacity-50 disabled:shadow-none flex items-center"
+                     >
+                        {creatingJob ? 'Pubblicazione...' : (editingJobId ? 'Salva Modifiche' : 'Pubblica Richiesta')}
+                     </button>
+                  </>
+               ) : (
+                  <div className="w-full text-center text-xs text-slate-400 font-medium">Seleziona una categoria per continuare</div>
+               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quote Modal (Pro) */}
+      {showQuoteModal && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowQuoteModal(null)}></div>
+            <div className="bg-white rounded-[32px] w-full max-w-lg relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
+               <div className="p-8">
+                  <div className="flex justify-between items-start mb-6">
+                     <div>
+                        <h3 className="text-2xl font-black text-slate-900 mb-1">Invia Preventivo</h3>
+                        <p className="text-slate-500 text-sm font-medium">Per: {showQuoteModal.category}</p>
+                     </div>
+                     <button onClick={() => setShowQuoteModal(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                        <X size={24} />
+                     </button>
+                  </div>
+
+                  <div className="space-y-6">
+                     <div>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">La tua Offerta (€)</label>
+                        <div className="relative">
+                           <Euro className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                           <input 
+                              type="number" 
+                              value={quotePrice}
+                              onChange={e => setQuotePrice(e.target.value)}
+                              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-xl text-slate-900 focus:border-indigo-600 outline-none"
+                              placeholder="0.00"
+                           />
+                        </div>
+                     </div>
+
+                     <div>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Tempistiche</label>
+                        <div className="relative">
+                           <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                           <input 
+                              type="text" 
+                              value={quoteTimeline}
+                              onChange={e => setQuoteTimeline(e.target.value)}
+                              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:border-indigo-600 outline-none"
+                              placeholder="es. 2 settimane"
+                           />
+                        </div>
+                     </div>
+
+                     <div>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Messaggio</label>
+                        <textarea 
+                           value={quoteMessage}
+                           onChange={e => setQuoteMessage(e.target.value)}
+                           rows={4}
+                           className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:border-indigo-600 outline-none resize-none"
+                           placeholder="Descrivi brevemente la tua proposta..."
+                        />
+                     </div>
+                  </div>
+
+                  <button 
+                     onClick={handleSendQuote}
+                     className="w-full mt-8 py-4 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                  >
+                     <Send size={20} />
+                     <span>Invia Preventivo</span>
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* Job Details Modal (Pro) */}
+      {viewingJobDetails && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setViewingJobDetails(null)}></div>
+            <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[85vh] overflow-y-auto relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
+               <div className="p-8">
+                  <div className="flex justify-between items-start mb-6">
+                     <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                           {getCategoryIcon(viewingJobDetails.category)}
+                        </div>
+                        <div>
+                           <h3 className="text-xl font-black text-slate-900">{viewingJobDetails.category}</h3>
+                           <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                              {viewingJobDetails.location?.city || 'Remoto'} • {viewingJobDetails.budget}
+                           </div>
+                        </div>
+                     </div>
+                     <button onClick={() => setViewingJobDetails(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                        <X size={24} />
+                     </button>
+                  </div>
+
+                  <div className="space-y-6">
+                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <h4 className="font-black text-slate-900 mb-2 text-sm uppercase tracking-wide">Descrizione</h4>
+                        <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">{viewingJobDetails.description}</p>
+                     </div>
+
+                     {viewingJobDetails.details && Object.keys(viewingJobDetails.details).length > 0 && (
+                        <div>
+                           <h4 className="font-black text-slate-900 mb-3 text-sm uppercase tracking-wide">Dettagli Tecnici</h4>
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {Object.entries(viewingJobDetails.details).map(([key, val]) => (
+                                 <div key={key} className="p-3 border border-slate-200 rounded-xl bg-white">
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">{key}</div>
+                                    <div className="font-medium text-slate-800 text-sm">{Array.isArray(val) ? val.join(', ') : val}</div>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+                     )}
+                     
+                     <div className="flex justify-end pt-4">
+                        <button 
+                           onClick={() => { setViewingJobDetails(null); setShowQuoteModal(viewingJobDetails); }}
+                           className="px-8 py-3 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center gap-2"
+                        >
+                           <Send size={18} /> Rispondi
+                        </button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* Client: View Quotes Modal */}
+      {viewingJobQuotes && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setViewingJobQuotes(null)}></div>
+            <div className="bg-white rounded-[32px] w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
+               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
+                  <div>
+                     <h3 className="text-xl font-black text-slate-900">Preventivi Ricevuti</h3>
+                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">{viewingJobQuotes.category}</p>
+                  </div>
+                  <button onClick={() => setViewingJobQuotes(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                     <X size={24} />
+                  </button>
+               </div>
+               
+               <div className="p-6 overflow-y-auto bg-slate-50 flex-grow">
+                  {currentJobQuotes.length === 0 ? (
+                     <div className="text-center py-20">
+                        <div className="w-16 h-16 bg-slate-200 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                           <Clock size={32} />
+                        </div>
+                        <h4 className="font-bold text-slate-900">In attesa di risposte</h4>
+                        <p className="text-slate-500 text-sm mt-1">I professionisti stanno analizzando la tua richiesta.</p>
+                     </div>
+                  ) : (
+                     <div className="space-y-4">
+                        {currentJobQuotes.map(quote => (
+                           <div key={quote.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:border-indigo-200 transition-all">
+                              <div className="flex justify-between items-start mb-4">
+                                 <div>
+                                    <div className="font-black text-lg text-slate-900">{quote.proName}</div>
+                                    <div className="text-xs font-bold text-slate-400">{new Date(quote.createdAt).toLocaleDateString()}</div>
+                                 </div>
+                                 <div className="text-right">
+                                    <div className="font-black text-2xl text-indigo-600">{quote.price} €</div>
+                                    <div className="text-xs font-bold text-slate-500">{quote.timeline}</div>
+                                 </div>
+                              </div>
+                              
+                              <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-600 italic border border-slate-100 mb-6">
+                                 "{quote.message}"
+                              </div>
+
+                              <div className="flex justify-end gap-3">
+                                 <button 
+                                    onClick={() => handleOpenQuoteDetail(quote)}
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 text-xs flex items-center gap-2"
+                                 >
+                                    <Eye size={14} /> Dettagli Completi
+                                 </button>
+                                 
+                                 {quote.status === 'ACCEPTED' ? (
+                                    <span className="px-4 py-2 bg-emerald-100 text-emerald-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                                       <Check size={14} /> Accettato
+                                    </span>
+                                 ) : quote.status === 'PENDING' && (
+                                    <button 
+                                       onClick={() => handleAcceptQuote(quote)}
+                                       className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 text-xs flex items-center gap-2"
+                                    >
+                                       Accetta Preventivo <ArrowRight size={14} />
+                                    </button>
+                                 )}
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  )}
+               </div>
+            </div>
+         </div>
+      )}
     </div>
   );
 };
