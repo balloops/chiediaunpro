@@ -419,7 +419,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
 const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   
   const [user, setUser] = useState<User>(initialUser);
   
@@ -630,7 +630,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         alert("Profilo aggiornato con successo!");
      } catch(e: any) { 
          console.error(e); 
-         alert(`Errore durante il salvataggio: ${e.message}`); 
+         // Helper to explain the schema error to the user
+         if (e.message?.includes('schema cache') || e.message?.includes('column')) {
+            alert(`⚠️ ERRORE DATABASE CRITICO: La tabella 'profiles' non ha la colonna 'phone_number'. \n\nSOLUZIONE: Vai nella dashboard di Supabase -> SQL Editor ed esegui lo script 'SQL_SETUP.sql' presente nel progetto.`);
+         } else {
+            alert(`Errore durante il salvataggio: ${e.message}`); 
+         }
      } 
      finally { setIsSavingProfile(false); }
   };

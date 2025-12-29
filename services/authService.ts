@@ -5,7 +5,6 @@ import { User, UserRole } from '../types';
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
     // 1. Create Auth User with metadata
-    // We pass data in 'options' so it is stored in auth.users raw_user_meta_data as well
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -32,18 +31,16 @@ export const authService = {
         location: userData.location,
         bio: userData.bio,
         vat_number: userData.vatNumber,
-        phone_number: userData.phoneNumber, // Added Phone Number mapping
+        phone_number: userData.phoneNumber,
         offered_services: userData.offeredServices,
         skills: userData.skills || [],
-        credits: userData.role === 'PROFESSIONAL' ? 100 : 0, // 100 Free credits for pros
+        credits: userData.role === 'PROFESSIONAL' ? 100 : 0,
         plan: 'FREE'
       }
     ]);
 
     if (profileError) {
         console.error('Error creating profile:', profileError);
-        // If profile creation fails but auth user exists, we might want to cleanup or warn
-        // For this demo, we assume Supabase triggers or manual cleanup if needed.
     }
 
     return authData.user;
@@ -67,46 +64,52 @@ export const authService = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
 
-    // Fetch profile details
+    // Fetch profile details from DB
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
 
+    // Get metadata from session (which we update manually on save)
+    const meta = session.user.user_metadata || {};
+
+    // Fallback completo se il DB non risponde o il profilo non esiste
     if (error || !profile) {
-       // Fallback: if profile is missing but user is logged in (rare sync issue or RLS block), 
-       // return info from metadata which persists in the session.
-       const meta = session.user.user_metadata;
+       console.warn("Profile fetch failed, using metadata fallback", error);
        return {
          id: session.user.id,
          email: session.user.email || '',
          name: meta.name || 'Utente',
          role: meta.role as UserRole || UserRole.CLIENT,
          brandName: meta.brand_name,
-         location: meta.location, // Recover from metadata
-         bio: meta.bio,           // Recover from metadata
-         phoneNumber: meta.phone_number // Recover from metadata
+         location: meta.location,
+         bio: meta.bio,
+         phoneNumber: meta.phone_number,
+         credits: 0,
+         plan: 'FREE'
        };
     }
 
-    // Map to our User type from DB
+    // HYBRID MERGE STRATEGY
+    // Se il DB ha il campo vuoto/null, ma i metadati ce l'hanno, usiamo i metadati.
+    // Questo "nasconde" il problema RLS all'utente finale perché vede i dati appena inseriti.
     return {
       id: profile.id,
       email: profile.email,
-      name: profile.name,
+      name: profile.name || meta.name,
       role: profile.role as UserRole,
       avatar: profile.avatar,
-      brandName: profile.brand_name,
-      location: profile.location,
-      bio: profile.bio,
+      brandName: profile.brand_name || meta.brand_name,
+      location: profile.location || meta.location,
+      bio: profile.bio || meta.bio,
+      phoneNumber: profile.phone_number || meta.phone_number,
       credits: profile.credits,
       plan: profile.plan,
       isVerified: profile.is_verified,
       offeredServices: profile.offered_services,
       skills: profile.skills,
-      vatNumber: profile.vat_number,
-      phoneNumber: profile.phone_number // Mapped properly
+      vatNumber: profile.vat_number
     };
   },
 

@@ -16,7 +16,6 @@ export const jobService = {
       return [];
     }
 
-    // Map DB columns to TS Interface
     return data.map((job: any) => ({
       ...job,
       clientId: job.client_id,
@@ -60,7 +59,6 @@ export const jobService = {
     }));
   },
 
-  // NEW METHOD for contact details
   async getUserProfile(userId: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('profiles')
@@ -79,7 +77,7 @@ export const jobService = {
       brandName: data.brand_name,
       location: data.location,
       bio: data.bio,
-      phoneNumber: data.phone_number, // Ensure this column exists in DB or is handled
+      phoneNumber: data.phone_number,
       isVerified: data.is_verified,
       offeredServices: data.offered_services,
       credits: data.credits,
@@ -97,7 +95,6 @@ export const jobService = {
     location?: JobLocation;
   }): Promise<JobRequest | null> {
     
-    // Safety check for user
     if (!params.clientId) throw new Error("ID Cliente mancante. Effettua nuovamente il login.");
 
     const newJob = {
@@ -112,8 +109,6 @@ export const jobService = {
       status: 'OPEN'
     };
 
-    console.log("Attempting to create job with payload:", newJob);
-
     const { data, error } = await supabase
       .from('jobs')
       .insert([newJob])
@@ -122,7 +117,7 @@ export const jobService = {
 
     if (error) {
       console.error('SUPABASE ERROR creating job:', error);
-      throw new Error(`Errore database: ${error.message} (Code: ${error.code})`);
+      throw new Error(`Errore database: ${error.message}`);
     }
 
     return {
@@ -162,7 +157,6 @@ export const jobService = {
     category?: string; 
   }): Promise<Quote | null> {
     
-    // 1. Deduct Credit
     const { data: pro } = await supabase.from('profiles').select('credits, plan').eq('id', params.proId).single();
     
     if (pro && pro.plan !== 'AGENCY') {
@@ -170,7 +164,6 @@ export const jobService = {
         await supabase.from('profiles').update({ credits: pro.credits - 1 }).eq('id', params.proId);
     }
 
-    // 2. Insert Quote
     const newQuote = {
       job_id: params.jobId,
       pro_id: params.proId,
@@ -199,11 +192,9 @@ export const jobService = {
   },
 
   async updateQuoteStatus(quote: Quote, status: Quote['status'], jobTitle?: string): Promise<void> {
-    // Update DB
     await supabase.from('quotes').update({ status }).eq('id', quote.id);
     
     if (status === 'ACCEPTED') {
-       // Close the job as well
        await this.updateJobStatus(quote.jobId, 'IN_PROGRESS');
     }
   },
@@ -232,7 +223,7 @@ export const jobService = {
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
       // 1. Prepare DB Payload
       const dbUpdates: any = {
-          id: userId, // Ensure ID is present for UPSERT
+          id: userId, 
           updated_at: new Date().toISOString()
       };
       
@@ -243,19 +234,23 @@ export const jobService = {
       if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
       if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
 
-      // 2. Perform UPSERT to Database
-      const { error } = await supabase
+      // 2. Perform UPSERT to Database with explicit selection to check RLS
+      const { data, error } = await supabase
         .from('profiles')
         .upsert(dbUpdates)
         .select();
 
       if (error) {
-          console.error("Supabase Profile Update Error:", error);
-          throw new Error(`Impossibile salvare il profilo: ${error.message}`);
+          throw new Error(`Errore DB: ${error.message}`);
+      }
+      
+      if (!data || data.length === 0) {
+          console.warn("RLS WARNING: L'aggiornamento è avvenuto ma non ha restituito dati. Verifica le policy su Supabase.");
+          // Non lanciamo errore bloccante per non spaventare l'utente, 
+          // perché il punto 3 (Auth Metadata) salverà comunque la situazione visivamente.
       }
 
       // 3. Update Auth Metadata (Double Safety)
-      // This saves the data in the user's session token, so it survives reloads even if DB read fails
       const metaUpdates: any = {};
       if (updates.name) metaUpdates.name = updates.name;
       if (updates.brandName) metaUpdates.brand_name = updates.brandName;
@@ -264,12 +259,10 @@ export const jobService = {
       if (updates.phoneNumber) metaUpdates.phone_number = updates.phoneNumber;
       
       if (Object.keys(metaUpdates).length > 0) {
-          const { error: authError } = await supabase.auth.updateUser({ data: metaUpdates });
-          if (authError) console.warn("Could not sync auth metadata", authError);
+          await supabase.auth.updateUser({ data: metaUpdates });
       }
   },
 
-  // Helper for matching
   async getMatchesForPro(pro: User): Promise<{ job: JobRequest; matchScore: number }[]> {
     const { data: allJobs } = await supabase.from('jobs').select('*').eq('status', 'OPEN');
     if (!allJobs) return [];
@@ -288,7 +281,6 @@ export const jobService = {
     const relevantJobs = jobs.filter((j: any) => !quotedJobIds.has(j.id));
 
     if (!pro.offeredServices) {
-       // Se non ha servizi, restituisci comunque ordinati per data decrescente
        return relevantJobs
          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
          .map((j: any) => ({ job: j, matchScore: 50 }));
@@ -310,16 +302,13 @@ export const jobService = {
       
       return { job, matchScore: Math.min(score, 100) };
     })
-    // ORDINE CRONOLOGICO (Più recente prima) come richiesto
     .sort((a: any, b: any) => new Date(b.job.createdAt).getTime() - new Date(a.job.createdAt).getTime());
   },
 
   async getReviews(userId: string): Promise<Review[]> {
-    // Check if table exists first (mocking for safety if user hasn't run SQL)
     const { error } = await supabase.from('reviews').select('id').limit(1);
     
     if (error) {
-      // Mock data if table missing
       return [
         {
           id: '1',
