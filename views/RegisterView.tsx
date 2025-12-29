@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, UserRole, ServiceCategory } from '../types';
-import { User as UserIcon, Briefcase, Mail, Lock, UserCheck, ArrowRight, ShieldCheck, ArrowLeft, MapPin, Globe, FileText, CreditCard, Zap, AlertCircle, Check } from 'lucide-react';
+import { User as UserIcon, Briefcase, Mail, Lock, UserCheck, ArrowRight, ShieldCheck, ArrowLeft, MapPin, Globe, FileText, CreditCard, Zap, AlertCircle, Check, Phone } from 'lucide-react';
 import { authService } from '../services/authService';
 import { contentService } from '../services/contentService';
 
@@ -23,6 +23,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(''); // New Phone Field
   
   // Pro Fields
   const [brandName, setBrandName] = useState('');
@@ -60,6 +61,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
       const userData: Partial<User> = {
         name,
         role,
+        phoneNumber: phoneNumber || undefined,
         brandName: role === UserRole.PROFESSIONAL ? (brandName || name) : undefined,
         location: role === UserRole.PROFESSIONAL ? location : undefined,
         bio: role === UserRole.PROFESSIONAL ? bio : undefined,
@@ -208,6 +210,20 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           onChange={e => setEmail(e.target.value)} 
                           className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
                           required 
+                        />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Telefono (Opzionale)</label>
+                    <div className="relative group">
+                       <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                       <input 
+                          type="tel" 
+                          placeholder="+39 333 1234567" 
+                          value={phoneNumber} 
+                          onChange={e => setPhoneNumber(e.target.value)} 
+                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
                         />
                     </div>
                   </div>

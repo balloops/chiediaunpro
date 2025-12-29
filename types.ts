@@ -141,6 +141,17 @@ export interface User {
   consentedAt?: string;
 }
 
+export interface Review {
+  id: string;
+  jobId: string;
+  clientId: string;
+  clientName: string;
+  proId: string;
+  rating: number; // 1-5
+  comment: string;
+  createdAt: string;
+}
+
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;

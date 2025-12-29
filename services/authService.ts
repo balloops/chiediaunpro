@@ -32,6 +32,7 @@ export const authService = {
         location: userData.location,
         bio: userData.bio,
         vat_number: userData.vatNumber,
+        phone_number: userData.phoneNumber, // Added Phone Number mapping
         offered_services: userData.offeredServices,
         skills: userData.skills || [],
         credits: userData.role === 'PROFESSIONAL' ? 100 : 0, // 100 Free credits for pros
@@ -100,7 +101,8 @@ export const authService = {
       isVerified: profile.is_verified,
       offeredServices: profile.offered_services,
       skills: profile.skills,
-      vatNumber: profile.vat_number
+      vatNumber: profile.vat_number,
+      phoneNumber: profile.phone_number // Mapped properly
     };
   }
 };

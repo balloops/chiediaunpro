@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory, FormDefinition } from '../types';
 import { 
-  FileText, Send, Settings, Plus, Search, Clock, TrendingUp, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, MapPin, CreditCard as BillingIcon, Check, Eye, X, Phone, Download, Save, Lock, Edit3, Trash2, XCircle, AlertTriangle, Coins, Box, Wallet, Euro, Trophy, Star, ChevronRight, ArrowRight, User as UserIcon
+  FileText, Send, Settings, Plus, Search, Clock, TrendingUp, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, MapPin, CreditCard as BillingIcon, Check, Eye, X, Phone, Download, Save, Lock, Edit3, Trash2, XCircle, AlertTriangle, Coins, Box, Wallet, Euro, Trophy, Star, ChevronRight, ArrowRight, User as UserIcon, RefreshCw, WifiOff, LogOut, Shield, HelpCircle, Briefcase
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { geminiService } from '../services/geminiService';
@@ -415,10 +415,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [user, setUser] = useState<User>(initialUser);
-  const isPro = user.role === UserRole.PROFESSIONAL;
+  
+  // Temporary state to allow role switching view without re-login
+  const [roleOverride, setRoleOverride] = useState<UserRole | null>(null);
+  
+  const activeRole = roleOverride || user.role;
+  const isPro = activeRole === UserRole.PROFESSIONAL;
   
   // URL Driven State (Source of Truth)
   const currentTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests');
+  const currentTabRef = useRef(currentTab); // Ref to access current tab inside closure
 
   // Data State
   const [matchedLeads, setMatchedLeads] = useState<{ job: JobRequest; matchScore: number }[]>([]);
@@ -430,9 +436,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [allJobsCache, setAllJobsCache] = useState<JobRequest[]>([]);
 
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   
   // Realtime New Lead Notification
   const [newLeadsCount, setNewLeadsCount] = useState(0);
+  const [hasUnseenLeads, setHasUnseenLeads] = useState(false); // New persistent notification state
 
   // New Job Modal State
   const [showNewJobModal, setShowNewJobModal] = useState(false);
@@ -447,7 +455,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [creatingJob, setCreatingJob] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
 
-  // Profile Form State
+  // Profile Hub State
+  const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>('menu');
   const [profileForm, setProfileForm] = useState<User>(user);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
@@ -455,38 +464,59 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   const refreshData = useCallback(async (showLoading = true) => {
     if (showLoading) setIsLoadingData(true);
+    setFetchError(false);
+    
+    // Safety Timeout in case fetch hangs indefinitely
+    const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 8000)
+    );
+
     try {
-        const latestUser = await authService.getCurrentUser();
-        if (latestUser) {
-            setUser(latestUser);
-            setProfileForm(latestUser);
-        }
-        setAvailableCategories(contentService.getCategories());
+        const fetchPromise = (async () => {
+            const latestUser = await authService.getCurrentUser();
+            if (latestUser) {
+                setUser(latestUser);
+                setProfileForm(latestUser);
+            }
+            setAvailableCategories(contentService.getCategories());
 
-        if (latestUser?.role === UserRole.PROFESSIONAL) {
-            const matches = await jobService.getMatchesForPro(latestUser);
-            setMatchedLeads(matches);
-            const allQuotes = await jobService.getQuotes();
-            setSentQuotes(allQuotes.filter(q => q.proId === latestUser.id));
-            
-            // Need all jobs to map details in "Quotes" tab
-            const all = await jobService.getJobs();
-            setAllJobsCache(all);
+            if (latestUser?.role === UserRole.PROFESSIONAL) {
+                const matches = await jobService.getMatchesForPro(latestUser);
+                setMatchedLeads(matches);
+                const allQuotes = await jobService.getQuotes();
+                setSentQuotes(allQuotes.filter(q => q.proId === latestUser.id));
+                const all = await jobService.getJobs();
+                setAllJobsCache(all);
+            } else if (latestUser) {
+                const allJobs = await jobService.getJobs();
+                const myJobsFiltered = allJobs.filter(j => j.clientId === latestUser.id);
+                setMyJobs(myJobsFiltered);
+                const allQuotes = await jobService.getQuotes();
+                const myJobIds = new Set(myJobsFiltered.map(j => j.id));
+                setClientQuotes(allQuotes.filter(q => myJobIds.has(q.jobId)));
+            }
+        })();
 
-        } else if (latestUser) {
-            const allJobs = await jobService.getJobs();
-            const myJobsFiltered = allJobs.filter(j => j.clientId === latestUser.id);
-            setMyJobs(myJobsFiltered);
-            const allQuotes = await jobService.getQuotes();
-            const myJobIds = new Set(myJobsFiltered.map(j => j.id));
-            setClientQuotes(allQuotes.filter(q => myJobIds.has(q.jobId)));
-        }
-    } catch (e) { console.error(e); } 
-    finally { if (showLoading) setIsLoadingData(false); }
+        await Promise.race([fetchPromise, timeoutPromise]);
+
+    } catch (e) { 
+        console.error("Dashboard fetch error:", e); 
+        setFetchError(true);
+    } 
+    finally { 
+        if (showLoading) setIsLoadingData(false); 
+    }
   }, []);
 
   useEffect(() => {
     refreshData(true);
+    // Sync ref
+    currentTabRef.current = currentTab;
+    
+    // Clear notification if we enter leads tab
+    if (currentTab === 'leads') {
+        setHasUnseenLeads(false);
+    }
   }, [currentTab, refreshData]);
 
   // --- REALTIME ---
@@ -497,13 +527,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'jobs' },
         async (payload) => {
-           // If Pro, refresh matches silently
            if (isPro) {
                console.log("New Job Detected! Refreshing leads...");
                await refreshData(false); 
-               // Visual cue
+               
                setNewLeadsCount(prev => prev + 1);
-               setTimeout(() => setNewLeadsCount(0), 5000); // Clear badge after 5s
+               setTimeout(() => setNewLeadsCount(0), 5000); 
+
+               // Check Ref to see if we are currently looking at leads
+               if (currentTabRef.current !== 'leads') {
+                   setHasUnseenLeads(true);
+               }
            }
         }
       )
@@ -518,7 +552,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   }, [refreshData, isPro]);
 
 
-  // --- HANDLERS (New Job Modal) ---
+  // --- HANDLERS ---
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
     setFormDefinition(contentService.getFormDefinition(category));
@@ -564,10 +598,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
            name: profileForm.name,
            brandName: profileForm.brandName,
            location: profileForm.location,
+           phoneNumber: profileForm.phoneNumber,
+           bio: profileForm.bio,
+           offeredServices: profileForm.offeredServices
         });
         await refreshData();
-        alert("Profilo aggiornato!");
-     } catch(e) { console.error(e); } 
+        setSettingsView('menu');
+     } catch(e) { console.error(e); alert("Errore durante il salvataggio."); } 
      finally { setIsSavingProfile(false); }
   };
 
@@ -575,6 +612,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     await jobService.updateUserPlan(user.id, plan);
     refreshData();
     alert(`Piano ${plan} attivato!`);
+  };
+
+  const handleRoleSwitch = () => {
+      // Logic: If user is strictly a CLIENT, they can't switch to PRO without upgrading/registering.
+      // If user is PRO, they can view as CLIENT.
+      // If overriding, we clear override to return to original role.
+      if (roleOverride) {
+          setRoleOverride(null);
+          navigate('/dashboard?tab=leads');
+      } else {
+          if (user.role === UserRole.PROFESSIONAL) {
+              setRoleOverride(UserRole.CLIENT);
+              navigate('/dashboard?tab=my-requests');
+          } else {
+              // Client wants to become pro
+              navigate('/register?role=pro');
+          }
+      }
   };
 
   const getCategoryIcon = (name: string) => {
@@ -592,6 +647,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     }
   };
 
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
   // --- RENDER CONTENT (LISTS) ---
   const renderDashboardContent = () => (
       <div className="max-w-[1250px] mx-auto w-full">
@@ -602,11 +661,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 {currentTab === 'leads' ? 'Opportunità per te' : 
                     currentTab === 'quotes' ? 'Preventivi Inviati' :
                     currentTab === 'won' ? 'I tuoi Successi' :
-                    currentTab === 'settings' ? `${user.brandName || user.name}` :
+                    currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
                     currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
                 </h1>
                 <p className="text-slate-400 font-medium text-lg">
-                    {newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
+                    {currentTab === 'settings' ? 'Gestisci il tuo profilo e le tue preferenze.' :
+                     newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
             {isPro && (currentTab === 'leads' || currentTab === 'quotes' || currentTab === 'won') && (
@@ -620,13 +680,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
             )}
         </header>
 
-        {/* Loading */}
-        {isLoadingData && matchedLeads.length === 0 && myJobs.length === 0 && (
+        {/* Loading State */}
+        {isLoadingData && !fetchError && matchedLeads.length === 0 && myJobs.length === 0 && (
             <div className="py-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div></div>
         )}
 
-        {/* Tab Content */}
-        {!isLoadingData && (
+        {/* Error State */}
+        {fetchError && (
+             <div className="py-20 text-center flex flex-col items-center justify-center animate-in fade-in">
+                 <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
+                     <WifiOff size={32} />
+                 </div>
+                 <h3 className="text-xl font-bold text-slate-900 mb-2">Impossibile caricare i dati</h3>
+                 <p className="text-slate-500 mb-6 max-w-md">Sembra esserci un problema di connessione o il server non risponde. Riprova tra un attimo.</p>
+                 <button 
+                    onClick={() => refreshData(true)}
+                    className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center gap-2"
+                 >
+                    <RefreshCw size={18} /> Riprova
+                 </button>
+             </div>
+        )}
+
+        {/* Tab Content (Show only if not loading AND no error) */}
+        {!isLoadingData && !fetchError && (
             <>
                 {currentTab === 'leads' && (
                     <div className="space-y-6">
@@ -753,28 +830,225 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     </div>
                 )}
 
+                {/* --- PROFILE HUB --- */}
                 {currentTab === 'settings' && (
-                     <div className="bg-white p-8 rounded-[24px] border border-slate-100 max-w-2xl">
-                          <h2 className="text-xl font-black text-slate-900 mb-6">Profilo</h2>
-                          <div className="space-y-4">
-                              <div>
-                                  <label className="text-xs font-black text-slate-400 uppercase">Nome</label>
-                                  <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                              </div>
-                              {isPro && (
-                                  <div>
-                                      <label className="text-xs font-black text-slate-400 uppercase">Brand</label>
-                                      <input type="text" value={profileForm.brandName || ''} onChange={e => setProfileForm({...profileForm, brandName: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                  </div>
-                              )}
-                              <div>
-                                  <label className="text-xs font-black text-slate-400 uppercase">Località</label>
-                                  <input type="text" value={profileForm.location || ''} onChange={e => setProfileForm({...profileForm, location: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                              </div>
-                              <button onClick={handleSaveProfile} disabled={isSavingProfile} className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
-                                  {isSavingProfile ? 'Salvataggio...' : 'Salva Modifiche'}
-                              </button>
-                          </div>
+                     <div className="animate-in fade-in slide-in-from-right-8 duration-300">
+                        {/* Profile Header */}
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center space-x-4">
+                                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-200">
+                                    {getInitials(user.name)}
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-900">{user.name}</h2>
+                                    <p className="text-slate-500 font-medium">{user.role === UserRole.PROFESSIONAL ? 'Professionista Verificato' : 'Cliente'}</p>
+                                </div>
+                            </div>
+                            {settingsView !== 'menu' && (
+                                <button onClick={() => setSettingsView('menu')} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
+                                    <X size={20} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* MENU VIEW */}
+                        {settingsView === 'menu' && (
+                            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="divide-y divide-slate-50">
+                                    {/* Item: Profile */}
+                                    <div onClick={() => setSettingsView('profile_edit')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                <UserIcon size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900">Il mio profilo</h3>
+                                                <p className="text-xs text-slate-400">Modifica foto, nome, email, telefono e posizione.</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
+                                    </div>
+
+                                    {/* Item: Services (Pro Only) */}
+                                    {user.role === UserRole.PROFESSIONAL && (
+                                        <div onClick={() => setSettingsView('services')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                    <Briefcase size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-slate-900">I miei servizi</h3>
+                                                    <p className="text-xs text-slate-400">Gestisci e visualizza i servizi offerti.</p>
+                                                </div>
+                                            </div>
+                                            <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
+                                        </div>
+                                    )}
+
+                                    {/* Item: Billing (Pro Only) */}
+                                    {user.role === UserRole.PROFESSIONAL && (
+                                        <div onClick={() => navigate('/dashboard?tab=billing')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                    <Wallet size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-slate-900">Il mio conto</h3>
+                                                    <p className="text-xs text-slate-400">Ricarica il tuo conto, controlla il saldo.</p>
+                                                </div>
+                                            </div>
+                                            <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
+                                        </div>
+                                    )}
+
+                                    {/* Item: Settings (Placeholder for now) */}
+                                    <div className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                <Settings size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900">Impostazioni dell'account</h3>
+                                                <p className="text-xs text-slate-400">Gestisci la password e le notifiche.</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
+                                    </div>
+
+                                    {/* Item: Support */}
+                                    <div onClick={() => navigate('/help')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                <HelpCircle size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900">Assistenza</h3>
+                                                <p className="text-xs text-slate-400">Hai bisogno di aiuto?</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
+                                    </div>
+
+                                    {/* Item: Role Switch */}
+                                    <div onClick={handleRoleSwitch} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                <RefreshCw size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900">Passa al profilo {activeRole === UserRole.PROFESSIONAL ? 'Cliente' : 'Pro'}</h3>
+                                                <p className="text-xs text-slate-400">Cambia modalità di visualizzazione.</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
+                                    </div>
+
+                                    {/* Item: Privacy */}
+                                    <div className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                <Lock size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900">Dati e privacy</h3>
+                                                <p className="text-xs text-slate-400">Gestisci i tuoi dati personali.</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
+                                    </div>
+
+                                    {/* Item: Logout */}
+                                    <div onClick={onLogout} className="p-6 flex items-center justify-between hover:bg-red-50 cursor-pointer transition-colors group border-t border-slate-100">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-red-100 group-hover:text-red-600 transition-colors">
+                                                <LogOut size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900 group-hover:text-red-600">Esci</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* EDIT PROFILE VIEW */}
+                        {settingsView === 'profile_edit' && (
+                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
+                                <h2 className="text-xl font-black text-slate-900 mb-6">Modifica Profilo</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-black text-slate-400 uppercase">Nome</label>
+                                        <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                    </div>
+                                    {isPro && (
+                                        <div>
+                                            <label className="text-xs font-black text-slate-400 uppercase">Brand</label>
+                                            <input type="text" value={profileForm.brandName || ''} onChange={e => setProfileForm({...profileForm, brandName: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className="text-xs font-black text-slate-400 uppercase">Località</label>
+                                        <input type="text" value={profileForm.location || ''} onChange={e => setProfileForm({...profileForm, location: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-black text-slate-400 uppercase">Telefono</label>
+                                        <input type="tel" value={profileForm.phoneNumber || ''} onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                    </div>
+                                    {isPro && (
+                                        <div>
+                                            <label className="text-xs font-black text-slate-400 uppercase">Bio</label>
+                                            <textarea rows={4} value={profileForm.bio || ''} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+                                        </div>
+                                    )}
+                                    <div className="flex gap-4 pt-4">
+                                        <button onClick={handleSaveProfile} disabled={isSavingProfile} className="flex-1 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
+                                            {isSavingProfile ? 'Salvataggio...' : 'Salva Modifiche'}
+                                        </button>
+                                        <button onClick={() => setSettingsView('menu')} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
+                                            Annulla
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SERVICES VIEW */}
+                        {settingsView === 'services' && (
+                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
+                                <h2 className="text-xl font-black text-slate-900 mb-6">Gestisci Servizi</h2>
+                                <div className="grid grid-cols-2 gap-3 mb-8">
+                                    {Object.values(ServiceCategory).map(cat => {
+                                        const isSelected = profileForm.offeredServices?.includes(cat);
+                                        return (
+                                            <button 
+                                                key={cat} 
+                                                onClick={() => {
+                                                    const current = profileForm.offeredServices || [];
+                                                    const updated = isSelected ? current.filter(c => c !== cat) : [...current, cat];
+                                                    setProfileForm({...profileForm, offeredServices: updated});
+                                                }}
+                                                className={`p-4 border-2 rounded-2xl text-xs font-black transition-all ${
+                                                isSelected 
+                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                                    : 'bg-slate-50 border-transparent text-slate-500 hover:bg-white hover:border-slate-200'
+                                                }`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={handleSaveProfile} disabled={isSavingProfile} className="flex-1 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
+                                        Salva Servizi
+                                    </button>
+                                    <button onClick={() => setSettingsView('menu')} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
+                                        Indietro
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                      </div>
                 )}
 
@@ -810,9 +1084,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         to={`/dashboard?tab=${item.id}`} // URL is the source of truth
                         className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all ${currentTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600 font-medium'}`}
                     >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-3 w-full">
                             <div className="shrink-0">{item.icon}</div>
                             <span className="font-bold text-sm hidden lg:block whitespace-nowrap">{item.label}</span>
+                            {item.id === 'leads' && hasUnseenLeads && (
+                                <div className="w-2.5 h-2.5 bg-red-500 rounded-full ml-auto animate-pulse shadow-sm shadow-red-200 shrink-0"></div>
+                            )}
                         </div>
                     </Link>
                 ))}
