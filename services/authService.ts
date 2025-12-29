@@ -104,5 +104,10 @@ export const authService = {
       vatNumber: profile.vat_number,
       phoneNumber: profile.phone_number // Mapped properly
     };
+  },
+
+  async updateUserPassword(password: string) {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
   }
 };

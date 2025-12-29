@@ -232,12 +232,13 @@ export const jobService = {
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
       // Map frontend keys to DB keys
       const dbUpdates: any = {};
-      if (updates.name) dbUpdates.name = updates.name;
-      if (updates.brandName) dbUpdates.brand_name = updates.brandName;
-      if (updates.location) dbUpdates.location = updates.location;
-      if (updates.bio) dbUpdates.bio = updates.bio;
-      if (updates.offeredServices) dbUpdates.offered_services = updates.offeredServices;
-      if (updates.phoneNumber) dbUpdates.phone_number = updates.phoneNumber;
+      // Use undefined check to allow clearing fields (e.g. empty string)
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
+      if (updates.location !== undefined) dbUpdates.location = updates.location;
+      if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
+      if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
+      if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
 
       const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', userId);
       if (error) throw error;

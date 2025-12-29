@@ -89,7 +89,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const myQuote = isPro ? quotes.find(q => q.proId === user.id) : null;
 
     return (
-        <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-[1250px] mx-auto w-full">
+        <div className="animate-in fade-in duration-300 max-w-[1250px] mx-auto w-full">
             <button 
                 onClick={() => navigate(isPro ? '/dashboard?tab=leads' : '/dashboard?tab=my-requests')} 
                 className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
@@ -279,7 +279,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     const isAccepted = quote.status === 'ACCEPTED';
 
     return (
-        <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-[1250px] mx-auto w-full">
+        <div className="animate-in fade-in duration-300 max-w-[1250px] mx-auto w-full">
              <button 
                 onClick={() => isPro ? navigate('/dashboard?tab=quotes') : navigate(`/dashboard/job/${job.id}`)} 
                 className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
@@ -441,7 +441,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   
   // Realtime New Lead Notification
   const [newLeadsCount, setNewLeadsCount] = useState(0);
-  const [hasUnseenLeads, setHasUnseenLeads] = useState(false); // New persistent notification state
+  const [hasUnseenLeads, setHasUnseenLeads] = useState(false); // Sidebar notification state
 
   // New Job Modal State
   const [showNewJobModal, setShowNewJobModal] = useState(false);
@@ -460,6 +460,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>('menu');
   const [profileForm, setProfileForm] = useState<User>(user);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  
+  // Password Change State
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
 
   // --- DATA FETCHING ---
 
@@ -467,7 +472,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     if (showLoading) setIsLoadingData(true);
     setFetchError(false);
     
-    // Safety Timeout in case fetch hangs indefinitely
     const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout')), 8000)
     );
@@ -511,13 +515,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   useEffect(() => {
     refreshData(true);
-    // Sync ref
     currentTabRef.current = currentTab;
-    
-    // Clear notification if we enter leads tab
-    if (currentTab === 'leads') {
-        setHasUnseenLeads(false);
-    }
   }, [currentTab, refreshData]);
 
   // Load viewed jobs from localStorage
@@ -532,6 +530,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     }
   }, []);
 
+  // Sync Unseen Leads State
+  useEffect(() => {
+      // Logic: If there are ANY matched leads that are NOT in viewedJobs, sidebar light is ON.
+      if (isPro && matchedLeads.length > 0) {
+          const hasUnread = matchedLeads.some(m => !viewedJobs.has(m.job.id));
+          setHasUnseenLeads(hasUnread);
+      } else {
+          setHasUnseenLeads(false);
+      }
+  }, [matchedLeads, viewedJobs, isPro]);
+
   // --- REALTIME ---
   useEffect(() => {
     const channel = supabase
@@ -543,14 +552,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
            if (isPro) {
                console.log("New Job Detected! Refreshing leads...");
                await refreshData(false); 
-               
                setNewLeadsCount(prev => prev + 1);
                setTimeout(() => setNewLeadsCount(0), 5000); 
-
-               // Check Ref to see if we are currently looking at leads
-               if (currentTabRef.current !== 'leads') {
-                   setHasUnseenLeads(true);
-               }
            }
         }
       )
@@ -616,9 +619,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
            offeredServices: profileForm.offeredServices
         });
         await refreshData();
-        setSettingsView('menu');
-     } catch(e) { console.error(e); alert("Errore durante il salvataggio."); } 
+        alert("Profilo aggiornato con successo!");
+     } catch(e: any) { 
+         console.error(e); 
+         alert(`Errore durante il salvataggio: ${e.message}`); 
+     } 
      finally { setIsSavingProfile(false); }
+  };
+
+  const handleUpdatePassword = async () => {
+      if (newPassword !== confirmPassword) {
+          setPasswordMessage("Le password non coincidono.");
+          return;
+      }
+      if (newPassword.length < 6) {
+          setPasswordMessage("La password deve essere di almeno 6 caratteri.");
+          return;
+      }
+      setIsSavingProfile(true);
+      try {
+          await authService.updateUserPassword(newPassword);
+          setPasswordMessage("Password aggiornata correttamente.");
+          setNewPassword('');
+          setConfirmPassword('');
+      } catch (e: any) {
+          setPasswordMessage(`Errore: ${e.message}`);
+      } finally {
+          setIsSavingProfile(false);
+      }
   };
 
   const handleUpgrade = async (plan: any) => {
@@ -628,9 +656,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   };
 
   const handleRoleSwitch = () => {
-      // Logic: If user is strictly a CLIENT, they can't switch to PRO without upgrading/registering.
-      // If user is PRO, they can view as CLIENT.
-      // If overriding, we clear override to return to original role.
       if (roleOverride) {
           setRoleOverride(null);
           navigate('/dashboard?tab=leads');
@@ -639,7 +664,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
               setRoleOverride(UserRole.CLIENT);
               navigate('/dashboard?tab=my-requests');
           } else {
-              // Client wants to become pro
               navigate('/register?role=pro');
           }
       }
@@ -652,6 +676,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
           newSet.add(jobId);
           setViewedJobs(newSet);
           localStorage.setItem('chiediunpro_viewed_jobs', JSON.stringify(Array.from(newSet)));
+          // Update dot state immediately
+          setHasUnseenLeads(matchedLeads.some(m => !newSet.has(m.job.id)));
       }
       navigate(`/dashboard/job/${jobId}`);
   };
@@ -742,7 +768,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                                             <TrendingUp size={10} /> {matchScore}% MATCH
                                         </span>
-                                        {/* New Dot Logic */}
+                                        {/* New Dot Logic - Individual Card */}
                                         {!viewedJobs.has(job.id) && (
                                             <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200 shrink-0 self-center" title="Nuova richiesta"></div>
                                         )}
@@ -856,7 +882,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                 {/* --- PROFILE HUB --- */}
                 {currentTab === 'settings' && (
-                     <div className="animate-in fade-in slide-in-from-right-8 duration-300">
+                     <div className="animate-in fade-in duration-300">
                         {/* Profile Header */}
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center space-x-4">
@@ -869,7 +895,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                 </div>
                             </div>
                             {settingsView !== 'menu' && (
-                                <button onClick={() => setSettingsView('menu')} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
+                                <button onClick={() => { setSettingsView('menu'); setPasswordMessage(''); }} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
                                     <X size={20} />
                                 </button>
                             )}
@@ -924,20 +950,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                             <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
                                         </div>
                                     )}
-
-                                    {/* Item: Settings (Placeholder for now) */}
-                                    <div className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                                                <Settings size={20} />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-slate-900">Impostazioni dell'account</h3>
-                                                <p className="text-xs text-slate-400">Gestisci la password e le notifiche.</p>
-                                            </div>
-                                        </div>
-                                        <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
-                                    </div>
 
                                     {/* Item: Support */}
                                     <div onClick={() => navigate('/help')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
@@ -998,41 +1010,69 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                         {/* EDIT PROFILE VIEW */}
                         {settingsView === 'profile_edit' && (
-                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
-                                <h2 className="text-xl font-black text-slate-900 mb-6">Modifica Profilo</h2>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase">Nome</label>
-                                        <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                    </div>
-                                    {isPro && (
+                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-900 mb-6">Dati Personali</h2>
+                                    <div className="space-y-4">
                                         <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase">Brand</label>
-                                            <input type="text" value={profileForm.brandName || ''} onChange={e => setProfileForm({...profileForm, brandName: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                            <label className="text-xs font-black text-slate-400 uppercase">Nome</label>
+                                            <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                                         </div>
-                                    )}
-                                    <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase">Località</label>
-                                        <input type="text" value={profileForm.location || ''} onChange={e => setProfileForm({...profileForm, location: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase">Telefono</label>
-                                        <input type="tel" value={profileForm.phoneNumber || ''} onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                    </div>
-                                    {isPro && (
+                                        {isPro && (
+                                            <div>
+                                                <label className="text-xs font-black text-slate-400 uppercase">Brand</label>
+                                                <input type="text" value={profileForm.brandName || ''} onChange={e => setProfileForm({...profileForm, brandName: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                            </div>
+                                        )}
                                         <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase">Bio</label>
-                                            <textarea rows={4} value={profileForm.bio || ''} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+                                            <label className="text-xs font-black text-slate-400 uppercase">Località</label>
+                                            <input type="text" value={profileForm.location || ''} onChange={e => setProfileForm({...profileForm, location: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                                         </div>
-                                    )}
-                                    <div className="flex gap-4 pt-4">
-                                        <button onClick={handleSaveProfile} disabled={isSavingProfile} className="flex-1 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
-                                            {isSavingProfile ? 'Salvataggio...' : 'Salva Modifiche'}
-                                        </button>
-                                        <button onClick={() => setSettingsView('menu')} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
-                                            Annulla
-                                        </button>
+                                        <div>
+                                            <label className="text-xs font-black text-slate-400 uppercase">Telefono</label>
+                                            <input type="tel" value={profileForm.phoneNumber || ''} onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                        </div>
+                                        {isPro && (
+                                            <div>
+                                                <label className="text-xs font-black text-slate-400 uppercase">Bio</label>
+                                                <textarea rows={4} value={profileForm.bio || ''} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+                                            </div>
+                                        )}
+                                        <div className="flex gap-4 pt-4">
+                                            <button onClick={handleSaveProfile} disabled={isSavingProfile} className="flex-1 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
+                                                {isSavingProfile ? 'Salvataggio...' : 'Salva Modifiche'}
+                                            </button>
+                                        </div>
                                     </div>
+                                </div>
+
+                                <div className="pt-8 border-t border-slate-100">
+                                    <h2 className="text-xl font-black text-slate-900 mb-6">Sicurezza</h2>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-black text-slate-400 uppercase">Nuova Password</label>
+                                            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-black text-slate-400 uppercase">Conferma Password</label>
+                                            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
+                                        </div>
+                                        {passwordMessage && (
+                                            <p className={`text-xs font-bold ${passwordMessage.includes('Errore') || passwordMessage.includes('non coincidono') ? 'text-red-500' : 'text-green-500'}`}>
+                                                {passwordMessage}
+                                            </p>
+                                        )}
+                                        <div className="flex gap-4 pt-2">
+                                            <button onClick={handleUpdatePassword} disabled={isSavingProfile || !newPassword} className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all">
+                                                Aggiorna Password
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="pt-4">
+                                    <button onClick={() => setSettingsView('menu')} className="w-full px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
+                                        Indietro
+                                    </button>
                                 </div>
                             </div>
                         )}
