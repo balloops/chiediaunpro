@@ -24,6 +24,9 @@ interface DashboardProps {
 const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () => void }> = ({ user, isPro, refreshParent }) => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests'); // Get current tab context
+
     const [job, setJob] = useState<JobRequest | null>(null);
     const [quotes, setQuotes] = useState<Quote[]>([]);
     const [loading, setLoading] = useState(true);
@@ -75,8 +78,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
             try {
                 await jobService.updateQuoteStatus(quote, 'ACCEPTED');
                 await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
-                // Navigate to the quote detail to see contact info immediately
-                navigate(`/dashboard/quote/${quote.id}`);
+                // Navigate to the quote detail to see contact info immediately, preserving context is tricky here, defaulting to quote detail
+                navigate(`/dashboard/quote/${quote.id}?tab=${activeTab}`);
             } catch (e) {
                 console.error(e);
             }
@@ -89,10 +92,10 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const myQuote = isPro ? quotes.find(q => q.proId === user.id) : null;
 
     return (
-        <div className="animate-in fade-in duration-300 max-w-[1250px] mx-auto w-full">
+        <div className="max-w-[1250px] mx-auto w-full">
             <button 
-                onClick={() => navigate(isPro ? '/dashboard?tab=leads' : '/dashboard?tab=my-requests')} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
+                onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna alla lista
             </button>
@@ -155,7 +158,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                         </div>
                                         <div className="flex gap-2 shrink-0">
                                             <button 
-                                                onClick={() => navigate(`/dashboard/quote/${q.id}`)}
+                                                onClick={() => navigate(`/dashboard/quote/${q.id}?tab=${activeTab}`)}
                                                 className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 text-sm"
                                             >
                                                 Dettagli
@@ -192,7 +195,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                     </div>
                                     <h3 className="font-black text-xl text-slate-900">Preventivo Inviato</h3>
                                     <p className="text-slate-500 text-sm mt-2 mb-6">Hai già risposto a questa richiesta.</p>
-                                    <button onClick={() => navigate(`/dashboard/quote/${myQuote.id}`)} className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl">
+                                    <button onClick={() => navigate(`/dashboard/quote/${myQuote.id}?tab=${activeTab}`)} className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl">
                                         Vedi il tuo preventivo
                                     </button>
                                 </div>
@@ -234,6 +237,9 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
 const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro }) => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || (isPro ? 'quotes' : 'my-requests'); // Default fallback based on role
+
     const [quote, setQuote] = useState<Quote | null>(null);
     const [job, setJob] = useState<JobRequest | null>(null);
     const [contact, setContact] = useState<User | null>(null);
@@ -279,10 +285,11 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     const isAccepted = quote.status === 'ACCEPTED';
 
     return (
-        <div className="animate-in fade-in duration-300 max-w-[1250px] mx-auto w-full">
+        <div className="max-w-[1250px] mx-auto w-full">
              <button 
-                onClick={() => isPro ? navigate('/dashboard?tab=quotes') : navigate(`/dashboard/job/${job.id}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
+                // Back button goes to the specific tab
+                onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna indietro
             </button>
@@ -679,7 +686,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
           // Update dot state immediately
           setHasUnseenLeads(matchedLeads.some(m => !newSet.has(m.job.id)));
       }
-      navigate(`/dashboard/job/${jobId}`);
+      // Navigate maintaining the current tab context
+      navigate(`/dashboard/job/${jobId}?tab=${currentTab}`);
   };
 
   const getCategoryIcon = (name: string) => {
@@ -804,7 +812,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {myJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -828,7 +836,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                              const job = allJobsCache.find(j => j.id === quote.jobId);
                              const category = job?.category || 'Servizio';
                              return (
-                                 <div key={quote.id} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
+                                 <div key={quote.id} onClick={() => navigate(`/dashboard/quote/${quote.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
                                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                         {getCategoryIcon(category)}
                                      </div>
@@ -860,12 +868,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                      </div>
 
                                      <div className="self-center">
-                                         <button 
-                                            onClick={() => navigate(`/dashboard/quote/${quote.id}`)}
-                                            className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all text-sm flex items-center gap-2"
+                                         <div
+                                            className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all"
                                          >
-                                            <Eye size={16} /> Dettagli
-                                         </button>
+                                            <ChevronRight size={20} />
+                                         </div>
                                      </div>
                                  </div>
                              );
