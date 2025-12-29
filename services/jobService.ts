@@ -261,7 +261,12 @@ export const jobService = {
 
     const relevantJobs = jobs.filter((j: any) => !quotedJobIds.has(j.id));
 
-    if (!pro.offeredServices) return relevantJobs.map((j: any) => ({ job: j, matchScore: 50 }));
+    if (!pro.offeredServices) {
+       // Se non ha servizi, restituisci comunque ordinati per data decrescente
+       return relevantJobs
+         .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+         .map((j: any) => ({ job: j, matchScore: 50 }));
+    }
 
     return relevantJobs.map((job: any) => {
       let score = 0;
@@ -278,7 +283,9 @@ export const jobService = {
       }
       
       return { job, matchScore: Math.min(score, 100) };
-    }).sort((a: any, b: any) => b.matchScore - a.matchScore);
+    })
+    // ORDINE CRONOLOGICO (Più recente prima) come richiesto
+    .sort((a: any, b: any) => new Date(b.job.createdAt).getTime() - new Date(a.job.createdAt).getTime());
   },
 
   async getReviews(userId: string): Promise<Review[]> {

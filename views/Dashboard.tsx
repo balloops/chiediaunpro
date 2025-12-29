@@ -431,6 +431,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [myJobs, setMyJobs] = useState<JobRequest[]>([]);
   const [sentQuotes, setSentQuotes] = useState<Quote[]>([]);
   const [clientQuotes, setClientQuotes] = useState<Quote[]>([]);
+  const [viewedJobs, setViewedJobs] = useState<Set<string>>(new Set());
   
   // Cache to resolve job info for sent quotes
   const [allJobsCache, setAllJobsCache] = useState<JobRequest[]>([]);
@@ -518,6 +519,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         setHasUnseenLeads(false);
     }
   }, [currentTab, refreshData]);
+
+  // Load viewed jobs from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('chiediunpro_viewed_jobs');
+    if (stored) {
+        try {
+            setViewedJobs(new Set(JSON.parse(stored)));
+        } catch (e) {
+            console.error("Error loading viewed jobs", e);
+        }
+    }
+  }, []);
 
   // --- REALTIME ---
   useEffect(() => {
@@ -632,6 +645,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
       }
   };
 
+  // Helper to mark a job as viewed when clicking it
+  const handleJobClick = (jobId: string) => {
+      if (!viewedJobs.has(jobId)) {
+          const newSet = new Set(viewedJobs);
+          newSet.add(jobId);
+          setViewedJobs(newSet);
+          localStorage.setItem('chiediunpro_viewed_jobs', JSON.stringify(Array.from(newSet)));
+      }
+      navigate(`/dashboard/job/${jobId}`);
+  };
+
   const getCategoryIcon = (name: string) => {
     switch(name) {
       case ServiceCategory.WEBSITE: return <Code size={24} />;
@@ -708,7 +732,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 {currentTab === 'leads' && (
                     <div className="space-y-6">
                         {matchedLeads.map(({ job, matchScore }) => (
-                            <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
+                            <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
                                 <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     {getCategoryIcon(job.category)}
                                 </div>
@@ -718,9 +742,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                                             <TrendingUp size={10} /> {matchScore}% MATCH
                                         </span>
-                                        {/* New Badge if very recent */}
-                                        {new Date(job.createdAt).getTime() > Date.now() - 60000 && (
-                                            <span className="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase animate-pulse">NUOVO</span>
+                                        {/* New Dot Logic */}
+                                        {!viewedJobs.has(job.id) && (
+                                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200 shrink-0 self-center" title="Nuova richiesta"></div>
                                         )}
                                     </div>
                                     <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">{job.description}</p>
