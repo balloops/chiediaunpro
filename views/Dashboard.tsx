@@ -63,7 +63,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
             });
             await notificationService.notifyNewQuote(job.clientId, user.brandName || user.name, job.category, job.id);
             alert("Preventivo inviato!");
-            navigate('/dashboard'); // Back to list
+            // Redirect to Quotes tab explicitly
+            navigate('/dashboard?tab=quotes');
         } catch (e: any) {
             alert(e.message);
         }
@@ -89,7 +90,10 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
 
     return (
         <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-5xl mx-auto">
-            <button onClick={() => navigate('/dashboard')} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm">
+            <button 
+                onClick={() => navigate(isPro ? '/dashboard?tab=leads' : '/dashboard?tab=my-requests')} 
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
+            >
                 <ArrowLeft size={18} className="mr-2" /> Torna alla lista
             </button>
 
@@ -276,7 +280,10 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
 
     return (
         <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-4xl mx-auto">
-             <button onClick={() => navigate(isPro ? '/dashboard' : `/dashboard/job/${job.id}`)} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm">
+             <button 
+                onClick={() => isPro ? navigate('/dashboard?tab=quotes') : navigate(`/dashboard/job/${job.id}`)} 
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
+            >
                 <ArrowLeft size={18} className="mr-2" /> Torna indietro
             </button>
 
@@ -369,6 +376,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [myJobs, setMyJobs] = useState<JobRequest[]>([]);
   const [sentQuotes, setSentQuotes] = useState<Quote[]>([]);
   const [clientQuotes, setClientQuotes] = useState<Quote[]>([]);
+  
+  // Cache to resolve job info for sent quotes
+  const [allJobsCache, setAllJobsCache] = useState<JobRequest[]>([]);
+
   const [isLoadingData, setIsLoadingData] = useState(false);
   
   // Realtime New Lead Notification
@@ -408,6 +419,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
             setMatchedLeads(matches);
             const allQuotes = await jobService.getQuotes();
             setSentQuotes(allQuotes.filter(q => q.proId === latestUser.id));
+            
+            // Need all jobs to map details in "Quotes" tab
+            const all = await jobService.getJobs();
+            setAllJobsCache(all);
+
         } else if (latestUser) {
             const allJobs = await jobService.getJobs();
             const myJobsFiltered = allJobs.filter(j => j.clientId === latestUser.id);
@@ -632,15 +648,59 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                 {(currentTab === 'quotes' || currentTab === 'won') && (
                     <div className="space-y-6">
-                         {sentQuotes.filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : true).map(quote => (
-                             <div key={quote.id} onClick={() => navigate(`/dashboard/quote/${quote.id}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all">
-                                 <div className="flex justify-between items-center mb-2">
-                                     <div className="font-black text-lg text-slate-900">{quote.price} €</div>
-                                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${quote.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{quote.status}</span>
+                         {sentQuotes.filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : true).map(quote => {
+                             const job = allJobsCache.find(j => j.id === quote.jobId);
+                             const category = job?.category || 'Servizio';
+                             return (
+                                 <div key={quote.id} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
+                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                        {getCategoryIcon(category)}
+                                     </div>
+                                     
+                                     <div className="flex-grow">
+                                         <div className="flex items-center gap-3 mb-1">
+                                             <h3 className="text-lg font-black text-slate-900">{category}</h3>
+                                             {quote.status === 'ACCEPTED' && (
+                                                 <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center gap-1">
+                                                     <Trophy size={10} /> LAVORO VINTO
+                                                 </span>
+                                             )}
+                                             {quote.status === 'PENDING' && (
+                                                 <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border border-slate-200">
+                                                     IN ATTESA
+                                                 </span>
+                                             )}
+                                         </div>
+                                         
+                                         <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">
+                                             {job?.description || quote.message}
+                                         </p>
+                                         
+                                         <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                             <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
+                                             <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
+                                             <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
+                                         </div>
+                                     </div>
+
+                                     <div className="self-center">
+                                         <button 
+                                            onClick={() => navigate(`/dashboard/quote/${quote.id}`)}
+                                            className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all text-sm flex items-center gap-2"
+                                         >
+                                            <Eye size={16} /> Dettagli
+                                         </button>
+                                     </div>
                                  </div>
-                                 <p className="text-sm text-slate-500 italic">"{quote.message}"</p>
+                             );
+                         })}
+                         {sentQuotes.length === 0 && (
+                             <div className="text-center py-12 text-slate-400">
+                                 <Send size={48} className="mx-auto mb-4 text-slate-300" />
+                                 <p>Non hai ancora inviato preventivi.</p>
+                                 <button onClick={() => navigate('/dashboard?tab=leads')} className="text-indigo-600 font-bold hover:underline mt-2">Trova opportunità</button>
                              </div>
-                         ))}
+                         )}
                     </div>
                 )}
 
