@@ -3,31 +3,64 @@ import { User, UserRole } from '../types';
 
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
-    // 1. Registrazione su Supabase Auth con Metadati Completi
-    // Passiamo tutti i campi custom dentro 'options.data'.
-    // Il Trigger SQL 'handle_new_user' userà questi dati per popolare la tabella 'profiles'.
+    // 1. Preparazione Dati Puliti (Sanitization)
+    // Assicuriamo che nessun campo sia 'undefined', ma 'null' o valore di default.
+    // Questo è fondamentale per il Trigger SQL e per jsonb.
+    const metaData = {
+      name: userData.name,
+      role: userData.role || 'CLIENT',
+      brand_name: userData.brandName ?? null,
+      location: userData.location ?? null,
+      bio: userData.bio ?? null,
+      vat_number: userData.vatNumber ?? null,
+      phone_number: userData.phoneNumber ?? null,
+      offered_services: userData.offeredServices ?? [], // Array vuoto se null
+    };
+
+    // 2. Registrazione Auth con Metadati
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          name: userData.name,
-          role: userData.role,
-          brand_name: userData.brandName,
-          location: userData.location,
-          bio: userData.bio,
-          vat_number: userData.vatNumber,
-          phone_number: userData.phoneNumber,
-          offered_services: userData.offeredServices, // Passiamo l'array
-        }
+        data: metaData
       }
     });
 
     if (authError) throw authError;
-    if (!authData.user) throw new Error('Registrazione fallita');
+    if (!authData.user) throw new Error('Registrazione fallita: Utente non creato.');
 
-    // NON facciamo più l'insert manuale qui.
-    // Ci affidiamo al 100% al Trigger SQL che è molto più affidabile e veloce.
+    // 3. Salvataggio Manuale Profilo (Backup Frontend - Double Safety)
+    // Se il Trigger SQL fallisce per qualsiasi motivo, questo blocco tenterà di salvare il profilo.
+    try {
+        const userProfile = {
+            id: authData.user.id,
+            email: email,
+            name: metaData.name,
+            role: metaData.role,
+            brand_name: metaData.brand_name,
+            location: metaData.location,
+            bio: metaData.bio,
+            phone_number: metaData.phone_number,
+            vat_number: metaData.vat_number,
+            offered_services: metaData.offered_services,
+            credits: metaData.role === 'PROFESSIONAL' ? 3 : 0,
+            plan: 'FREE',
+            is_verified: false,
+            updated_at: new Date().toISOString()
+        };
+
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert(userProfile)
+            .select();
+
+        if (profileError) {
+            // Logghiamo solo come warning perché è probabile che il trigger abbia già fatto il lavoro
+            console.warn("Info salvataggio manuale (normale se il trigger ha funzionato):", profileError.message);
+        }
+    } catch (e) {
+        console.warn("Errore non critico nel salvataggio profilo manuale:", e);
+    }
 
     return authData.user;
   },
@@ -57,11 +90,10 @@ export const authService = {
       .eq('id', session.user.id)
       .single();
 
-    // Recupero metadati dalla sessione come fallback immediato
+    // Recupero metadati dalla sessione (Fallback immediato se il DB è lento o il trigger sta ancora lavorando)
     const meta = session.user.user_metadata || {};
 
-    // Se il profilo DB non è ancora pronto (questione di millisecondi per il trigger),
-    // usiamo i metadati della sessione per non bloccare l'utente.
+    // Costruiamo l'oggetto utente fondendo DB e Metadati
     return {
       id: session.user.id,
       email: session.user.email || '',

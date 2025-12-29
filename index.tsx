@@ -1,4 +1,4 @@
-import React, { ReactNode, ErrorInfo, Component } from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
@@ -13,7 +13,6 @@ interface ErrorBoundaryState {
 
 // Error Boundary Semplice per catturare crash totali dell'app
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Use class property for state initialization to satisfy TypeScript strict property checks
   public state: ErrorBoundaryState = {
     hasError: false,
     error: null
