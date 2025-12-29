@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.API_KEY;
@@ -23,7 +22,7 @@ export const geminiService = {
     try {
       const ai = getAI();
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: `Sono un professionista digitale con queste competenze: ${proSkills.join(', ')}. 
         Voglio rispondere a questa richiesta di lavoro: "${jobTitle}". Descrizione: "${jobDescription}".
         Scrivi un messaggio di presentazione professionale, persuasivo e breve in italiano per convincere il cliente ad affidarmi il lavoro.`,
@@ -45,7 +44,7 @@ export const geminiService = {
     try {
       const ai = getAI();
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: `Affina questa descrizione di lavoro per un progetto digitale rendendola più tecnica e chiara per un professionista. 
         Descrizione originale: "${description}". Fornisci una versione migliorata in italiano, senza aggiungere commenti o premesse, solo il testo riscritto.`,
       });
