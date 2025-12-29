@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory, FormDefinition } from '../types';
 import { 
-  FileText, Send, Settings, Plus, Search, Clock, TrendingUp, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, MapPin, CreditCard as BillingIcon, Check, Eye, X, Phone, Download, Save, Lock, Edit3, Trash2, XCircle, AlertTriangle, Coins, Box, Wallet, Euro, Trophy, Star, ChevronRight, ArrowRight
+  FileText, Send, Settings, Plus, Search, Clock, TrendingUp, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, MapPin, CreditCard as BillingIcon, Check, Eye, X, Phone, Download, Save, Lock, Edit3, Trash2, XCircle, AlertTriangle, Coins, Box, Wallet, Euro, Trophy, Star, ChevronRight, ArrowRight, User as UserIcon
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { geminiService } from '../services/geminiService';
@@ -89,7 +89,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const myQuote = isPro ? quotes.find(q => q.proId === user.id) : null;
 
     return (
-        <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-5xl mx-auto">
+        <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-[1250px] mx-auto w-full">
             <button 
                 onClick={() => navigate(isPro ? '/dashboard?tab=leads' : '/dashboard?tab=my-requests')} 
                 className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
@@ -279,7 +279,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     const isAccepted = quote.status === 'ACCEPTED';
 
     return (
-        <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-4xl mx-auto">
+        <div className="animate-in fade-in slide-in-from-right-8 duration-300 max-w-[1250px] mx-auto w-full">
              <button 
                 onClick={() => isPro ? navigate('/dashboard?tab=quotes') : navigate(`/dashboard/job/${job.id}`)} 
                 className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"
@@ -287,70 +287,119 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                 <ArrowLeft size={18} className="mr-2" /> Torna indietro
             </button>
 
-            <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl">
-                <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <div className="text-white/60 font-bold uppercase tracking-widest text-xs mb-2">Preventivo per {job.category}</div>
-                            <h1 className="text-3xl font-black">{quote.price} €</h1>
-                            <div className="text-white/80 font-medium mt-1">Tempistiche: {quote.timeline}</div>
-                        </div>
-                        {isAccepted && (
-                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
-                                <Check size={32} className="text-white" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Side: Original Job Details (Context) */}
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+                        <div className="flex items-center space-x-3 mb-6">
+                            <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
+                                <FileText size={24} />
                             </div>
-                        )}
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900">{job.category}</h2>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Richiesta Originale Cliente</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase">Descrizione Progetto</h3>
+                                <p className="text-slate-700 leading-relaxed whitespace-pre-line">{job.description}</p>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
+                                <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
+                                <span className="flex items-center"><Wallet size={16} className="mr-1"/> Budget: {job.budget}</span>
+                                <span className="flex items-center"><UserIcon size={16} className="mr-1"/> {job.clientName}</span>
+                            </div>
+
+                            {job.details && (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-3 text-sm uppercase">Specifiche Tecniche</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {Object.entries(job.details).map(([k, v]) => (
+                                            <div key={k} className="p-3 border border-slate-200 rounded-xl bg-white">
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">{k}</div>
+                                                <div className="font-medium text-slate-800 text-sm">{Array.isArray(v) ? v.join(', ') : v}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                <div className="p-8 space-y-8">
-                    {/* Message */}
-                    <div>
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Messaggio del Professionista</h3>
-                        <div className="bg-slate-50 p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-lg leading-relaxed">
-                            "{quote.message}"
-                        </div>
-                    </div>
-
-                    {/* Contact Info Section */}
-                    <div className={`p-8 rounded-[24px] border-2 transition-all ${isAccepted ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-dashed border-slate-200'}`}>
-                        <div className="flex items-center space-x-4 mb-6">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isAccepted ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
-                                {isAccepted ? <Phone size={24} /> : <Lock size={24} />}
+                {/* Right Side: Quote Details & Status */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
+                        <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="text-white/60 font-bold uppercase tracking-widest text-xs mb-2">
+                                        {isPro ? 'Il tuo preventivo' : 'Preventivo ricevuto'}
+                                    </div>
+                                    <h1 className="text-4xl font-black">{quote.price} €</h1>
+                                    <div className="text-white/80 font-medium mt-1">Tempistiche: {quote.timeline}</div>
+                                </div>
+                                {isAccepted && (
+                                    <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                                        <Check size={32} className="text-white" />
+                                    </div>
+                                )}
                             </div>
+                        </div>
+
+                        <div className="p-8 space-y-8">
+                            {/* Message */}
                             <div>
-                                <h3 className={`font-black text-lg ${isAccepted ? 'text-emerald-900' : 'text-slate-500'}`}>
-                                    {isAccepted ? 'Contatti Sbloccati' : 'Contatti Nascosti'}
-                                </h3>
-                                <p className="text-sm text-slate-500">
-                                    {isAccepted ? 'Puoi contattare direttamente la controparte.' : 'Accetta il preventivo per vedere email e telefono.'}
-                                </p>
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Messaggio</h3>
+                                <div className="bg-slate-50 p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-base leading-relaxed">
+                                    "{quote.message}"
+                                </div>
+                            </div>
+
+                            {/* Contact Info Section */}
+                            <div className={`p-6 rounded-[24px] border-2 transition-all ${isAccepted ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-dashed border-slate-200'}`}>
+                                <div className="flex items-center space-x-4 mb-4">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAccepted ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
+                                        {isAccepted ? <Phone size={20} /> : <Lock size={20} />}
+                                    </div>
+                                    <div>
+                                        <h3 className={`font-black text-base ${isAccepted ? 'text-emerald-900' : 'text-slate-500'}`}>
+                                            {isAccepted ? 'Contatti Sbloccati' : 'Contatti Nascosti'}
+                                        </h3>
+                                    </div>
+                                </div>
+
+                                {isAccepted && contact ? (
+                                    <div className="space-y-3 animate-in fade-in">
+                                        <div>
+                                            <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Nome</label>
+                                            <div className="font-bold text-slate-900">{contact.brandName || contact.name}</div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Email</label>
+                                            <div className="font-bold text-slate-900 break-all">{contact.email}</div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Telefono</label>
+                                            <div className="font-bold text-slate-900">{contact.phoneNumber || 'Non specificato'}</div>
+                                        </div>
+                                    </div>
+                                ) : !isPro && !isAccepted && (
+                                    <button 
+                                        onClick={handleAccept}
+                                        className="w-full py-3 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        Accetta e Vedi Contatti <ArrowRight size={16} />
+                                    </button>
+                                )}
+                                {isPro && !isAccepted && (
+                                    <p className="text-xs text-slate-400">I contatti del cliente saranno visibili solo se accetta il tuo preventivo.</p>
+                                )}
                             </div>
                         </div>
-
-                        {isAccepted && contact ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
-                                <div>
-                                    <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Nome</label>
-                                    <div className="font-bold text-slate-900 text-lg">{contact.brandName || contact.name}</div>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Email</label>
-                                    <div className="font-bold text-slate-900">{contact.email}</div>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Telefono</label>
-                                    <div className="font-bold text-slate-900">{contact.phoneNumber || 'Non specificato'}</div>
-                                </div>
-                            </div>
-                        ) : !isPro && !isAccepted && (
-                            <button 
-                                onClick={handleAccept}
-                                className="w-full py-4 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2"
-                            >
-                                Accetta Preventivo e Vedi Contatti <ArrowRight size={20} />
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>
@@ -545,7 +594,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   // --- RENDER CONTENT (LISTS) ---
   const renderDashboardContent = () => (
-      <>
+      <div className="max-w-[1250px] mx-auto w-full">
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
             <div>
@@ -738,7 +787,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
             </>
         )}
-      </>
+      </div>
   );
 
   return (
