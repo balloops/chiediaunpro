@@ -230,8 +230,12 @@ export const jobService = {
   },
 
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
-      // 1. Update Public Profile Table
-      const dbUpdates: any = {};
+      // 1. Prepare DB Payload
+      const dbUpdates: any = {
+          id: userId, // Ensure ID is present for UPSERT
+          updated_at: new Date().toISOString()
+      };
+      
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
       if (updates.location !== undefined) dbUpdates.location = updates.location;
@@ -239,14 +243,25 @@ export const jobService = {
       if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
       if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
 
-      const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', userId);
-      if (error) throw error;
+      // 2. Perform UPSERT to Database
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(dbUpdates)
+        .select();
 
-      // 2. Update Auth Metadata (Sync to prevent data disappearing on reload if profile fetch fails)
+      if (error) {
+          console.error("Supabase Profile Update Error:", error);
+          throw new Error(`Impossibile salvare il profilo: ${error.message}`);
+      }
+
+      // 3. Update Auth Metadata (Double Safety)
+      // This saves the data in the user's session token, so it survives reloads even if DB read fails
       const metaUpdates: any = {};
       if (updates.name) metaUpdates.name = updates.name;
       if (updates.brandName) metaUpdates.brand_name = updates.brandName;
-      // We only sync critical identity fields to auth metadata
+      if (updates.location) metaUpdates.location = updates.location;
+      if (updates.bio) metaUpdates.bio = updates.bio;
+      if (updates.phoneNumber) metaUpdates.phone_number = updates.phoneNumber;
       
       if (Object.keys(metaUpdates).length > 0) {
           const { error: authError } = await supabase.auth.updateUser({ data: metaUpdates });

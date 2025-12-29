@@ -75,18 +75,22 @@ export const authService = {
       .single();
 
     if (error || !profile) {
-       // Fallback: if profile is missing but user is logged in (rare sync issue), return basic info from metadata
+       // Fallback: if profile is missing but user is logged in (rare sync issue or RLS block), 
+       // return info from metadata which persists in the session.
        const meta = session.user.user_metadata;
        return {
          id: session.user.id,
          email: session.user.email || '',
          name: meta.name || 'Utente',
          role: meta.role as UserRole || UserRole.CLIENT,
-         brandName: meta.brand_name
+         brandName: meta.brand_name,
+         location: meta.location, // Recover from metadata
+         bio: meta.bio,           // Recover from metadata
+         phoneNumber: meta.phone_number // Recover from metadata
        };
     }
 
-    // Map to our User type
+    // Map to our User type from DB
     return {
       id: profile.id,
       email: profile.email,
