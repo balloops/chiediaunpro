@@ -3,10 +3,9 @@ import { User, UserRole } from '../types';
 
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
-    // 1. Passiamo TUTTI i dati utente nei metadati di Supabase Auth.
-    // Il Trigger SQL 'handle_new_user' (definito in SQL_SETUP.sql) leggerà questi dati
-    // e creerà automaticamente la riga nella tabella 'profiles'.
-    // Questo aggira qualsiasi problema di permessi/RLS lato frontend.
+    // 1. Registrazione su Supabase Auth con Metadati Completi
+    // Passiamo tutti i campi custom dentro 'options.data'.
+    // Il Trigger SQL 'handle_new_user' userà questi dati per popolare la tabella 'profiles'.
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -19,9 +18,7 @@ export const authService = {
           bio: userData.bio,
           vat_number: userData.vatNumber,
           phone_number: userData.phoneNumber,
-          offered_services: userData.offeredServices,
-          // Flag per il trigger
-          is_manual_registration: true 
+          offered_services: userData.offeredServices, // Passiamo l'array
         }
       }
     });
@@ -29,9 +26,8 @@ export const authService = {
     if (authError) throw authError;
     if (!authData.user) throw new Error('Registrazione fallita');
 
-    // Nota: Non facciamo più l'insert manuale in 'profiles' qui.
-    // Se ne occupa il Trigger SQL per garantire che i dati vengano salvati 
-    // anche se la sessione non è ancora attiva (es. email confirmation pending).
+    // NON facciamo più l'insert manuale qui.
+    // Ci affidiamo al 100% al Trigger SQL che è molto più affidabile e veloce.
 
     return authData.user;
   },
@@ -54,51 +50,34 @@ export const authService = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
 
-    // Fetch profile details from DB
+    // Tentativo di recupero profilo dal DB
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
 
-    // Get metadata from session (fallback utile per UI reattiva subito dopo il login)
+    // Recupero metadati dalla sessione come fallback immediato
     const meta = session.user.user_metadata || {};
 
-    // Se il profilo DB non esiste o c'è errore, usiamo i metadati come fallback
-    // Questo evita che l'app crashi se il trigger ha avuto un ritardo
-    if (error || !profile) {
-       console.warn("Profile fetch failed (using metadata fallback):", error?.message);
-       return {
-         id: session.user.id,
-         email: session.user.email || '',
-         name: meta.name || 'Utente',
-         role: meta.role as UserRole || UserRole.CLIENT,
-         brandName: meta.brand_name,
-         location: meta.location,
-         bio: meta.bio,
-         phoneNumber: meta.phone_number,
-         credits: 0,
-         plan: 'FREE'
-       };
-    }
-
-    // Uniamo i dati DB con i metadati per massima sicurezza
+    // Se il profilo DB non è ancora pronto (questione di millisecondi per il trigger),
+    // usiamo i metadati della sessione per non bloccare l'utente.
     return {
-      id: profile.id,
-      email: profile.email,
-      name: profile.name || meta.name,
-      role: profile.role as UserRole,
-      avatar: profile.avatar,
-      brandName: profile.brand_name || meta.brand_name,
-      location: profile.location || meta.location,
-      bio: profile.bio || meta.bio,
-      phoneNumber: profile.phone_number || meta.phone_number,
-      credits: profile.credits,
-      plan: profile.plan,
-      isVerified: profile.is_verified,
-      offeredServices: profile.offered_services,
-      skills: profile.skills,
-      vatNumber: profile.vat_number
+      id: session.user.id,
+      email: session.user.email || '',
+      name: profile?.name || meta.name || 'Utente',
+      role: (profile?.role || meta.role || UserRole.CLIENT) as UserRole,
+      avatar: profile?.avatar || meta.avatar,
+      brandName: profile?.brand_name || meta.brand_name,
+      location: profile?.location || meta.location,
+      bio: profile?.bio || meta.bio,
+      phoneNumber: profile?.phone_number || meta.phone_number,
+      credits: profile?.credits ?? (meta.role === 'PROFESSIONAL' ? 3 : 0),
+      plan: profile?.plan || 'FREE',
+      isVerified: profile?.is_verified || false,
+      offeredServices: profile?.offered_services || meta.offered_services || [],
+      skills: profile?.skills || [],
+      vatNumber: profile?.vat_number || meta.vat_number
     };
   },
 
