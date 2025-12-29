@@ -438,7 +438,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [myJobs, setMyJobs] = useState<JobRequest[]>([]);
   const [sentQuotes, setSentQuotes] = useState<Quote[]>([]);
   const [clientQuotes, setClientQuotes] = useState<Quote[]>([]);
+  
+  // UX State
   const [viewedJobs, setViewedJobs] = useState<Set<string>>(new Set());
+  const [viewedWonIds, setViewedWonIds] = useState<Set<string>>(new Set()); // Tracks seen "Won" quotes
   
   // Cache to resolve job info for sent quotes
   const [allJobsCache, setAllJobsCache] = useState<JobRequest[]>([]);
@@ -449,6 +452,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   // Realtime New Lead Notification
   const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [hasUnseenLeads, setHasUnseenLeads] = useState(false); // Sidebar notification state
+  const [hasUnseenWon, setHasUnseenWon] = useState(false); // Sidebar notification for Won jobs
 
   // New Job Modal State
   const [showNewJobModal, setShowNewJobModal] = useState(false);
@@ -502,11 +506,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 setAllJobsCache(all);
             } else if (latestUser) {
                 const allJobs = await jobService.getJobs();
-                const myJobsFiltered = allJobs.filter(j => j.clientId === latestUser.id);
-                setMyJobs(myJobsFiltered);
                 const allQuotes = await jobService.getQuotes();
+                
+                // Client Side Logic: Sort jobs by latest activity (received quotes)
+                const myJobsFiltered = allJobs.filter(j => j.clientId === latestUser.id);
                 const myJobIds = new Set(myJobsFiltered.map(j => j.id));
-                setClientQuotes(allQuotes.filter(q => myJobIds.has(q.jobId)));
+                const relatedQuotes = allQuotes.filter(q => myJobIds.has(q.jobId));
+                setClientQuotes(relatedQuotes);
+
+                // SORTING LOGIC: Move jobs with recent quotes to top
+                myJobsFiltered.sort((a, b) => {
+                    const getLatestActivity = (jobId: string, created: string) => {
+                         const jobQuotes = relatedQuotes.filter(q => q.jobId === jobId);
+                         if (jobQuotes.length === 0) return new Date(created).getTime();
+                         const latest = jobQuotes.reduce((max, q) => Math.max(max, new Date(q.createdAt).getTime()), 0);
+                         return Math.max(latest, new Date(created).getTime());
+                    };
+                    return getLatestActivity(b.id, b.createdAt) - getLatestActivity(a.id, a.createdAt);
+                });
+
+                setMyJobs(myJobsFiltered);
             }
         })();
 
@@ -526,28 +545,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     currentTabRef.current = currentTab;
   }, [currentTab, refreshData]);
 
-  // Load viewed jobs from localStorage
+  // Load viewed state from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('chiediunpro_viewed_jobs');
-    if (stored) {
-        try {
-            setViewedJobs(new Set(JSON.parse(stored)));
-        } catch (e) {
-            console.error("Error loading viewed jobs", e);
-        }
+    const storedJobs = localStorage.getItem('chiediunpro_viewed_jobs');
+    if (storedJobs) {
+        try { setViewedJobs(new Set(JSON.parse(storedJobs))); } catch (e) { console.error(e); }
+    }
+    const storedWon = localStorage.getItem('chiediunpro_viewed_won');
+    if (storedWon) {
+        try { setViewedWonIds(new Set(JSON.parse(storedWon))); } catch(e) { console.error(e); }
     }
   }, []);
 
-  // Sync Unseen Leads State
+  // Sync Unseen Notifications
   useEffect(() => {
-      // Logic: If there are ANY matched leads that are NOT in viewedJobs, sidebar light is ON.
+      // 1. Unseen Leads (Pro)
       if (isPro && matchedLeads.length > 0) {
           const hasUnread = matchedLeads.some(m => !viewedJobs.has(m.job.id));
           setHasUnseenLeads(hasUnread);
       } else {
           setHasUnseenLeads(false);
       }
-  }, [matchedLeads, viewedJobs, isPro]);
+
+      // 2. Unseen Won Jobs (Pro)
+      if (isPro && sentQuotes.length > 0) {
+          const wonQuotes = sentQuotes.filter(q => q.status === 'ACCEPTED');
+          const hasUnseenW = wonQuotes.some(q => !viewedWonIds.has(q.id));
+          setHasUnseenWon(hasUnseenW);
+      } else {
+          setHasUnseenWon(false);
+      }
+
+  }, [matchedLeads, viewedJobs, sentQuotes, viewedWonIds, isPro]);
 
   // --- REALTIME ---
   useEffect(() => {
@@ -691,6 +720,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
       navigate(`/dashboard/job/${jobId}?tab=${currentTab}`);
   };
 
+  // Helper to mark a WON quote as viewed
+  const handleQuoteClick = (quote: Quote) => {
+      if (quote.status === 'ACCEPTED' && !viewedWonIds.has(quote.id)) {
+          const newSet = new Set(viewedWonIds);
+          newSet.add(quote.id);
+          setViewedWonIds(newSet);
+          localStorage.setItem('chiediunpro_viewed_won', JSON.stringify(Array.from(newSet)));
+          // Update dot state
+          const remainingUnseen = sentQuotes.filter(q => q.status === 'ACCEPTED' && !newSet.has(q.id)).length > 0;
+          setHasUnseenWon(remainingUnseen);
+      }
+      navigate(`/dashboard/quote/${quote.id}?tab=${currentTab}`);
+  };
+
   const getCategoryIcon = (name: string) => {
     switch(name) {
       case ServiceCategory.WEBSITE: return <Code size={24} />;
@@ -725,6 +768,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 </h1>
                 <p className="text-slate-400 font-medium text-lg">
                     {currentTab === 'settings' ? 'Gestisci il tuo profilo e le tue preferenze.' :
+                     currentTab === 'won' ? 'Congratulazioni! Ecco i lavori che hai conquistato.' :
                      newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
@@ -812,17 +856,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          </div>
                          {myJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
+                             const hasNewQuotes = quoteCount > 0; 
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
                                     <div className="flex-grow">
-                                        <h3 className="text-lg font-black text-slate-900">{job.category}</h3>
+                                        <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
                                         <p className="text-slate-500 text-sm line-clamp-1 mb-2">{job.description}</p>
                                         <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
                                             <span className={`px-2 py-0.5 rounded uppercase ${job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>{job.status}</span>
-                                            <span>{quoteCount} Preventivi</span>
+                                            <span className={`${hasNewQuotes ? 'text-indigo-600 font-black' : ''}`}>{quoteCount} Preventivi</span>
+                                        </div>
+                                    </div>
+                                    <div className="self-center">
+                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
+                                            <ChevronRight size={20} />
                                         </div>
                                     </div>
                                 </div>
@@ -833,56 +883,74 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                 {(currentTab === 'quotes' || currentTab === 'won') && (
                     <div className="space-y-6">
-                         {sentQuotes.filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : true).map(quote => {
-                             const job = allJobsCache.find(j => j.id === quote.jobId);
-                             const category = job?.category || 'Servizio';
-                             return (
-                                 <div key={quote.id} onClick={() => navigate(`/dashboard/quote/${quote.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
-                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
-                                        {getCategoryIcon(category)}
-                                     </div>
-                                     
-                                     <div className="flex-grow">
-                                         <div className="flex items-center gap-3 mb-1">
-                                             <h3 className="text-lg font-black text-slate-900">{category}</h3>
-                                             {quote.status === 'ACCEPTED' && (
-                                                 <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center gap-1">
-                                                     <Trophy size={10} /> LAVORO VINTO
-                                                 </span>
-                                             )}
-                                             {quote.status === 'PENDING' && (
-                                                 <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border border-slate-200">
-                                                     IN ATTESA
-                                                 </span>
-                                             )}
+                         {sentQuotes
+                             .filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : q.status !== 'ACCEPTED')
+                             .map(quote => {
+                                 const job = allJobsCache.find(j => j.id === quote.jobId);
+                                 const category = job?.category || 'Servizio';
+                                 return (
+                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                            {getCategoryIcon(category)}
                                          </div>
                                          
-                                         <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">
-                                             {job?.description || quote.message}
-                                         </p>
-                                         
-                                         <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                             <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
-                                             <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
-                                             <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
+                                         <div className="flex-grow">
+                                             <div className="flex items-center gap-3 mb-1">
+                                                 <h3 className="text-lg font-black text-slate-900">{category}</h3>
+                                                 {quote.status === 'ACCEPTED' && (
+                                                     <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center gap-1">
+                                                         <Trophy size={10} /> LAVORO VINTO
+                                                     </span>
+                                                 )}
+                                                 {quote.status === 'PENDING' && (
+                                                     <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border border-slate-200">
+                                                         IN ATTESA
+                                                     </span>
+                                                 )}
+                                                 
+                                                 {/* Dot for new won jobs */}
+                                                 {currentTab === 'won' && !viewedWonIds.has(quote.id) && (
+                                                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-200 shrink-0 self-center" title="Nuovo lavoro vinto"></div>
+                                                 )}
+                                             </div>
+                                             
+                                             <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">
+                                                 {job?.description || quote.message}
+                                             </p>
+                                             
+                                             <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                 <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
+                                                 <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
+                                                 <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
+                                             </div>
                                          </div>
-                                     </div>
 
-                                     <div className="self-center">
-                                         <div
-                                            className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all"
-                                         >
-                                            <ChevronRight size={20} />
+                                         <div className="self-center">
+                                             <div
+                                                className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all"
+                                             >
+                                                <ChevronRight size={20} />
+                                             </div>
                                          </div>
                                      </div>
-                                 </div>
-                             );
-                         })}
-                         {sentQuotes.length === 0 && (
+                                 );
+                             })}
+                         
+                         {/* Empty States */}
+                         {sentQuotes.filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : q.status !== 'ACCEPTED').length === 0 && (
                              <div className="text-center py-12 text-slate-400">
-                                 <Send size={48} className="mx-auto mb-4 text-slate-300" />
-                                 <p>Non hai ancora inviato preventivi.</p>
-                                 <button onClick={() => navigate('/dashboard?tab=leads')} className="text-indigo-600 font-bold hover:underline mt-2">Trova opportunità</button>
+                                 {currentTab === 'won' ? (
+                                    <>
+                                        <Trophy size={48} className="mx-auto mb-4 text-slate-300" />
+                                        <p>Ancora nessun lavoro vinto. Continua a inviare proposte!</p>
+                                    </>
+                                 ) : (
+                                    <>
+                                        <Send size={48} className="mx-auto mb-4 text-slate-300" />
+                                        <p>Non hai preventivi in attesa.</p>
+                                        <button onClick={() => navigate('/dashboard?tab=leads')} className="text-indigo-600 font-bold hover:underline mt-2">Trova opportunità</button>
+                                    </>
+                                 )}
                              </div>
                          )}
                     </div>
@@ -1159,8 +1227,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         <div className="flex items-center space-x-3 w-full">
                             <div className="shrink-0">{item.icon}</div>
                             <span className="font-bold text-sm hidden lg:block whitespace-nowrap">{item.label}</span>
+                            {/* Dots for Leads */}
                             {item.id === 'leads' && hasUnseenLeads && (
                                 <div className="w-2.5 h-2.5 bg-red-500 rounded-full ml-auto animate-pulse shadow-sm shadow-red-200 shrink-0"></div>
+                            )}
+                            {/* Dots for Won Jobs */}
+                            {item.id === 'won' && hasUnseenWon && (
+                                <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full ml-auto animate-pulse shadow-sm shadow-emerald-200 shrink-0"></div>
                             )}
                         </div>
                     </Link>
