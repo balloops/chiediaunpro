@@ -1,15 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.API_KEY;
-
 // Helper to check if AI is available
-const isAIEnabled = () => !!apiKey && apiKey !== 'undefined' && apiKey !== '';
+const isAIEnabled = () => !!process.env.API_KEY && process.env.API_KEY !== 'undefined' && process.env.API_KEY !== '';
 
 const getAI = () => {
   if (!isAIEnabled()) {
     throw new Error("API Key mancante");
   }
-  return new GoogleGenAI({ apiKey: apiKey! });
+  return new GoogleGenAI({ apiKey: process.env.API_KEY! });
 };
 
 export const geminiService = {
@@ -27,7 +25,7 @@ export const geminiService = {
         Voglio rispondere a questa richiesta di lavoro: "${jobTitle}". Descrizione: "${jobDescription}".
         Scrivi un messaggio di presentazione professionale, persuasivo e breve in italiano per convincere il cliente ad affidarmi il lavoro.`,
       });
-      return response.text;
+      return response.text || "Errore nella generazione del testo.";
     } catch (error) {
       console.warn("AI Error:", error);
       return `Ciao! Ho letto il tuo annuncio per "${jobTitle}" e sono molto interessato. Ho le competenze giuste per aiutarti.`;
