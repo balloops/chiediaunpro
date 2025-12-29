@@ -1,10 +1,12 @@
-
 import { supabase } from './supabaseClient';
 import { User, UserRole } from '../types';
 
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
-    // 1. Create Auth User with metadata
+    // 1. Passiamo TUTTI i dati utente nei metadati di Supabase Auth.
+    // Il Trigger SQL 'handle_new_user' (definito in SQL_SETUP.sql) leggerà questi dati
+    // e creerà automaticamente la riga nella tabella 'profiles'.
+    // Questo aggira qualsiasi problema di permessi/RLS lato frontend.
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -12,7 +14,14 @@ export const authService = {
         data: {
           name: userData.name,
           role: userData.role,
-          brand_name: userData.brandName
+          brand_name: userData.brandName,
+          location: userData.location,
+          bio: userData.bio,
+          vat_number: userData.vatNumber,
+          phone_number: userData.phoneNumber,
+          offered_services: userData.offeredServices,
+          // Flag per il trigger
+          is_manual_registration: true 
         }
       }
     });
@@ -20,28 +29,9 @@ export const authService = {
     if (authError) throw authError;
     if (!authData.user) throw new Error('Registrazione fallita');
 
-    // 2. Create Profile Record (Public table)
-    const { error: profileError } = await supabase.from('profiles').insert([
-      {
-        id: authData.user.id,
-        email: email,
-        name: userData.name,
-        role: userData.role,
-        brand_name: userData.brandName,
-        location: userData.location,
-        bio: userData.bio,
-        vat_number: userData.vatNumber,
-        phone_number: userData.phoneNumber,
-        offered_services: userData.offeredServices,
-        skills: userData.skills || [],
-        credits: userData.role === 'PROFESSIONAL' ? 100 : 0,
-        plan: 'FREE'
-      }
-    ]);
-
-    if (profileError) {
-        console.error('Error creating profile:', profileError);
-    }
+    // Nota: Non facciamo più l'insert manuale in 'profiles' qui.
+    // Se ne occupa il Trigger SQL per garantire che i dati vengano salvati 
+    // anche se la sessione non è ancora attiva (es. email confirmation pending).
 
     return authData.user;
   },
@@ -71,12 +61,13 @@ export const authService = {
       .eq('id', session.user.id)
       .single();
 
-    // Get metadata from session (which we update manually on save)
+    // Get metadata from session (fallback utile per UI reattiva subito dopo il login)
     const meta = session.user.user_metadata || {};
 
-    // Fallback completo se il DB non risponde o il profilo non esiste
+    // Se il profilo DB non esiste o c'è errore, usiamo i metadati come fallback
+    // Questo evita che l'app crashi se il trigger ha avuto un ritardo
     if (error || !profile) {
-       console.warn("Profile fetch failed, using metadata fallback", error);
+       console.warn("Profile fetch failed (using metadata fallback):", error?.message);
        return {
          id: session.user.id,
          email: session.user.email || '',
@@ -91,9 +82,7 @@ export const authService = {
        };
     }
 
-    // HYBRID MERGE STRATEGY
-    // Se il DB ha il campo vuoto/null, ma i metadati ce l'hanno, usiamo i metadati.
-    // Questo "nasconde" il problema RLS all'utente finale perché vede i dati appena inseriti.
+    // Uniamo i dati DB con i metadati per massima sicurezza
     return {
       id: profile.id,
       email: profile.email,
