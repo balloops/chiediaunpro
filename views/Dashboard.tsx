@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory, NotificationType, PlanType, FormDefinition, JobLocation } from '../types';
 import { 
   LayoutGrid, FileText, Send, Settings, Plus, Search, Clock, CheckCircle, MessageSquare, Sparkles, TrendingUp, Filter, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, ArrowRight, ChevronRight, MapPin, Tag, Briefcase, Globe, CreditCard, Mail, Zap, Star, Trophy, Coins, History, CalendarDays, User as UserIcon, XCircle, AlertTriangle, ExternalLink, ShieldCheck, CreditCard as BillingIcon, Crown, Building2, Check, Eye, X, Phone, Download, Save, Lock, Image as ImageIcon, Edit3, Trash2, RefreshCcw, UserCheck, Upload, HelpCircle, Box, Wallet, Calendar
@@ -10,6 +10,7 @@ import { jobService } from '../services/jobService';
 import { notificationService } from '../services/notificationService';
 import { contentService } from '../services/contentService';
 import { authService } from '../services/authService';
+import { supabase } from '../services/supabaseClient';
 import ServiceForm from '../components/ServiceForm';
 
 interface DashboardProps {
@@ -17,7 +18,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -29,12 +30,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
     isPro ? 'leads' : 'my-requests'
   );
 
-  // State for logic from other views
-  useEffect(() => {
-    if (location.state && (location.state as any).targetTab) {
-      setActiveTab((location.state as any).targetTab);
-    }
-  }, [location]);
   
   // Modal & Detail states
   const [showNewJobModal, setShowNewJobModal] = useState(false);
@@ -65,6 +60,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   const [quotePrice, setQuotePrice] = useState('');
   const [quoteMessage, setQuoteMessage] = useState('');
   const [quoteTimeline, setQuoteTimeline] = useState('');
+  // Validation State for Quote
+  const [quoteTouched, setQuoteTouched] = useState({ price: false, message: false, timeline: false });
 
   // Profile State
   const [profileForm, setProfileForm] = useState<User>(user);
@@ -79,32 +76,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   const [allJobsForQuotes, setAllJobsForQuotes] = useState<JobRequest[]>([]); // To resolve job details for quotes
   const [isLoadingData, setIsLoadingData] = useState(false);
   
-  // Async Data Fetching
-  const refreshData = async () => {
-    setIsLoadingData(true);
+  // Async Data Fetching - Wrapped in useCallback for dependency stability
+  const refreshData = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoadingData(true);
     try {
-        // Refresh User
+        // Refresh User to keep credits/profile sync
         const latestUser = await authService.getCurrentUser();
         if (latestUser) {
             setUser(latestUser);
-            setProfileForm(latestUser);
+            setProfileForm(latestUser); // Keep profile form in sync
         }
 
         // Refresh Categories
         setAvailableCategories(contentService.getCategories());
 
-        if (isPro) {
-            const matches = await jobService.getMatchesForPro(user);
+        if (latestUser?.role === UserRole.PROFESSIONAL) {
+            const matches = await jobService.getMatchesForPro(latestUser);
             setMatchedLeads(matches);
             const allQuotes = await jobService.getQuotes();
             // Fetch all jobs to allow mapping job details in quotes tab
             const allJobs = await jobService.getJobs();
             setAllJobsForQuotes(allJobs);
             
-            setSentQuotes(allQuotes.filter(q => q.proId === user.id));
-        } else {
+            setSentQuotes(allQuotes.filter(q => q.proId === latestUser.id));
+        } else if (latestUser) {
             const allJobs = await jobService.getJobs();
-            const myJobsFiltered = allJobs.filter(j => j.clientId === user.id);
+            const myJobsFiltered = allJobs.filter(j => j.clientId === latestUser.id);
             setMyJobs(myJobsFiltered);
             
             // Fetch all quotes to determine status and counts for My Requests
@@ -116,13 +113,53 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
     } catch (e) {
         console.error(e);
     } finally {
-        setIsLoadingData(false);
+        if (showLoading) setIsLoadingData(false);
     }
-  };
+  }, []); // Empty deps because we fetch user inside or use args. 
+  // Actually, 'isPro' logic depends on the fetched user, so we are good.
 
+  // Initial Fetch & Tab Handling
   useEffect(() => {
-    refreshData();
-  }, [activeTab]);
+    refreshData(true);
+  }, [activeTab, refreshData]);
+
+  // Handle Navigation State (e.g. from Notification)
+  useEffect(() => {
+    if (location.state && (location.state as any).targetTab) {
+      setActiveTab((location.state as any).targetTab);
+      // If navigating from notification, force a silent refresh to ensure data is there
+      if ((location.state as any).fromNotification) {
+        refreshData(false);
+      }
+    }
+  }, [location, refreshData]);
+
+  // Realtime Subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('dashboard_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'jobs' },
+        () => {
+           console.log("Realtime: Job change detected. Refreshing...");
+           refreshData(false); // Silent refresh
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'quotes' },
+        () => {
+           console.log("Realtime: Quote change detected. Refreshing...");
+           refreshData(false); // Silent refresh
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refreshData]);
 
   useEffect(() => {
     if (viewingJobQuotes) {
@@ -237,7 +274,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   };
 
   const handleSendQuote = async () => {
-    if (showQuoteModal && quotePrice && quoteMessage && quoteTimeline) {
+    // Validation check
+    if (!quotePrice || !quoteMessage || !quoteTimeline) return;
+
+    if (showQuoteModal) {
       try {
         await jobService.sendQuote({
           jobId: showQuoteModal.id,
@@ -250,8 +290,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
           category: showQuoteModal.category
         });
 
-        // Trigger Notification Locally (Simulation)
-        notificationService.notifyNewQuote(
+        // Trigger Notification DB
+        await notificationService.notifyNewQuote(
            showQuoteModal.clientId, 
            user.brandName || user.name, 
            showQuoteModal.category, 
@@ -262,6 +302,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
         setQuotePrice('');
         setQuoteMessage('');
         setQuoteTimeline('');
+        setQuoteTouched({ price: false, message: false, timeline: false });
         await refreshData();
         setActiveTab('quotes');
         alert("Preventivo inviato con successo!");
@@ -279,7 +320,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
            await jobService.updateQuoteStatus(quote, 'ACCEPTED');
            
            // 2. Notify Pro
-           notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
+           await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
            
            alert("Preventivo accettato! Il professionista riceverà una notifica.");
            setViewingJobQuotes(null);
@@ -353,6 +394,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   };
 
   const getJobForQuote = (jobId: string) => allJobsForQuotes.find(j => j.id === jobId);
+
+  // Quote Validation Logic
+  const isQuotePriceValid = !!quotePrice && parseFloat(quotePrice) > 0;
+  const isQuoteTimelineValid = !!quoteTimeline.trim();
+  const isQuoteMessageValid = !!quoteMessage.trim();
+  const isQuoteFormValid = isQuotePriceValid && isQuoteTimelineValid && isQuoteMessageValid;
 
   // Render Functions
 
@@ -626,7 +673,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
   return (
     <div className="bg-slate-50 min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20">
+      <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
         <div className="space-y-2 flex-grow">
           {[
             { id: 'leads', label: 'Opportunità', icon: <Star size={20} />, role: 'pro' },
@@ -645,7 +692,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
             >
               <div className="flex items-center space-x-3">
                  <div className="shrink-0">{item.icon}</div>
-                 <span className="font-bold text-sm hidden lg:block">{item.label}</span>
+                 <span className="font-bold text-sm hidden lg:block whitespace-nowrap">{item.label}</span>
               </div>
               {item.badge && item.badge > 0 && (
                  <span className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full hidden lg:block">{item.badge}</span>
@@ -681,7 +728,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                        activeTab === 'quotes' ? 'Monitora le tue proposte attive.' :
                        activeTab === 'won' ? 'Ottimo lavoro! Ecco i tuoi successi.' :
                        activeTab === 'settings' ? 'Professionista Verificato' :
-                       isLoadingData ? 'Caricamento dati in corso...' : 'Dati aggiornati.'}
+                       isLoadingData ? 'Sincronizzazione...' : 'Dati aggiornati.'}
                   </p>
                 </div>
 
@@ -719,7 +766,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                         </div>
 
                         {matchedLeads.map(({ job, matchScore }) => (
-                          <div key={job.id} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-100 transition-all shadow-sm flex flex-col md:flex-row gap-6 items-start">
+                          <div key={job.id} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-100 transition-all shadow-sm flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Icon */}
                             <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                {getCategoryIcon(job.category)}
@@ -767,6 +814,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                                     setQuoteMessage('');
                                     setQuotePrice('');
                                     setQuoteTimeline('');
+                                    setQuoteTouched({ price: false, message: false, timeline: false });
                                     setShowQuoteModal(job);
                                  }}
                                  className="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all text-sm flex items-center justify-center gap-2"
@@ -1017,357 +1065,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser }) => {
                 ) : null
             )}
            </>
-        )}
-
-        {/* --- MODALS --- */}
-
-        {/* New Job Modal (Code identical to previous, kept for context) */}
-        {showNewJobModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-             <div className="bg-white w-full max-w-3xl rounded-[32px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                   <div>
-                      <h3 className="text-2xl font-black text-slate-900">
-                         {editingJobId ? 'Modifica Richiesta' : (modalStep === 'category' ? 'Nuova Richiesta' : selectedCategory)}
-                      </h3>
-                      <p className="text-slate-500 text-sm font-medium">Passaggio {modalStep === 'category' ? '1' : modalStep === 'details' ? '2' : '3'} di 3</p>
-                   </div>
-                   <button onClick={() => { setShowNewJobModal(false); resetJobForm(); }} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-red-500">
-                      <X size={24} />
-                   </button>
-                </div>
-                
-                <div className="p-8 overflow-y-auto custom-scrollbar flex-grow">
-                   {modalStep === 'category' && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                         {availableCategories.map(cat => (
-                            <button 
-                               key={cat}
-                               onClick={() => handleCategorySelect(cat)}
-                               className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-50/30 transition-all text-center gap-3"
-                            >
-                               <div className="text-indigo-600">{getCategoryIcon(cat)}</div>
-                               <span className="font-bold text-slate-700 text-sm">{cat}</span>
-                            </button>
-                         ))}
-                      </div>
-                   )}
-
-                   {modalStep === 'details' && formDefinition && (
-                      <ServiceForm 
-                         formDefinition={formDefinition}
-                         description={jobDescription}
-                         setDescription={setJobDescription}
-                         details={jobDetails}
-                         setDetails={setJobDetails}
-                         onRefine={handleRefineDescription}
-                         isRefining={isRefining}
-                      />
-                   )}
-
-                   {modalStep === 'budget' && (
-                      <div className="space-y-6">
-                         <div>
-                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Budget Stimato</label>
-                            <div className="grid grid-cols-2 gap-4">
-                               {(formDefinition?.budgetOptions || ['< 500€', '500 - 2k€', '2k - 5k€', '5k€+']).map(b => (
-                                  <button 
-                                     key={b}
-                                     onClick={() => setBudget(b)}
-                                     className={`py-5 px-4 rounded-[24px] text-sm font-black border-2 transition-all duration-200 ${
-                                        budget === b 
-                                        ? 'border-indigo-600 bg-indigo-600 text-white shadow-xl shadow-indigo-200' 
-                                        : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 bg-white'
-                                     }`}
-                                  >
-                                     {b}
-                                  </button>
-                               ))}
-                            </div>
-                         </div>
-
-                         <div>
-                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Città (Opzionale)</label>
-                            <div className="relative">
-                               <MapPin className="absolute top-4 left-4 text-slate-400" size={20} />
-                               <input 
-                                 type="text" 
-                                 value={locationCity}
-                                 onChange={(e) => setLocationCity(e.target.value)}
-                                 placeholder="es. Milano, Remoto, Roma..."
-                                 className="w-full bg-white border-2 border-slate-200 rounded-[24px] py-4 pl-12 pr-6 text-sm font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
-                               />
-                            </div>
-                         </div>
-                      </div>
-                   )}
-                </div>
-
-                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between">
-                   {modalStep !== 'category' && (
-                      <button 
-                         onClick={() => setModalStep(modalStep === 'budget' ? 'details' : 'category')}
-                         className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-white transition-all"
-                      >
-                         Indietro
-                      </button>
-                   )}
-                   <div className="flex-grow"></div>
-                   {modalStep === 'details' && (
-                      <button 
-                         onClick={() => setModalStep('budget')}
-                         disabled={!jobDescription}
-                         className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50"
-                      >
-                         Continua
-                      </button>
-                   )}
-                   {modalStep === 'budget' && (
-                      <button 
-                         onClick={handleCreateJob}
-                         disabled={!budget || creatingJob}
-                         className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg disabled:opacity-50 flex items-center"
-                      >
-                         {creatingJob ? 'Salvataggio...' : (editingJobId ? 'Salva Modifiche' : 'Pubblica Richiesta')}
-                      </button>
-                   )}
-                </div>
-             </div>
-          </div>
-        )}
-
-        {/* View Quotes Modal (Client Side) */}
-        {viewingJobQuotes && (
-           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl">
-              <div className="bg-white p-10 rounded-[24px] max-w-4xl w-full max-h-[90vh] flex flex-col">
-                 <div className="flex justify-between items-center mb-6">
-                    <div>
-                       <h3 className="text-2xl font-black">Proposte Ricevute</h3>
-                       <p className="text-slate-500 text-sm">per {viewingJobQuotes.category}</p>
-                    </div>
-                    <button onClick={() => setViewingJobQuotes(null)} className="p-2 hover:bg-slate-100 rounded-xl"><X size={24}/></button>
-                 </div>
-                 
-                 <div className="flex-grow overflow-y-auto custom-scrollbar space-y-4">
-                    {currentJobQuotes.length === 0 ? (
-                       <div className="text-center py-20 text-slate-400">
-                          Nessun preventivo ricevuto ancora.
-                       </div>
-                    ) : (
-                       currentJobQuotes.map(quote => (
-                          <div key={quote.id} className="p-6 border border-slate-200 rounded-2xl hover:border-indigo-200 transition-all">
-                             <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                   <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">
-                                      {quote.proName.charAt(0)}
-                                   </div>
-                                   <div>
-                                      <div className="font-bold text-slate-900">{quote.proName}</div>
-                                      <div className="text-xs text-slate-500">{new Date(quote.createdAt).toLocaleDateString()}</div>
-                                   </div>
-                                </div>
-                                <div className="text-xl font-black text-indigo-600">€{quote.price}</div>
-                             </div>
-                             <p className="text-slate-600 text-sm mb-4 leading-relaxed bg-slate-50 p-4 rounded-xl">{quote.message}</p>
-                             <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-6">
-                                <Clock size={14} /> Tempo stimato: {quote.timeline}
-                             </div>
-                             <div className="flex gap-4">
-                                <button className="flex-1 py-3 border-2 border-slate-200 rounded-xl font-bold hover:bg-slate-50">Chatta</button>
-                                {quote.status === 'ACCEPTED' ? (
-                                    <button 
-                                      onClick={() => handleOpenQuoteDetail(quote)}
-                                      className="flex-1 py-3 bg-emerald-100 text-emerald-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-200 transition-colors"
-                                    >
-                                       <Eye size={18} /> Vedi Dettagli & Contatti
-                                    </button>
-                                ) : (
-                                    <button 
-                                      onClick={() => handleAcceptQuote(quote)}
-                                      className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700"
-                                    >
-                                       Accetta Preventivo
-                                    </button>
-                                )}
-                             </div>
-                          </div>
-                       ))
-                    )}
-                 </div>
-              </div>
-           </div>
-        )}
-        
-        {/* Job Details Modal for Pros (New Implementation) */}
-        {viewingJobDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-             <div className="bg-white w-full max-w-2xl rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                {/* Header */}
-                <div className="p-6 border-b border-slate-100 flex justify-between items-start">
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center border border-indigo-100">
-                         <FileText size={24} />
-                      </div>
-                      <div>
-                         <h3 className="text-xl font-black text-slate-900">Dettaglio Richiesta</h3>
-                         <p className="text-slate-500 font-medium text-sm">{viewingJobDetails.category} • {viewingJobDetails.clientName}</p>
-                      </div>
-                   </div>
-                   <button 
-                      onClick={() => setViewingJobDetails(null)}
-                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
-                   >
-                      <X size={24} />
-                   </button>
-                </div>
-
-                {/* Content */}
-                <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                   {/* Description */}
-                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Descrizione Progetto</label>
-                      <p className="text-slate-800 font-medium leading-relaxed text-sm">{viewingJobDetails.description}</p>
-                   </div>
-
-                   {/* Grid: Budget & Location */}
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="border border-slate-100 p-5 rounded-2xl flex items-start gap-4 hover:border-indigo-100 transition-colors">
-                         <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl shrink-0"><Wallet size={20} /></div>
-                         <div>
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Budget</div>
-                            <div className="font-black text-slate-900 text-lg">{viewingJobDetails.budget}</div>
-                         </div>
-                      </div>
-                      <div className="border border-slate-100 p-5 rounded-2xl flex items-start gap-4 hover:border-indigo-100 transition-colors">
-                         <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl shrink-0"><MapPin size={20} /></div>
-                         <div>
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Località</div>
-                            <div className="font-black text-slate-900 text-lg">{viewingJobDetails.location?.city || 'Remoto'}</div>
-                         </div>
-                      </div>
-                   </div>
-
-                   {/* Technical Specs */}
-                   {viewingJobDetails.details && Object.keys(viewingJobDetails.details).length > 0 && (
-                      <div>
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Specifiche Tecniche</label>
-                         <div className="flex flex-wrap gap-2">
-                             {Object.entries(viewingJobDetails.details).map(([key, val]) => (
-                                <div key={key} className="px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium text-slate-700 shadow-sm">
-                                   <span className="text-slate-400 mr-2 font-normal">{key}:</span> 
-                                   <span className="font-bold">{Array.isArray(val) ? val.join(', ') : val}</span>
-                                </div>
-                             ))}
-                         </div>
-                      </div>
-                   )}
-
-                   {/* Date */}
-                   <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                      <Clock size={14} />
-                      <span>Pubblicato il {new Date(viewingJobDetails.createdAt).toLocaleDateString()}</span>
-                   </div>
-                </div>
-
-                {/* Footer */}
-                <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
-                   <button 
-                      onClick={() => setViewingJobDetails(null)}
-                      className="px-6 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-white hover:border-slate-300 transition-all text-sm"
-                   >
-                      Chiudi
-                   </button>
-                   <button 
-                      onClick={() => {
-                         setQuoteMessage('');
-                         setQuotePrice('');
-                         setQuoteTimeline('');
-                         setShowQuoteModal(viewingJobDetails);
-                         setViewingJobDetails(null);
-                      }}
-                      className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all text-sm flex items-center gap-2"
-                   >
-                      Rispondi a questa richiesta <Send size={16} />
-                   </button>
-                </div>
-             </div>
-          </div>
-        )}
-
-        {/* Send Quote Modal (Pro Side) - Redesigned */}
-        {showQuoteModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl">
-                <div className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                    {/* Header */}
-                    <div className="p-8 border-b border-slate-100 flex justify-between items-start">
-                       <div>
-                          <h3 className="text-3xl font-black text-slate-900 mb-1">Invia Preventivo</h3>
-                          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">LEAD: {showQuoteModal.category}</p>
-                       </div>
-                       <button onClick={()=>setShowQuoteModal(null)} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={24}/></button>
-                    </div>
-
-                    <div className="p-8 overflow-y-auto custom-scrollbar space-y-8">
-                       
-                       {/* Grid Inputs */}
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-3">
-                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Prezzo Proposto (€)</label>
-                             <div className="relative">
-                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-indigo-600 font-black text-lg">€</span>
-                                <input 
-                                  type="number" 
-                                  placeholder="0.00" 
-                                  value={quotePrice} 
-                                  onChange={e=>setQuotePrice(e.target.value)} 
-                                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-[20px] py-4 pl-10 pr-6 text-lg font-black text-slate-900 focus:border-indigo-600 outline-none transition-all placeholder:text-slate-300" 
-                                />
-                             </div>
-                          </div>
-                          <div className="space-y-3">
-                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Tempistiche Stimati</label>
-                             <div className="relative">
-                                <CalendarDays className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                                <input 
-                                  type="text" 
-                                  placeholder="Seleziona durata..." 
-                                  value={quoteTimeline} 
-                                  onChange={e=>setQuoteTimeline(e.target.value)} 
-                                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-[20px] py-4 pl-12 pr-6 text-sm font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all" 
-                                />
-                             </div>
-                          </div>
-                       </div>
-
-                       {/* Message Area */}
-                       <div className="space-y-3">
-                          <div className="flex justify-between items-center px-1">
-                             <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Messaggio di Presentazione</label>
-                          </div>
-                          <textarea 
-                             placeholder="Scrivi qui il tuo messaggio persuasivo per il cliente..." 
-                             value={quoteMessage} 
-                             onChange={e=>setQuoteMessage(e.target.value)} 
-                             className="w-full bg-slate-50 border-2 border-slate-200 rounded-[24px] p-6 text-sm font-medium text-slate-900 focus:border-indigo-600 outline-none transition-all resize-none h-48 leading-relaxed placeholder:text-slate-400" 
-                          />
-                       </div>
-                    </div>
-
-                    {/* Footer Action */}
-                    <div className="p-8 border-t border-slate-50 bg-slate-50/50 text-center">
-                        <button 
-                           onClick={handleSendQuote} 
-                           className="w-full py-5 bg-indigo-400 text-white font-black rounded-[24px] hover:bg-indigo-600 shadow-xl shadow-indigo-200 transition-all text-xl flex items-center justify-center gap-3 mb-4"
-                        >
-                           <span>Invia Proposta (1 Credito)</span>
-                           <Send size={22} className="rotate-0" />
-                        </button>
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                           Hai {user.credits} crediti rimanenti
-                        </div>
-                    </div>
-                </div>
-            </div>
         )}
       </main>
     </div>

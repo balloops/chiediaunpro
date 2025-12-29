@@ -96,13 +96,13 @@ export interface SiteContent {
 }
 
 // Dynamic Form Types
-export type FieldType = 'text' | 'textarea' | 'select' | 'multiselect' | 'checkbox_group';
+export type FieldType = 'text' | 'textarea' | 'select' | 'multiselect' | 'checkbox_group' | 'radio_group';
 
 export interface FormField {
   id: string;
   label: string;
   type: FieldType;
-  options?: string[]; // For select, multiselect, checkbox_group
+  options?: string[]; // For select, multiselect, checkbox_group, radio_group
   required?: boolean;
   placeholder?: string;
   subLabels?: string[]; // Optional subtitles for options

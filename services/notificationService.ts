@@ -1,54 +1,91 @@
 
+import { supabase } from './supabaseClient';
 import { Notification, NotificationType } from '../types';
 
-const NOTIFICATIONS_KEY = 'chiediunpro_notifications';
-
 export const notificationService = {
-  getNotifications(userId: string): Notification[] {
-    const data = localStorage.getItem(NOTIFICATIONS_KEY);
-    const all: Notification[] = data ? JSON.parse(data) : [];
-    return all.filter(n => n.userId === userId).sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+  
+  // Fetch delle ultime 8 notifiche dal DB
+  async getNotifications(userId: string): Promise<Notification[]> {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    if (error) {
+      console.error("Supabase Error (getNotifications):", error.message);
+      return [];
+    }
+
+    // Map DB casing to camelCase
+    return data.map((n: any) => ({
+      ...n,
+      userId: n.user_id,
+      isRead: n.is_read,
+      createdAt: n.created_at
+    }));
   },
 
-  addNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>): void {
-    const data = localStorage.getItem(NOTIFICATIONS_KEY);
-    const all: Notification[] = data ? JSON.parse(data) : [];
-    
-    const newNotification: Notification = {
-      ...notification,
-      id: `notif-${Math.random().toString(36).substr(2, 9)}`,
-      isRead: false,
-      createdAt: new Date().toISOString(),
-    };
+  // Aggiunge notifica e pulisce quelle vecchie (Mantiene solo le ultime 8)
+  async addNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>): Promise<void> {
+    try {
+      // 1. Inserisci la nuova notifica
+      const dbNotification = {
+        user_id: notification.userId,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        link: notification.link,
+        metadata: notification.metadata,
+        is_read: false
+      };
 
-    all.unshift(newNotification);
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(all.slice(0, 100))); // Keep last 100
-  },
+      const { error } = await supabase.from('notifications').insert([dbNotification]);
+      if (error) throw error;
 
-  markAsRead(id: string): void {
-    const data = localStorage.getItem(NOTIFICATIONS_KEY);
-    if (!data) return;
-    const all: Notification[] = JSON.parse(data);
-    const index = all.findIndex(n => n.id === id);
-    if (index !== -1) {
-      all[index].isRead = true;
-      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(all));
+      // 2. Pulizia (Logica FIFO migliorata)
+      // Recupera TUTTI gli ID di questo utente ordinati per data (dal più recente)
+      const { data: allUserNotifs } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', notification.userId)
+        .order('created_at', { ascending: false });
+
+      // Se ce ne sono più di 8, prendi quelli dal nono in poi (index 8+) ed eliminali
+      if (allUserNotifs && allUserNotifs.length > 8) {
+        const idsToDelete = allUserNotifs.slice(8).map(x => x.id);
+        
+        if (idsToDelete.length > 0) {
+          await supabase
+            .from('notifications')
+            .delete()
+            .in('id', idsToDelete); // Metodo più sicuro e diretto
+        }
+      }
+
+    } catch (e: any) {
+      console.error("Error adding notification:", e.message || e);
     }
   },
 
-  markAllAsRead(userId: string): void {
-    const data = localStorage.getItem(NOTIFICATIONS_KEY);
-    if (!data) return;
-    const all: Notification[] = JSON.parse(data);
-    const updated = all.map(n => n.userId === userId ? { ...n, isRead: true } : n);
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updated));
+  async markAsRead(id: string): Promise<void> {
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', id);
+  },
+
+  async markAllAsRead(userId: string): Promise<void> {
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userId);
   },
 
   // Helpers to trigger specific notifications
-  notifyNewOpportunity(proId: string, category: string, jobId: string): void {
-    this.addNotification({
+  async notifyNewOpportunity(proId: string, category: string, jobId: string): Promise<void> {
+    await this.addNotification({
       userId: proId,
       type: NotificationType.NEW_OPPORTUNITY,
       title: 'Nuova Opportunità!',
@@ -61,8 +98,8 @@ export const notificationService = {
     });
   },
 
-  notifyNewQuote(clientId: string, proName: string, category: string, jobId: string): void {
-    this.addNotification({
+  async notifyNewQuote(clientId: string, proName: string, category: string, jobId: string): Promise<void> {
+    await this.addNotification({
       userId: clientId,
       type: NotificationType.NEW_QUOTE,
       title: 'Nuovo Preventivo Ricevuto',
@@ -75,8 +112,8 @@ export const notificationService = {
     });
   },
 
-  notifyQuoteAccepted(proId: string, clientName: string, quoteId: string): void {
-    this.addNotification({
+  async notifyQuoteAccepted(proId: string, clientName: string, quoteId: string): Promise<void> {
+    await this.addNotification({
       userId: proId,
       type: NotificationType.QUOTE_ACCEPTED,
       title: 'Congratulazioni! Proposta Accettata',
@@ -89,8 +126,8 @@ export const notificationService = {
     });
   },
 
-  notifyQuoteRejected(proId: string, clientName: string, quoteId: string): void {
-    this.addNotification({
+  async notifyQuoteRejected(proId: string, clientName: string, quoteId: string): Promise<void> {
+    await this.addNotification({
       userId: proId,
       type: NotificationType.QUOTE_REJECTED,
       title: 'Aggiornamento Proposta',

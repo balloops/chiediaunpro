@@ -5,6 +5,7 @@ import { User, UserRole, Notification, SiteContent } from '../types';
 import { LayoutDashboard, LogOut, User as UserIcon, Bell, Check, Clock } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { contentService } from '../services/contentService';
+import { supabase } from '../services/supabaseClient';
 
 interface NavbarProps {
   user: User | null;
@@ -27,14 +28,48 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   }, [location]);
 
   useEffect(() => {
-    if (user) {
-      const loadNotifs = () => {
-        setNotifications(notificationService.getNotifications(user.id));
-      };
-      loadNotifs();
-      const interval = setInterval(loadNotifs, 10000); // Poll every 10s for demo
-      return () => clearInterval(interval);
-    }
+    if (!user) return;
+
+    // 1. Initial Load
+    const loadNotifs = async () => {
+      const data = await notificationService.getNotifications(user.id);
+      setNotifications(data);
+    };
+    loadNotifs();
+
+    // 2. Realtime Subscription
+    const channel = supabase
+      .channel('public:notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // Map snake_case from DB to camelCase for UI
+          const newNotif = {
+              ...payload.new,
+              userId: payload.new.user_id,
+              isRead: payload.new.is_read,
+              createdAt: payload.new.created_at
+          } as Notification;
+          
+          // Prepend new notification and limit to 8 locally
+          setNotifications(prev => [newNotif, ...prev].slice(0, 8));
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn("⚠️ Errore connessione Realtime: Verifica di aver abilitato la Replication sulla tabella 'notifications' su Supabase.");
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
@@ -49,13 +84,14 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const handleMarkAsRead = (id: string) => {
-    notificationService.markAsRead(id);
-    setNotifications(notificationService.getNotifications(user!.id));
+  const handleMarkAsRead = async (id: string) => {
+    // Optimistic update
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    await notificationService.markAsRead(id);
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    handleMarkAsRead(notification.id);
+  const handleNotificationClick = async (notification: Notification) => {
+    await handleMarkAsRead(notification.id);
     setShowNotifDropdown(false);
     
     if (notification.metadata) {
@@ -70,9 +106,12 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     }
   };
 
-  const handleMarkAllAsRead = () => {
-    notificationService.markAllAsRead(user!.id);
-    setNotifications(notificationService.getNotifications(user!.id));
+  const handleMarkAllAsRead = async () => {
+    if (user) {
+      // Optimistic update
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      await notificationService.markAllAsRead(user.id);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -124,14 +163,14 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 >
                   <Bell size={20} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[8px] font-black text-white">
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[8px] font-black text-white animate-in zoom-in duration-300">
                       {unreadCount}
                     </span>
                   )}
                 </button>
 
                 {showNotifDropdown && (
-                  <div className="absolute right-0 mt-4 w-80 sm:w-96 bg-white border border-slate-100 rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="absolute right-0 mt-4 w-80 sm:w-96 bg-white border border-slate-100 rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300 origin-top-right z-50">
                     <div className="p-6 border-b border-slate-50 flex items-center justify-between">
                       <h4 className="font-black text-slate-900 text-sm">Notifiche</h4>
                       {unreadCount > 0 && (
@@ -149,9 +188,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                           <div 
                             key={n.id} 
                             onClick={() => handleNotificationClick(n)}
-                            className={`p-5 flex items-start space-x-4 cursor-pointer transition-colors ${n.isRead ? 'opacity-60 grayscale-[0.5]' : 'bg-slate-50/50 hover:bg-indigo-50/30'}`}
+                            className={`p-5 flex items-start space-x-4 cursor-pointer transition-colors border-b border-slate-50 last:border-0 ${n.isRead ? 'opacity-60 grayscale-[0.5]' : 'bg-slate-50/50 hover:bg-indigo-50/30'}`}
                           >
-                            <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${n.isRead ? 'bg-slate-200' : 'bg-indigo-600 animate-pulse'}`}></div>
+                            <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${n.isRead ? 'bg-slate-200' : 'bg-indigo-600 animate-pulse'}`}></div>
                             <div className="flex-grow">
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{n.title}</span>
@@ -160,7 +199,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                                   {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-500 leading-relaxed font-medium">{n.message}</p>
+                              <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">{n.message}</p>
                             </div>
                           </div>
                         ))

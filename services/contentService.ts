@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
@@ -123,7 +124,171 @@ const defaultPlans: PricingPlan[] = [
   }
 ];
 
-const defaultForms: FormDefinition[] = [];
+// --- FORM DEFINITIONS ---
+const defaultForms: FormDefinition[] = [
+  {
+    categoryId: ServiceCategory.WEBSITE, // Sito Web
+    descriptionPlaceholder: "Es. Ho bisogno di un sito vetrina per il mio studio legale con 5 pagine e un form di contatto...",
+    askLocation: true,
+    budgetOptions: ['< 500€', '500 - 1.500€', '1.500 - 3.000€', '3.000€+'],
+    fields: [
+      {
+        id: 'website_type',
+        label: 'Che tipo di sito hai in mente?',
+        type: 'select',
+        options: ['Sito Vetrina', 'Landing Page', 'Blog / Magazine', 'Portale Complesso', 'Altro'],
+        required: true
+      },
+      {
+        id: 'content_ready',
+        label: 'Hai già i contenuti (testi/foto)?',
+        type: 'radio_group',
+        options: ['Sì, pronti', 'No, da creare'],
+        required: true
+      },
+      {
+        id: 'features',
+        label: 'Funzionalità Extra',
+        type: 'checkbox_group',
+        options: ['Newsletter', 'Pagamenti', 'Prenotazioni', 'SEO Pro', 'Social Feed', 'Multilingua'],
+        required: false
+      }
+    ]
+  },
+  {
+    categoryId: ServiceCategory.ECOMMERCE, // E-commerce
+    descriptionPlaceholder: "Es. Voglio vendere prodotti artigianali in pelle, circa 50 referenze, spedizioni in tutta Italia...",
+    askLocation: false, // Spesso remoto
+    budgetOptions: ['< 1.000€', '1.000 - 3.000€', '3.000 - 10.000€', '10.000€+'],
+    fields: [
+      {
+        id: 'platform',
+        label: 'Piattaforma Preferita',
+        type: 'select',
+        options: ['Shopify', 'WooCommerce (WordPress)', 'Magento', 'PrestaShop', 'Custom', 'Consigliami tu'],
+        required: true
+      },
+      {
+        id: 'product_count',
+        label: 'Numero di prodotti stimato',
+        type: 'select',
+        options: ['1 - 10', '10 - 100', '100 - 1.000', '1.000+'],
+        required: true
+      }
+    ]
+  },
+  {
+    categoryId: ServiceCategory.MARKETING, // Social Media & Marketing
+    descriptionPlaceholder: "Es. Cerco un Social Media Manager per gestire Instagram e LinkedIn della mia azienda, 3 post a settimana...",
+    askLocation: false,
+    budgetOptions: ['< 300€/mese', '300 - 800€/mese', '800 - 2.000€/mese', 'Budget a progetto'],
+    fields: [
+      {
+        id: 'platforms',
+        label: 'Quali piattaforme vuoi gestire?',
+        type: 'multiselect',
+        options: ['Instagram', 'Facebook', 'LinkedIn', 'TikTok', 'YouTube', 'Google Ads'],
+        required: true
+      },
+      {
+        id: 'goals',
+        label: 'Obiettivo Principale',
+        type: 'select',
+        options: ['Brand Awareness', 'Lead Generation (Contatti)', 'Vendite Dirette', 'Community Management'],
+        required: true
+      }
+    ]
+  },
+  {
+    categoryId: ServiceCategory.DESIGN, // UX/UI Design
+    descriptionPlaceholder: "Es. Ho bisogno di ridisegnare l'interfaccia della mia app iOS per renderla più moderna...",
+    askLocation: false,
+    budgetOptions: ['< 500€', '500 - 2.000€', '2.000 - 5.000€', '5.000€+'],
+    fields: [
+      {
+        id: 'design_scope',
+        label: 'Cosa devi progettare?',
+        type: 'select',
+        options: ['App Mobile', 'Sito Web', 'Dashboard / SaaS', 'Logo & Brand', 'Altro'],
+        required: true
+      },
+      {
+        id: 'deliverables',
+        label: 'Cosa ti serve?',
+        type: 'checkbox_group',
+        options: ['Wireframes', 'Prototipo Interattivo', 'Design System', 'User Research'],
+        required: false
+      }
+    ]
+  },
+  {
+    categoryId: ServiceCategory.SOFTWARE, // Sviluppo Software & App
+    descriptionPlaceholder: "Es. Vorrei creare un'app gestionale per il mio magazzino che funzioni su iPad...",
+    askLocation: false,
+    budgetOptions: ['< 2.000€', '2.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
+    fields: [
+      {
+        id: 'app_type',
+        label: 'Tipologia Progetto',
+        type: 'select',
+        options: ['App Mobile (iOS/Android)', 'Web App / SaaS', 'Software Desktop', 'Script / Automazione'],
+        required: true
+      },
+      {
+        id: 'project_stage',
+        label: 'Stato del progetto',
+        type: 'radio_group',
+        options: ['Solo Idea', 'Specifica Pronta', 'Progetto da Aggiornare'],
+        required: true
+      }
+    ]
+  },
+  {
+    categoryId: ServiceCategory.BRANDING, // Branding & Grafica
+    descriptionPlaceholder: "Es. Sto aprendo un ristorante e mi serve logo, menu e biglietti da visita...",
+    askLocation: true,
+    budgetOptions: ['< 300€', '300 - 1.000€', '1.000 - 3.000€', '3.000€+'],
+    fields: [
+      {
+        id: 'branding_needs',
+        label: 'Di cosa hai bisogno?',
+        type: 'multiselect',
+        options: ['Logo Design', 'Immagine Coordinata', 'Rebranding', 'Materiale Stampa', 'Packaging'],
+        required: true
+      }
+    ]
+  },
+  {
+    categoryId: ServiceCategory.PHOTOGRAPHY, // Fotografia
+    descriptionPlaceholder: "Es. Servizio fotografico per i piatti del mio nuovo menu...",
+    askLocation: true,
+    budgetOptions: ['< 200€', '200 - 500€', '500 - 1.500€', '1.500€+'],
+    fields: [
+      {
+        id: 'photo_type',
+        label: 'Tipo di servizio',
+        type: 'select',
+        options: ['Eventi', 'Prodotti / E-commerce', 'Ritratti / Corporate', 'Immobiliare', 'Cibo / Ristorazione'],
+        required: true
+      }
+    ]
+  },
+  {
+    categoryId: ServiceCategory.VIDEO, // Video
+    descriptionPlaceholder: "Es. Video promozionale di 30 secondi per Instagram...",
+    askLocation: true,
+    budgetOptions: ['< 300€', '300 - 1.000€', '1.000 - 3.000€', '3.000€+'],
+    fields: [
+      {
+        id: 'video_type',
+        label: 'Tipo di Video',
+        type: 'select',
+        options: ['Spot Pubblicitario', 'Video Corporate', 'Riprese Evento', 'Animazione / Motion Graphics', 'Montaggio / Editing'],
+        required: true
+      }
+    ]
+  }
+];
 
 // In-memory cache to prevent frequent fetches
 let cachedContent: SiteContent = defaultContent;
@@ -139,20 +304,24 @@ export const contentService = {
     try {
       const { data, error } = await supabase.from('site_content').select('content').eq('id', 1).single();
       
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "row not found"
-        console.error("Error fetching content:", error);
-        return cachedContent;
+      if (error) {
+        if (error.code !== 'PGRST116') { // PGRST116 is "row not found"
+          // Avoid noise if table doesn't exist
+          console.warn("Supabase: Could not fetch content (using local defaults).", error.message);
+          return cachedContent;
+        }
+        // If row not found (PGRST116), we try to seed, but handle error gracefully
       }
 
       if (data && data.content) {
         // Merge to ensure new fields are present if DB is outdated structure
         cachedContent = { ...defaultContent, ...data.content };
       } else {
-        // DB is empty, seed it with defaults
+        // DB is empty or row missing, seed it with defaults
         await this.saveContent(defaultContent);
       }
     } catch (e) {
-      console.error("Fetch content exception", e);
+      console.warn("Fetch content exception", e);
     }
     return cachedContent;
   },
@@ -165,7 +334,9 @@ export const contentService = {
       updated_at: new Date().toISOString()
     });
     
-    if (error) console.error("Error saving content:", error);
+    if (error) {
+      console.warn("Supabase Warning: Error saving content (DB might be missing 'site_content' table):", error.message || error);
+    }
   },
 
   getPlans(): PricingPlan[] {
@@ -227,13 +398,21 @@ export const contentService = {
 
   getFormDefinition(categoryId: string): FormDefinition {
     const data = localStorage.getItem(FORMS_KEY);
+    
+    // 1. Try Local Storage
     try {
-        const forms: FormDefinition[] = data ? JSON.parse(data) : defaultForms;
-        const found = forms.find(f => f.categoryId === categoryId);
-        if (found) return found;
+        const localForms: FormDefinition[] = data ? JSON.parse(data) : [];
+        const foundLocal = localForms.find(f => f.categoryId === categoryId);
+        if (foundLocal) return foundLocal;
     } catch (e) {
-        // Fallback if local storage is corrupt
+        // Fallback
     }
+
+    // 2. Try Default Hardcoded Forms
+    const foundDefault = defaultForms.find(f => f.categoryId === categoryId);
+    if (foundDefault) return foundDefault;
+
+    // 3. Fallback generic
     return {
       categoryId,
       budgetOptions: ['< 500€', '500 - 2k€', '2k - 5k€', '5k€+'],
@@ -245,9 +424,9 @@ export const contentService = {
 
   saveFormDefinition(definition: FormDefinition) {
     const data = localStorage.getItem(FORMS_KEY);
-    let forms: FormDefinition[] = defaultForms;
+    let forms: FormDefinition[] = [];
     try {
-        forms = data ? JSON.parse(data) : defaultForms;
+        forms = data ? JSON.parse(data) : [];
     } catch(e) {}
 
     const index = forms.findIndex(f => f.categoryId === definition.categoryId);
