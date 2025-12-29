@@ -4,7 +4,7 @@ import { User, UserRole, JobRequest, Quote, ServiceCategory, FormDefinition } fr
 import { 
   FileText, Send, Settings, Plus, Search, Clock, TrendingUp, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, MapPin, CreditCard as BillingIcon, Check, Eye, X, Phone, Download, Save, Lock, Edit3, Trash2, XCircle, AlertTriangle, Coins, Box, Wallet, Euro, Trophy, Star, ChevronRight, ArrowRight
 } from 'lucide-react';
-import { Link, useNavigate, useLocation, Routes, Route, useParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { geminiService } from '../services/geminiService';
 import { jobService } from '../services/jobService';
 import { notificationService } from '../services/notificationService';
@@ -356,14 +356,13 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
 const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [user, setUser] = useState<User>(initialUser);
   const isPro = user.role === UserRole.PROFESSIONAL;
   
-  // Tab logic synced with URL query or internal state if simple
-  const [activeTab, setActiveTab] = useState<'leads' | 'quotes' | 'won' | 'settings' | 'billing' | 'my-requests'>(
-    isPro ? 'leads' : 'my-requests'
-  );
+  // URL Driven State (Source of Truth)
+  const currentTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests');
 
   // Data State
   const [matchedLeads, setMatchedLeads] = useState<{ job: JobRequest; matchScore: number }[]>([]);
@@ -423,7 +422,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   useEffect(() => {
     refreshData(true);
-  }, [activeTab, refreshData]);
+  }, [currentTab, refreshData]);
 
   // --- REALTIME ---
   useEffect(() => {
@@ -535,17 +534,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
             <div>
                 <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
-                {activeTab === 'leads' ? 'Opportunità per te' : 
-                    activeTab === 'quotes' ? 'Preventivi Inviati' :
-                    activeTab === 'won' ? 'I tuoi Successi' :
-                    activeTab === 'settings' ? `${user.brandName || user.name}` :
-                    activeTab === 'billing' ? 'Crediti' : 'Dashboard'}
+                {currentTab === 'leads' ? 'Opportunità per te' : 
+                    currentTab === 'quotes' ? 'Preventivi Inviati' :
+                    currentTab === 'won' ? 'I tuoi Successi' :
+                    currentTab === 'settings' ? `${user.brandName || user.name}` :
+                    currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
                 </h1>
                 <p className="text-slate-400 font-medium text-lg">
                     {newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
-            {isPro && (activeTab === 'leads' || activeTab === 'quotes' || activeTab === 'won') && (
+            {isPro && (currentTab === 'leads' || currentTab === 'quotes' || currentTab === 'won') && (
                 <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center space-x-4 min-w-[200px]">
                     <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center"><Coins size={20} /></div>
                     <div>
@@ -564,7 +563,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         {/* Tab Content */}
         {!isLoadingData && (
             <>
-                {activeTab === 'leads' && (
+                {currentTab === 'leads' && (
                     <div className="space-y-6">
                         {matchedLeads.map(({ job, matchScore }) => (
                             <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-in fade-in slide-in-from-top-2">
@@ -600,7 +599,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     </div>
                 )}
 
-                {activeTab === 'my-requests' && (
+                {currentTab === 'my-requests' && (
                     <div className="space-y-6">
                          <div className="flex justify-end mb-6">
                             <button 
@@ -631,9 +630,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     </div>
                 )}
 
-                {(activeTab === 'quotes' || activeTab === 'won') && (
+                {(currentTab === 'quotes' || currentTab === 'won') && (
                     <div className="space-y-6">
-                         {sentQuotes.filter(q => activeTab === 'won' ? q.status === 'ACCEPTED' : true).map(quote => (
+                         {sentQuotes.filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : true).map(quote => (
                              <div key={quote.id} onClick={() => navigate(`/dashboard/quote/${quote.id}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all">
                                  <div className="flex justify-between items-center mb-2">
                                      <div className="font-black text-lg text-slate-900">{quote.price} €</div>
@@ -645,7 +644,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     </div>
                 )}
 
-                {activeTab === 'settings' && (
+                {currentTab === 'settings' && (
                      <div className="bg-white p-8 rounded-[24px] border border-slate-100 max-w-2xl">
                           <h2 className="text-xl font-black text-slate-900 mb-6">Profilo</h2>
                           <div className="space-y-4">
@@ -670,7 +669,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                      </div>
                 )}
 
-                {activeTab === 'billing' && (
+                {currentTab === 'billing' && (
                     <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 max-w-2xl">
                         <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">Bilancio Crediti</div>
                         <div className="text-7xl font-black mb-2 tracking-tighter">{user.credits && user.credits >= 999 ? '∞' : (user.credits ?? 0)}</div>
@@ -699,9 +698,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 .map((item) => (
                     <Link
                         key={item.id}
-                        to={`/dashboard?tab=${item.id}`} // Using query param to keep it simple or route
-                        onClick={() => setActiveTab(item.id as any)}
-                        className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600 font-medium'}`}
+                        to={`/dashboard?tab=${item.id}`} // URL is the source of truth
+                        className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all ${currentTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600 font-medium'}`}
                     >
                         <div className="flex items-center space-x-3">
                             <div className="shrink-0">{item.icon}</div>
