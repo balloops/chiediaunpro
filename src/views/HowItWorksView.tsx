@@ -8,9 +8,9 @@ import {
   UserCheck, 
   Search, 
   Trophy, 
-  ArrowRight,
-  Briefcase,
-  Users
+  ArrowRight, 
+  Briefcase, 
+  Users 
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
 import { SiteContent } from '../../types';

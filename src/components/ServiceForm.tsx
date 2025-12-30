@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { FormDefinition, FormField } from '../types';
+import { FormDefinition, FormField } from '../../types';
 import { Sparkles, ChevronDown } from 'lucide-react';
 
 interface ServiceFormProps {

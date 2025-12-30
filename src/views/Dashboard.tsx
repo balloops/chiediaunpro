@@ -1073,7 +1073,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     <div className="space-y-6">
                         {filteredLeads.length > 0 ? (
                             filteredLeads.map(({ job, matchScore }) => (
-                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border-l-4 border-l-indigo-600 border-t border-r border-b border-slate-100 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                     <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1115,7 +1115,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border-l-4 border-l-indigo-600 border-t border-r border-b border-slate-100 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1204,7 +1204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                  const job = allJobsCache.find(j => j.id === quote.jobId);
                                  const category = job?.category || 'Servizio';
                                  return (
-                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border-l-4 border-l-indigo-600 border-t border-r border-b border-slate-100 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             {getCategoryIcon(category)}
                                          </div>
@@ -1234,9 +1234,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                              </p>
                                              
                                              <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                                 <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
-                                                 <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
-                                                 <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
+                                                 <span className="flex items-center gap-1"><MapPin size={12}/> <span>{job?.location?.city || 'Remoto'}</span></span>
+                                                 <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> <span>Tua Offerta: {quote.price}€</span></span>
+                                                 <span className="flex items-center gap-1"><Clock size={12}/> <span>Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span></span>
                                              </div>
                                          </div>
 
@@ -1532,7 +1532,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   return (
     <div className="bg-slate-50 min-h-screen flex">
         {/* Sidebar */}
-        <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
+        <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col px-6 py-4 sticky top-[72px] h-[calc(100vh-72px)] z-20 shrink-0">
              <div className="space-y-2 flex-grow">
                 {[
                     { id: 'leads', label: 'Opportunità', icon: <Star size={20} />, role: 'pro' },
