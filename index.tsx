@@ -18,10 +18,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     error: null
   };
 
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-  }
-
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
@@ -41,7 +37,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           </pre>
           <button 
             onClick={() => window.location.reload()}
-            style={{padding: '10px 20px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'}}
+            style={{padding: '10px 20px', background: '#0060e3', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'}}
           >
             Ricarica Pagina
           </button>

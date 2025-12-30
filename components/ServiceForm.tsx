@@ -223,7 +223,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           </div>
         </div>
         
-        <div className={`relative group bg-white rounded-[24px] border-2 p-2 transition-all shadow-sm ${isDescError ? 'border-red-500 bg-red-50' : 'border-slate-200 focus-within:border-indigo-600 focus-within:shadow-[0_0_0_4px_rgba(79,70,229,0.1)] hover:border-slate-300'}`}>
+        <div className={`relative group bg-white rounded-[24px] border-2 p-2 transition-all shadow-sm ${isDescError ? 'border-red-500 bg-red-50' : 'border-slate-200 focus-within:border-indigo-600 focus-within:shadow-[0_0_0_4px_rgba(0,96,227,0.1)] hover:border-slate-300'}`}>
           <textarea 
             rows={8}
             value={description}

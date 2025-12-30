@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../types';
@@ -218,7 +219,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                 </p>
                 <div className="mt-5 h-1.5 w-full max-w-sm bg-slate-100 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-indigo-600 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
+                      className="h-full bg-indigo-600 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,96,227,0.3)]"
                       style={{ width: `${progress}%` }}
                     ></div>
                 </div>
@@ -235,7 +236,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     <button
                       key={cat}
                       onClick={() => handleCategorySelect(cat)}
-                      className="group p-10 rounded-[24px] border-2 border-slate-100 bg-white hover:border-indigo-600 hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all text-left flex flex-col justify-between h-72"
+                      className="group p-10 rounded-[24px] border-2 border-slate-100 bg-white hover:border-indigo-600 hover:shadow-[0_20px_50px_rgba(0,96,227,0.1)] transition-all text-left flex flex-col justify-between h-72"
                     >
                       <div className={`w-16 h-16 rounded-[22px] bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all ${info.color} shadow-sm group-hover:scale-110`}>
                         {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
@@ -318,7 +319,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                 <div className="pt-8">
                   <button 
                     disabled={!jobDescription || !budget}
-                    className="w-full py-7 bg-indigo-600 text-white font-black rounded-[24px] hover:bg-indigo-700 shadow-[0_20px_60px_-10px_rgba(79,70,229,0.3)] transition-all text-2xl flex items-center justify-center disabled:opacity-50 disabled:shadow-none group"
+                    className="w-full py-7 bg-indigo-600 text-white font-black rounded-[24px] hover:bg-indigo-700 shadow-[0_20px_60px_-10px_rgba(0,96,227,0.3)] transition-all text-2xl flex items-center justify-center disabled:opacity-50 disabled:shadow-none group"
                     onClick={handleFinalSubmit}
                   >
                     {user ? 'Invia Richiesta Pro' : 'Continua e Pubblica'}
