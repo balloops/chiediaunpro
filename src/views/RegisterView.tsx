@@ -137,7 +137,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-2xl">
                   <div className="flex items-center gap-1 mb-3">
                       {[1,2,3,4,5].map(i => <Star key={i} size={16} className="fill-amber-400 text-amber-400" />)}
-                      <span className="text-xs font-bold text-indigo-100 ml-2">4.9/5 di media</span>
+                      <span className="text-xs font-bold text-indigo-100 ml-2">4.9/5 da 10k+ utenti</span>
                   </div>
                   <blockquote className="text-lg font-medium leading-relaxed mb-6 text-white">
                       "Il miglior strumento per scalare la mia agenzia. Clienti seri e pagamenti sempre puntuali."
