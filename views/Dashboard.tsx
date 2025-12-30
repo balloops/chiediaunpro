@@ -123,11 +123,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         if (!job) return;
         if (window.confirm("Sei sicuro di voler eliminare definitivamente questa richiesta?")) {
             try {
-                // Esegue l'eliminazione
                 await jobService.deleteJob(job.id);
-                // Attende esplicitamente che il parent refresh sia completato per aggiornare lo stato locale di 'myJobs'
                 await refreshParent();
-                // Naviga solo dopo l'aggiornamento
                 navigate('/dashboard?tab=my-requests');
             } catch (e: any) {
                 alert("Errore eliminazione: " + e.message);
@@ -152,7 +149,6 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         if (!job) return;
         if (window.confirm("Chiudendo la richiesta non sarà più visibile ai professionisti. Confermi?")) {
             try {
-                // We use 'CANCELLED' status to denote a closed request by client that hides it from Pros
                 await jobService.updateJobStatus(job.id, 'CANCELLED');
                 setJob(prev => prev ? ({ ...prev, status: 'CANCELLED' }) : null);
                 await refreshParent();
@@ -218,14 +214,37 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                     </div>
                                 )}
                             </div>
-                            <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${
-                                job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
-                                job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                                job.status === 'ARCHIVED' ? 'bg-slate-100 text-slate-600' :
-                                'bg-slate-100 text-slate-500'
-                            }`}>
-                                {job.status === 'OPEN' ? 'Aperta' : job.status === 'CANCELLED' ? 'Chiusa' : job.status === 'ARCHIVED' ? 'Archiviata' : job.status}
-                            </span>
+                            
+                            {/* CUSTOM LABEL LOGIC - RICHIESTA UTENTE */}
+                            {(() => {
+                                if (!isPro && (job.status === 'OPEN' || job.status === 'IN_PROGRESS')) {
+                                    if (quotes.length > 0) {
+                                        return (
+                                            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
+                                                {quotes.length === 1 ? '1 PREVENTIVO RICEVUTO' : `${quotes.length} PREVENTIVI RICEVUTI`}
+                                            </span>
+                                        );
+                                    } else {
+                                        return (
+                                            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
+                                                IN ATTESA DI PREVENTIVI
+                                            </span>
+                                        );
+                                    }
+                                }
+                                
+                                // Default labels for Pro or other statuses
+                                return (
+                                    <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${
+                                        job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
+                                        job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                        job.status === 'ARCHIVED' ? 'bg-slate-100 text-slate-600' :
+                                        'bg-slate-100 text-slate-500'
+                                    }`}>
+                                        {job.status === 'OPEN' ? 'Aperta' : job.status === 'CANCELLED' ? 'Chiusa' : job.status === 'ARCHIVED' ? 'Archiviata' : job.status}
+                                    </span>
+                                );
+                            })()}
                         </div>
 
                         {/* Description */}
@@ -972,7 +991,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-8">
             <div>
                 <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
-                {currentTab === 'leads' ? 'Opportunità per te' : 
+                {currentTab === 'leads' ? 'Opportunità' : 
                     currentTab === 'quotes' ? 'Preventivi Inviati' :
                     currentTab === 'my-requests' ? 'Le mie Richieste' :
                     currentTab === 'archived' ? 'Richieste Archiviate' :
@@ -1000,12 +1019,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {isPro && (currentTab === 'leads' || currentTab === 'quotes' || currentTab === 'won') && (
-                    <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center space-x-4 min-w-[200px]">
-                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center"><Coins size={20} /></div>
-                        <div>
+                    <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center min-w-[220px]">
+                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mr-4"><Coins size={20} /></div>
+                        <div className="mr-4">
                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Crediti</div>
                             <div className="text-xl font-black text-slate-900 leading-none mt-1">{user.credits}</div>
                         </div>
+                        <div className="h-8 w-px bg-slate-100 mr-4"></div>
+                        <button 
+                            onClick={() => navigate('/dashboard?tab=billing')}
+                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline uppercase tracking-wide"
+                        >
+                            Ricarica
+                        </button>
                     </div>
                 )}
             </div>
@@ -1086,7 +1112,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     <div className="space-y-6">
                          {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
-                             const hasNewQuotes = quoteCount > 0; 
                              return (
                                 <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
@@ -1095,15 +1120,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
                                         <p className="text-slate-500 text-sm line-clamp-1 mb-2">{job.description}</p>
-                                        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                                            <span className={`px-2 py-0.5 rounded uppercase ${
-                                                job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
-                                                job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                                                'bg-slate-100 text-slate-500'
-                                            }`}>
-                                                {job.status === 'OPEN' ? 'Aperta' : job.status === 'CANCELLED' ? 'Chiusa' : job.status}
-                                            </span>
-                                            <span className={`${hasNewQuotes ? 'text-indigo-600 font-black' : ''}`}>{quoteCount} Preventivi</span>
+                                        <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-400">
+                                            {/* LIST VIEW LABELS */}
+                                            {job.status === 'OPEN' || job.status === 'IN_PROGRESS' ? (
+                                                quoteCount > 0 ? (
+                                                    <span className="px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-700">
+                                                        {quoteCount === 1 ? '1 PREVENTIVO' : `${quoteCount} PREVENTIVI`}
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 rounded uppercase bg-amber-100 text-amber-700">
+                                                        IN ATTESA
+                                                    </span>
+                                                )
+                                            ) : (
+                                                <span className={`px-2 py-0.5 rounded uppercase ${
+                                                    job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                                    'bg-slate-100 text-slate-500'
+                                                }`}>
+                                                    {job.status === 'CANCELLED' ? 'Chiusa' : job.status}
+                                                </span>
+                                            )}
+                                            
                                             <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
                                         </div>
                                     </div>
