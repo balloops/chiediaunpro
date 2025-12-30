@@ -176,7 +176,7 @@ export interface JobRequest {
   timeline?: string;
   tags: string[];
   location?: JobLocation;
-  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ARCHIVED';
   createdAt: string;
 }
 

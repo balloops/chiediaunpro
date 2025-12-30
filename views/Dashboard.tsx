@@ -6,7 +6,7 @@ import {
   Code, ShoppingCart, Palette, Camera, Video, BarChart3, AppWindow, Box, 
   Briefcase, HelpCircle, LogOut, Coins, RefreshCw, WifiOff,
   User as UserIcon, TrendingUp, Euro, Filter, ChevronDown, ArrowUp, ArrowDown,
-  Trash2, Edit3, XCircle, Save, X, Ban
+  Trash2, Edit3, XCircle, Save, X, Ban, Archive
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { jobService } from '../services/jobService';
@@ -101,7 +101,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         }
     };
 
-    // Client Actions: Update, Delete, Close
+    // Client Actions: Update, Delete, Close, Archive
     const handleUpdateJob = async () => {
         if (!job) return;
         try {
@@ -135,6 +135,19 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         }
     };
 
+    const handleArchiveJob = async () => {
+        if (!job) return;
+        if (window.confirm("Archiviando la richiesta, non sarà più visibile ai nuovi professionisti nel marketplace. Confermi?")) {
+            try {
+                await jobService.updateJobStatus(job.id, 'ARCHIVED');
+                await refreshParent();
+                navigate('/dashboard?tab=archived');
+            } catch (e: any) {
+                alert("Errore archiviazione: " + e.message);
+            }
+        }
+    };
+
     const handleCloseJob = async () => {
         if (!job) return;
         if (window.confirm("Chiudendo la richiesta non sarà più visibile ai professionisti. Confermi?")) {
@@ -156,6 +169,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const hasQuotes = quotes.length > 0;
     const canEditOrDelete = !isPro && !hasQuotes && job.status === 'OPEN';
     const canClose = !isPro && hasQuotes && job.status === 'OPEN';
+    const canArchive = !isPro && hasQuotes && job.status !== 'ARCHIVED';
 
     return (
         <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-20">
@@ -207,9 +221,10 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                             <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${
                                 job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
                                 job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                job.status === 'ARCHIVED' ? 'bg-slate-100 text-slate-600' :
                                 'bg-slate-100 text-slate-500'
                             }`}>
-                                {job.status === 'OPEN' ? 'Aperta' : job.status === 'CANCELLED' ? 'Chiusa' : job.status}
+                                {job.status === 'OPEN' ? 'Aperta' : job.status === 'CANCELLED' ? 'Chiusa' : job.status === 'ARCHIVED' ? 'Archiviata' : job.status}
                             </span>
                         </div>
 
@@ -275,9 +290,19 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                                 <Ban size={16} /> Chiudi Richiesta
                                             </button>
                                         )}
+                                        {canArchive && (
+                                            <button onClick={handleArchiveJob} className="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-amber-100 transition-colors">
+                                                <Archive size={16} /> Archivia
+                                            </button>
+                                        )}
                                         {job.status === 'CANCELLED' && (
                                             <span className="px-4 py-2 bg-slate-50 text-slate-400 rounded-xl text-sm font-bold flex items-center gap-2 cursor-not-allowed">
                                                 <Ban size={16} /> Richiesta Chiusa
+                                            </span>
+                                        )}
+                                        {job.status === 'ARCHIVED' && (
+                                            <span className="px-4 py-2 bg-slate-50 text-slate-400 rounded-xl text-sm font-bold flex items-center gap-2 cursor-not-allowed">
+                                                <Archive size={16} /> Richiesta Archiviata
                                             </span>
                                         )}
                                     </>
@@ -905,8 +930,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
-  // My Requests (Client)
+  // My Requests (Client) - Active only
   const filteredMyJobs = myJobs
+    .filter(job => job.status !== 'ARCHIVED')
+    .filter(job => filterCategory === 'all' || job.category === filterCategory)
+    .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    
+  // Archived Requests (Client)
+  const filteredArchivedJobs = myJobs
+    .filter(job => job.status === 'ARCHIVED')
     .filter(job => filterCategory === 'all' || job.category === filterCategory)
     .sort((a, b) => {
         const dateA = new Date(a.createdAt).getTime();
@@ -939,6 +975,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 {currentTab === 'leads' ? 'Opportunità per te' : 
                     currentTab === 'quotes' ? 'Preventivi Inviati' :
                     currentTab === 'my-requests' ? 'Le mie Richieste' :
+                    currentTab === 'archived' ? 'Richieste Archiviate' :
                     currentTab === 'won' ? 'I tuoi Successi' :
                     currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
                     currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
@@ -946,6 +983,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 <p className="text-slate-400 font-medium text-lg">
                     {currentTab === 'settings' ? 'Gestisci il tuo profilo e le tue preferenze.' :
                      currentTab === 'won' ? 'Congratulazioni! Ecco i lavori che hai conquistato.' :
+                     currentTab === 'archived' ? 'Storico delle tue richieste passate.' :
                      newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
@@ -974,7 +1012,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         </header>
 
         {/* Filters (Only for list views) */}
-        {(currentTab === 'leads' || currentTab === 'my-requests' || currentTab === 'quotes' || currentTab === 'won') && (
+        {(currentTab === 'leads' || currentTab === 'my-requests' || currentTab === 'archived' || currentTab === 'quotes' || currentTab === 'won') && (
             <FilterControls />
         )}
 
@@ -1079,6 +1117,42 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          }) : (
                             <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">
                                 Nessuna richiesta trovata.
+                            </div>
+                         )}
+                    </div>
+                )}
+                
+                {currentTab === 'archived' && (
+                    <div className="space-y-6">
+                         {filteredArchivedJobs.length > 0 ? filteredArchivedJobs.map(job => {
+                             const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
+                             return (
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
+                                     <div className="w-14 h-14 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center shrink-0">
+                                        {getCategoryIcon(job.category)}
+                                    </div>
+                                    <div className="flex-grow">
+                                        <h3 className="text-lg font-black text-slate-700">{job.category}</h3>
+                                        <p className="text-slate-500 text-sm line-clamp-1 mb-2">{job.description}</p>
+                                        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                                            <span className="px-2 py-0.5 rounded uppercase bg-slate-200 text-slate-500">
+                                                Archiviata
+                                            </span>
+                                            <span>{quoteCount} Preventivi</span>
+                                            <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
+                                    <div className="self-center">
+                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400">
+                                            <ChevronRight size={20} />
+                                        </div>
+                                    </div>
+                                </div>
+                             );
+                         }) : (
+                            <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">
+                                <Archive size={48} className="mx-auto mb-4 text-slate-300" />
+                                <p>Nessuna richiesta archiviata.</p>
                             </div>
                          )}
                     </div>
@@ -1426,6 +1500,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     { id: 'my-requests', label: 'Mie Richieste', icon: <FileText size={20} />, role: 'client' },
                     { id: 'quotes', label: 'Preventivi Inviati', icon: <Send size={20} />, role: 'pro' },
                     { id: 'won', label: 'Lavori Ottenuti', icon: <Trophy size={20} />, role: 'pro' },
+                    { id: 'archived', label: 'Archiviate', icon: <Archive size={20} />, role: 'client' },
                     { id: 'settings', label: 'Profilo', icon: <Settings size={20} />, role: 'all' },
                     { id: 'billing', label: 'Crediti', icon: <Coins size={20} />, role: 'pro' }
                 ]
