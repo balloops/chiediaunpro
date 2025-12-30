@@ -1,17 +1,19 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { User, UserRole, JobRequest, Quote, ServiceCategory, FormDefinition } from '../types';
+import { User, UserRole, JobRequest, Quote, ServiceCategory } from '../types';
 import { 
-  FileText, Send, Settings, Plus, Search, Clock, TrendingUp, Code, Palette, Camera, Video, BarChart3, ShoppingCart, AppWindow, ArrowLeft, MapPin, CreditCard as BillingIcon, Check, Eye, X, Phone, Download, Save, Lock, Edit3, Trash2, XCircle, AlertTriangle, Coins, Box, Wallet, Euro, Trophy, Star, ChevronRight, ArrowRight, User as UserIcon, RefreshCw, WifiOff, LogOut, Shield, HelpCircle, Briefcase
+  FileText, Send, Settings, Plus, Star, Trophy, MapPin, Wallet, Clock, 
+  ChevronRight, ArrowLeft, ArrowRight, Check, Phone, Lock, 
+  Code, ShoppingCart, Palette, Camera, Video, BarChart3, AppWindow, Box, 
+  Briefcase, HelpCircle, LogOut, Coins, RefreshCw, WifiOff,
+  User as UserIcon, TrendingUp, Euro, Filter, ChevronDown, ArrowUp, ArrowDown,
+  Trash2, Edit3, XCircle, Save, X, Ban
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
-import { geminiService } from '../services/geminiService';
 import { jobService } from '../services/jobService';
 import { notificationService } from '../services/notificationService';
-import { contentService } from '../services/contentService';
 import { authService } from '../services/authService';
+import { contentService } from '../services/contentService';
 import { supabase } from '../services/supabaseClient';
-import ServiceForm from '../components/ServiceForm';
 
 interface DashboardProps {
   user: User;
@@ -21,7 +23,7 @@ interface DashboardProps {
 // --- SUB COMPONENTS (PAGES) ---
 
 // 1. Job Detail Page (Full Screen)
-const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () => void }> = ({ user, isPro, refreshParent }) => {
+const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () => Promise<void> }> = ({ user, isPro, refreshParent }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -36,6 +38,14 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const [quoteMessage, setQuoteMessage] = useState('');
     const [quoteTimeline, setQuoteTimeline] = useState('');
 
+    // Client Edit State
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({
+        description: '',
+        budget: '',
+        city: ''
+    });
+
     useEffect(() => {
         const fetchJob = async () => {
             if (!id) return;
@@ -43,6 +53,11 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
             const foundJob = jobs.find(j => j.id === id);
             if (foundJob) {
                 setJob(foundJob);
+                setEditData({
+                    description: foundJob.description,
+                    budget: foundJob.budget || '',
+                    city: foundJob.location?.city || ''
+                });
                 const qs = await jobService.getQuotesForJob(foundJob.id);
                 setQuotes(qs);
             }
@@ -78,10 +93,58 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
             try {
                 await jobService.updateQuoteStatus(quote, 'ACCEPTED');
                 await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
-                // Navigate to the quote detail to see contact info immediately, preserving context is tricky here, defaulting to quote detail
+                // Navigate to the quote detail to see contact info immediately
                 navigate(`/dashboard/quote/${quote.id}?tab=${activeTab}`);
             } catch (e) {
                 console.error(e);
+            }
+        }
+    };
+
+    // Client Actions: Update, Delete, Close
+    const handleUpdateJob = async () => {
+        if (!job) return;
+        try {
+            await jobService.updateJobDetails(job.id, {
+                description: editData.description,
+                budget: editData.budget,
+                location: { city: editData.city }
+            });
+            setIsEditing(false);
+            // Refresh local data
+            setJob(prev => prev ? ({ ...prev, description: editData.description, budget: editData.budget, location: { city: editData.city } }) : null);
+            alert("Richiesta aggiornata!");
+        } catch (e: any) {
+            alert("Errore aggiornamento: " + e.message);
+        }
+    };
+
+    const handleDeleteJob = async () => {
+        if (!job) return;
+        if (window.confirm("Sei sicuro di voler eliminare definitivamente questa richiesta?")) {
+            try {
+                // Esegue l'eliminazione
+                await jobService.deleteJob(job.id);
+                // Attende esplicitamente che il parent refresh sia completato per aggiornare lo stato locale di 'myJobs'
+                await refreshParent();
+                // Naviga solo dopo l'aggiornamento
+                navigate('/dashboard?tab=my-requests');
+            } catch (e: any) {
+                alert("Errore eliminazione: " + e.message);
+            }
+        }
+    };
+
+    const handleCloseJob = async () => {
+        if (!job) return;
+        if (window.confirm("Chiudendo la richiesta non sarà più visibile ai professionisti. Confermi?")) {
+            try {
+                // We use 'CANCELLED' status to denote a closed request by client that hides it from Pros
+                await jobService.updateJobStatus(job.id, 'CANCELLED');
+                setJob(prev => prev ? ({ ...prev, status: 'CANCELLED' }) : null);
+                await refreshParent();
+            } catch (e: any) {
+                alert("Errore chiusura: " + e.message);
             }
         }
     };
@@ -90,9 +153,12 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     if (!job) return <div className="p-10 text-center">Richiesta non trovata.</div>;
 
     const myQuote = isPro ? quotes.find(q => q.proId === user.id) : null;
+    const hasQuotes = quotes.length > 0;
+    const canEditOrDelete = !isPro && !hasQuotes && job.status === 'OPEN';
+    const canClose = !isPro && hasQuotes && job.status === 'OPEN';
 
     return (
-        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full">
+        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-20">
             <button 
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
                 className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
@@ -103,25 +169,67 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left: Job Details */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
-                        <div className="flex justify-between items-start mb-6">
+                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
+                        
+                        {/* Header & Status */}
+                        <div className="flex justify-between items-start mb-6 relative z-10">
                             <div>
                                 <h1 className="text-3xl font-black text-slate-900 mb-2">{job.category}</h1>
-                                <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
-                                    <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
-                                    <span className="flex items-center"><Wallet size={16} className="mr-1"/> {job.budget}</span>
-                                    <span className="flex items-center"><Clock size={16} className="mr-1"/> {new Date(job.createdAt).toLocaleDateString()}</span>
-                                </div>
+                                {!isEditing ? (
+                                    <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
+                                        <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
+                                        <span className="flex items-center"><Wallet size={16} className="mr-1"/> {job.budget}</span>
+                                        <span className="flex items-center"><Clock size={16} className="mr-1"/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-wrap gap-4 mt-2">
+                                         <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-200">
+                                            <MapPin size={14} className="text-slate-400 mr-2"/>
+                                            <input 
+                                                value={editData.city} 
+                                                onChange={e => setEditData({...editData, city: e.target.value})}
+                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-32"
+                                                placeholder="Città"
+                                            />
+                                         </div>
+                                         <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-200">
+                                            <Wallet size={14} className="text-slate-400 mr-2"/>
+                                            <input 
+                                                value={editData.budget} 
+                                                onChange={e => setEditData({...editData, budget: e.target.value})}
+                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-32"
+                                                placeholder="Budget"
+                                            />
+                                         </div>
+                                    </div>
+                                )}
                             </div>
-                            <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                                {job.status === 'OPEN' ? 'Aperta' : job.status}
+                            <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${
+                                job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
+                                job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-500'
+                            }`}>
+                                {job.status === 'OPEN' ? 'Aperta' : job.status === 'CANCELLED' ? 'Chiusa' : job.status}
                             </span>
                         </div>
 
-                        <div className="space-y-6">
+                        {/* Description */}
+                        <div className="space-y-6 relative z-10">
                             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase">Descrizione</h3>
-                                <p className="text-slate-700 leading-relaxed whitespace-pre-line">{job.description}</p>
+                                <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase flex justify-between">
+                                    Descrizione
+                                    {isEditing && <span className="text-indigo-600 text-xs">Modifica in corso...</span>}
+                                </h3>
+                                {!isEditing ? (
+                                    <p className="text-slate-700 leading-relaxed whitespace-pre-line">{job.description}</p>
+                                ) : (
+                                    <textarea 
+                                        value={editData.description}
+                                        onChange={e => setEditData({...editData, description: e.target.value})}
+                                        rows={6}
+                                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-700 text-sm focus:border-indigo-600 outline-none resize-none"
+                                    />
+                                )}
                             </div>
                             {job.details && (
                                 <div>
@@ -137,6 +245,45 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 </div>
                             )}
                         </div>
+
+                        {/* Client Actions Toolbar */}
+                        {!isPro && job.status !== 'COMPLETED' && (
+                             <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-3">
+                                {isEditing ? (
+                                    <>
+                                        <button onClick={handleUpdateJob} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-indigo-700">
+                                            <Save size={16} /> Salva Modifiche
+                                        </button>
+                                        <button onClick={() => setIsEditing(false)} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200">
+                                            <X size={16} /> Annulla
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        {canEditOrDelete && (
+                                            <>
+                                                <button onClick={() => setIsEditing(true)} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200 hover:text-indigo-600 transition-colors">
+                                                    <Edit3 size={16} /> Modifica
+                                                </button>
+                                                <button onClick={handleDeleteJob} className="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-red-100 transition-colors">
+                                                    <Trash2 size={16} /> Elimina
+                                                </button>
+                                            </>
+                                        )}
+                                        {canClose && (
+                                            <button onClick={handleCloseJob} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200 hover:text-slate-800 transition-colors">
+                                                <Ban size={16} /> Chiudi Richiesta
+                                            </button>
+                                        )}
+                                        {job.status === 'CANCELLED' && (
+                                            <span className="px-4 py-2 bg-slate-50 text-slate-400 rounded-xl text-sm font-bold flex items-center gap-2 cursor-not-allowed">
+                                                <Ban size={16} /> Richiesta Chiusa
+                                            </span>
+                                        )}
+                                    </>
+                                )}
+                             </div>
+                        )}
                     </div>
 
                     {/* CLIENT VIEW: List Quotes */}
@@ -145,7 +292,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                             <h2 className="text-2xl font-black text-slate-900">Preventivi Ricevuti ({quotes.length})</h2>
                             {quotes.length === 0 ? (
                                 <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
-                                    Nessun preventivo ancora ricevuto.
+                                    Nessun preventivo ancora ricevuto. Modifica la richiesta per renderla più appetibile!
                                 </div>
                             ) : (
                                 quotes.map(q => (
@@ -163,7 +310,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                             >
                                                 Dettagli
                                             </button>
-                                            {q.status === 'PENDING' && (
+                                            {q.status === 'PENDING' && job.status === 'OPEN' && (
                                                 <button 
                                                     onClick={() => handleAcceptQuote(q)}
                                                     className="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 text-sm shadow-lg shadow-indigo-100"
@@ -433,6 +580,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const currentTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests');
   const currentTabRef = useRef(currentTab); // Ref to access current tab inside closure
 
+  // Filter & Sort State
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
   // Data State
   const [matchedLeads, setMatchedLeads] = useState<{ job: JobRequest; matchScore: number }[]>([]);
   const [myJobs, setMyJobs] = useState<JobRequest[]>([]);
@@ -454,19 +606,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [hasUnseenLeads, setHasUnseenLeads] = useState(false); // Sidebar notification state
   const [hasUnseenWon, setHasUnseenWon] = useState(false); // Sidebar notification for Won jobs
 
-  // New Job Modal State
-  const [showNewJobModal, setShowNewJobModal] = useState(false);
-  const [modalStep, setModalStep] = useState<'category' | 'details' | 'budget'>('category');
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [formDefinition, setFormDefinition] = useState<FormDefinition | null>(null);
-  const [jobDescription, setJobDescription] = useState('');
-  const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
-  const [budget, setBudget] = useState('');
-  const [locationCity, setLocationCity] = useState('');
-  const [creatingJob, setCreatingJob] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
-
   // Profile Hub State
   const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>('menu');
   const [profileForm, setProfileForm] = useState<User>(user);
@@ -476,6 +615,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
+
+  // Reset filters when changing tabs
+  useEffect(() => {
+      setSortOrder('newest');
+      setFilterCategory('all');
+  }, [currentTab]);
+
+  // Load categories for filter
+  useEffect(() => {
+      setAvailableCategories(contentService.getCategories());
+  }, []);
 
   // --- DATA FETCHING ---
 
@@ -495,7 +645,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 setUser(latestUser);
                 setProfileForm(latestUser);
             }
-            setAvailableCategories(contentService.getCategories());
 
             if (latestUser?.role === UserRole.PROFESSIONAL) {
                 const matches = await jobService.getMatchesForPro(latestUser);
@@ -513,17 +662,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 const myJobIds = new Set(myJobsFiltered.map(j => j.id));
                 const relatedQuotes = allQuotes.filter(q => myJobIds.has(q.jobId));
                 setClientQuotes(relatedQuotes);
-
-                // SORTING LOGIC: Move jobs with recent quotes to top
-                myJobsFiltered.sort((a, b) => {
-                    const getLatestActivity = (jobId: string, created: string) => {
-                         const jobQuotes = relatedQuotes.filter(q => q.jobId === jobId);
-                         if (jobQuotes.length === 0) return new Date(created).getTime();
-                         const latest = jobQuotes.reduce((max, q) => Math.max(max, new Date(q.createdAt).getTime()), 0);
-                         return Math.max(latest, new Date(created).getTime());
-                    };
-                    return getLatestActivity(b.id, b.createdAt) - getLatestActivity(a.id, a.createdAt);
-                });
 
                 setMyJobs(myJobsFiltered);
             }
@@ -606,44 +744,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
 
   // --- HANDLERS ---
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
-    setFormDefinition(contentService.getFormDefinition(category));
-    setModalStep('details');
-  };
-
-  const handleCreateJob = async () => {
-    if (!selectedCategory || !budget) return;
-    setCreatingJob(true);
-    try {
-        await jobService.createJob({
-        clientId: user.id,
-        clientName: user.name,
-        category: selectedCategory,
-        description: jobDescription,
-        details: jobDetails,
-        budget: budget,
-        location: locationCity ? { city: locationCity } : undefined
-        });
-        setShowNewJobModal(false);
-        setModalStep('category');
-        setJobDescription('');
-        setBudget('');
-        await refreshData();
-    } catch (e: any) { alert(e.message); } 
-    finally { setCreatingJob(false); }
-  };
-  
-  const handleRefineDescription = async () => {
-    if (!jobDescription) return;
-    setIsRefining(true);
-    try {
-      const refined = await geminiService.refineJobDescription(jobDescription);
-      if (refined) setJobDescription(refined);
-    } catch (err) { console.error(err); } 
-    finally { setIsRefining(false); }
-  };
-
   const handleSaveProfile = async () => {
      setIsSavingProfile(true);
      try {
@@ -753,15 +853,92 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
+  // Filter Bar Component
+  const FilterControls = () => (
+      <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-in fade-in">
+          <div className="relative group">
+              <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as any)}
+                  className="appearance-none bg-white border border-slate-200 text-slate-700 py-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:border-indigo-300 w-full sm:w-auto"
+              >
+                  <option value="newest">Più recenti</option>
+                  <option value="oldest">Meno recenti</option>
+              </select>
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-indigo-600 transition-colors">
+                  {sortOrder === 'newest' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+              </div>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <ChevronDown size={16} />
+              </div>
+          </div>
+
+          <div className="relative group">
+              <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="appearance-none bg-white border border-slate-200 text-slate-700 py-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:border-indigo-300 w-full sm:w-auto"
+              >
+                  <option value="all">Tutte le categorie</option>
+                  {availableCategories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                  ))}
+              </select>
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-indigo-600 transition-colors">
+                  <Filter size={16} />
+              </div>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <ChevronDown size={16} />
+              </div>
+          </div>
+      </div>
+  );
+
+  // --- PROCESSING LISTS ---
+  
+  // Leads (Pro)
+  const filteredLeads = matchedLeads
+    .filter(item => filterCategory === 'all' || item.job.category === filterCategory)
+    .sort((a, b) => {
+        const dateA = new Date(a.job.createdAt).getTime();
+        const dateB = new Date(b.job.createdAt).getTime();
+        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+  // My Requests (Client)
+  const filteredMyJobs = myJobs
+    .filter(job => filterCategory === 'all' || job.category === filterCategory)
+    .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+  // Quotes / Won (Pro)
+  const filteredQuotes = sentQuotes
+    .filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : q.status !== 'ACCEPTED')
+    .filter(q => {
+        if (filterCategory === 'all') return true;
+        const job = allJobsCache.find(j => j.id === q.jobId);
+        return job?.category === filterCategory;
+    })
+    .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+
   // --- RENDER CONTENT (LISTS) ---
   const renderDashboardContent = () => (
       <div className="max-w-[1250px] mx-auto w-full">
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-8">
             <div>
                 <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
                 {currentTab === 'leads' ? 'Opportunità per te' : 
                     currentTab === 'quotes' ? 'Preventivi Inviati' :
+                    currentTab === 'my-requests' ? 'Le mie Richieste' :
                     currentTab === 'won' ? 'I tuoi Successi' :
                     currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
                     currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
@@ -772,16 +949,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                      newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
-            {isPro && (currentTab === 'leads' || currentTab === 'quotes' || currentTab === 'won') && (
-                <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center space-x-4 min-w-[200px]">
-                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center"><Coins size={20} /></div>
-                    <div>
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Crediti</div>
-                        <div className="text-xl font-black text-slate-900 leading-none mt-1">{user.credits}</div>
+            
+            {/* Right Side Header Action */}
+            <div className="flex items-center gap-4">
+                {!isPro && currentTab === 'my-requests' && (
+                    <Link
+                        to="/post-job"
+                        className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center"
+                    >
+                        <Plus className="mr-2" size={20} /> Nuova Richiesta
+                    </Link>
+                )}
+
+                {isPro && (currentTab === 'leads' || currentTab === 'quotes' || currentTab === 'won') && (
+                    <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center space-x-4 min-w-[200px]">
+                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center"><Coins size={20} /></div>
+                        <div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Crediti</div>
+                            <div className="text-xl font-black text-slate-900 leading-none mt-1">{user.credits}</div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </header>
+
+        {/* Filters (Only for list views) */}
+        {(currentTab === 'leads' || currentTab === 'my-requests' || currentTab === 'quotes' || currentTab === 'won') && (
+            <FilterControls />
+        )}
 
         {/* Loading State */}
         {isLoadingData && !fetchError && matchedLeads.length === 0 && myJobs.length === 0 && (
@@ -810,51 +1005,48 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
             <>
                 {currentTab === 'leads' && (
                     <div className="space-y-6">
-                        {matchedLeads.map(({ job, matchScore }) => (
-                            <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
-                                <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                    {getCategoryIcon(job.category)}
-                                </div>
-                                <div className="flex-grow">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
-                                        <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                                            <TrendingUp size={10} /> {matchScore}% MATCH
-                                        </span>
-                                        {/* New Dot Logic - Individual Card */}
-                                        {!viewedJobs.has(job.id) && (
-                                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200 shrink-0 self-center" title="Nuova richiesta"></div>
-                                        )}
+                        {filteredLeads.length > 0 ? (
+                            filteredLeads.map(({ job, matchScore }) => (
+                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                    <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                        {getCategoryIcon(job.category)}
                                     </div>
-                                    <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">{job.description}</p>
-                                    <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                        <span className="flex items-center gap-1"><MapPin size={12}/> {job.location?.city || 'Remoto'}</span>
-                                        <span className="flex items-center gap-1"><Wallet size={12}/> {job.budget}</span>
-                                        <span className="flex items-center gap-1"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                    <div className="flex-grow">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
+                                            <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                                                <TrendingUp size={10} /> {matchScore}% MATCH
+                                            </span>
+                                            {/* New Dot Logic - Individual Card */}
+                                            {!viewedJobs.has(job.id) && (
+                                                <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200 shrink-0 self-center" title="Nuova richiesta"></div>
+                                            )}
+                                        </div>
+                                        <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">{job.description}</p>
+                                        <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            <span className="flex items-center gap-1"><MapPin size={12}/> {job.location?.city || 'Remoto'}</span>
+                                            <span className="flex items-center gap-1"><Wallet size={12}/> {job.budget}</span>
+                                            <span className="flex items-center gap-1"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
+                                    <div className="self-center">
+                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
+                                            <ChevronRight size={20} />
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="self-center">
-                                    <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
-                                        <ChevronRight size={20} />
-                                    </div>
-                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">
+                                Nessuna opportunità trovata con i filtri attuali.
                             </div>
-                        ))}
-                        {matchedLeads.length === 0 && <div className="text-center py-10 text-slate-400">Nessuna opportunità al momento.</div>}
+                        )}
                     </div>
                 )}
 
                 {currentTab === 'my-requests' && (
                     <div className="space-y-6">
-                         <div className="flex justify-end mb-6">
-                            <button 
-                                onClick={() => { setModalStep('category'); setShowNewJobModal(true); }}
-                                className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center"
-                            >
-                                <Plus className="mr-2" size={20} /> Nuova Richiesta
-                            </button>
-                         </div>
-                         {myJobs.map(job => {
+                         {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              const hasNewQuotes = quoteCount > 0; 
                              return (
@@ -866,8 +1058,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
                                         <p className="text-slate-500 text-sm line-clamp-1 mb-2">{job.description}</p>
                                         <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                                            <span className={`px-2 py-0.5 rounded uppercase ${job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>{job.status}</span>
+                                            <span className={`px-2 py-0.5 rounded uppercase ${
+                                                job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
+                                                job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                                'bg-slate-100 text-slate-500'
+                                            }`}>
+                                                {job.status === 'OPEN' ? 'Aperta' : job.status === 'CANCELLED' ? 'Chiusa' : job.status}
+                                            </span>
                                             <span className={`${hasNewQuotes ? 'text-indigo-600 font-black' : ''}`}>{quoteCount} Preventivi</span>
+                                            <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
                                         </div>
                                     </div>
                                     <div className="self-center">
@@ -877,15 +1076,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                     </div>
                                 </div>
                              );
-                         })}
+                         }) : (
+                            <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">
+                                Nessuna richiesta trovata.
+                            </div>
+                         )}
                     </div>
                 )}
 
                 {(currentTab === 'quotes' || currentTab === 'won') && (
                     <div className="space-y-6">
-                         {sentQuotes
-                             .filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : q.status !== 'ACCEPTED')
-                             .map(quote => {
+                         {filteredQuotes.length > 0 ? (
+                             filteredQuotes.map(quote => {
                                  const job = allJobsCache.find(j => j.id === quote.jobId);
                                  const category = job?.category || 'Servizio';
                                  return (
@@ -934,20 +1136,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                          </div>
                                      </div>
                                  );
-                             })}
-                         
-                         {/* Empty States */}
-                         {sentQuotes.filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : q.status !== 'ACCEPTED').length === 0 && (
-                             <div className="text-center py-12 text-slate-400">
+                             })
+                         ) : (
+                             <div className="text-center py-12 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">
                                  {currentTab === 'won' ? (
                                     <>
                                         <Trophy size={48} className="mx-auto mb-4 text-slate-300" />
-                                        <p>Ancora nessun lavoro vinto. Continua a inviare proposte!</p>
+                                        <p>Ancora nessun lavoro vinto con questi filtri. Continua a inviare proposte!</p>
                                     </>
                                  ) : (
                                     <>
                                         <Send size={48} className="mx-auto mb-4 text-slate-300" />
-                                        <p>Non hai preventivi in attesa.</p>
+                                        <p>Nessun preventivo trovato.</p>
                                         <button onClick={() => navigate('/dashboard?tab=leads')} className="text-indigo-600 font-bold hover:underline mt-2">Trova opportunità</button>
                                     </>
                                  )}
@@ -1227,7 +1427,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     { id: 'quotes', label: 'Preventivi Inviati', icon: <Send size={20} />, role: 'pro' },
                     { id: 'won', label: 'Lavori Ottenuti', icon: <Trophy size={20} />, role: 'pro' },
                     { id: 'settings', label: 'Profilo', icon: <Settings size={20} />, role: 'all' },
-                    { id: 'billing', label: 'Crediti', icon: <BillingIcon size={20} />, role: 'pro' }
+                    { id: 'billing', label: 'Crediti', icon: <Coins size={20} />, role: 'pro' }
                 ]
                 .filter(item => item.role === 'all' || (isPro && item.role === 'pro') || (!isPro && item.role === 'client'))
                 .map((item) => (
@@ -1261,57 +1461,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                  <Route path="/quote/:id" element={<QuoteDetailView user={user} isPro={isPro} />} />
              </Routes>
         </main>
-
-        {/* Create Job Modal (Only Modal left as it's a creation flow) */}
-        {showNewJobModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowNewJobModal(false)}></div>
-                <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl flex flex-col">
-                     <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
-                         <h3 className="text-xl font-black text-slate-900">{modalStep === 'category' ? 'Nuova Richiesta' : selectedCategory}</h3>
-                         <button onClick={() => setShowNewJobModal(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400"><X size={24} /></button>
-                     </div>
-                     <div className="p-6 md:p-8 space-y-8">
-                         {modalStep === 'category' ? (
-                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                 {availableCategories.map(cat => (
-                                     <button key={cat} onClick={() => handleCategorySelect(cat)} className="p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-50 text-left transition-all">
-                                         <div className="font-bold text-slate-900 text-sm">{cat}</div>
-                                     </button>
-                                 ))}
-                             </div>
-                         ) : (
-                             <>
-                                {formDefinition && (
-                                    <ServiceForm formDefinition={formDefinition} description={jobDescription} setDescription={setJobDescription} details={jobDetails} setDetails={setJobDetails} onRefine={handleRefineDescription} isRefining={isRefining} />
-                                )}
-                                <div className="space-y-4 pt-4 border-t border-slate-100">
-                                    <label className="text-xs font-black text-slate-500 uppercase">Budget</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {formDefinition?.budgetOptions.map(b => (
-                                            <button key={b} onClick={() => setBudget(b)} className={`py-3 px-4 rounded-xl text-xs font-bold border ${budget === b ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-200'}`}>{b}</button>
-                                        ))}
-                                    </div>
-                                </div>
-                                {formDefinition?.askLocation && (
-                                    <div className="space-y-4">
-                                        <label className="text-xs font-black text-slate-500 uppercase">Città</label>
-                                        <input type="text" value={locationCity} onChange={e => setLocationCity(e.target.value)} placeholder="Milano..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold" />
-                                    </div>
-                                )}
-                             </>
-                         )}
-                     </div>
-                     <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-[32px] flex justify-between items-center sticky bottom-0">
-                         {modalStep === 'details' && (
-                             <button onClick={handleCreateJob} disabled={creatingJob || !jobDescription || !budget} className="px-8 py-3 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center ml-auto">
-                                 {creatingJob ? 'Pubblicazione...' : 'Pubblica Richiesta'}
-                             </button>
-                         )}
-                     </div>
-                </div>
-            </div>
-        )}
     </div>
   );
 };

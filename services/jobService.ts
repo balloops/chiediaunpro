@@ -199,11 +199,31 @@ export const jobService = {
   },
 
   async updateJobStatus(jobId: string, status: JobRequest['status']): Promise<void> {
-    await supabase.from('jobs').update({ status }).eq('id', jobId);
+    const { error } = await supabase.from('jobs').update({ status }).eq('id', jobId);
+    if (error) throw new Error(`Errore aggiornamento stato: ${error.message}`);
   },
 
   async deleteJob(jobId: string): Promise<void> {
-    await supabase.from('jobs').delete().eq('id', jobId);
+    // 1. Tenta di eliminare prima i preventivi associati (Manual Cascade)
+    // Questo previene errori di Foreign Key se il DB non ha CASCADE DELETE configurato
+    const { error: quoteError } = await supabase.from('quotes').delete().eq('job_id', jobId);
+    if (quoteError) {
+      console.warn("Avviso pulizia preventivi (potrebbe fallire se non sei il proprietario dei preventivi):", quoteError.message);
+    }
+
+    // 2. Elimina il Job
+    const { error, count } = await supabase
+      .from('jobs')
+      .delete()
+      .eq('id', jobId)
+      .select('*', { count: 'exact' });
+
+    if (error) throw new Error(`Errore eliminazione: ${error.message}`);
+    
+    // Controllo se è stato effettivamente cancellato qualcosa
+    if (count === 0) {
+      throw new Error("Impossibile eliminare: richiesta non trovata o permessi insufficienti.");
+    }
   },
 
   async updateUserPlan(userId: string, plan: 'FREE' | 'PRO' | 'AGENCY'): Promise<void> {

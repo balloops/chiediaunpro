@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../types';
@@ -21,7 +20,8 @@ import {
   Clock, 
   Euro, 
   Box,
-  AlertCircle
+  AlertCircle,
+  LayoutDashboard
 } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
 import { jobService } from '../services/jobService';
@@ -178,6 +178,16 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   return (
     <div className="min-h-screen bg-slate-50 pt-12 pb-32 px-6">
       <div className="max-w-[1250px] mx-auto">
+        
+        {/* Back to Dashboard Link (Only if Logged In) */}
+        {user && (
+           <div className="mb-6 animate-in fade-in slide-in-from-left-4">
+              <Link to="/dashboard" className="inline-flex items-center space-x-2 text-slate-500 hover:text-indigo-600 font-bold text-sm transition-colors">
+                 <LayoutDashboard size={18} />
+                 <span>Torna alla Dashboard</span>
+              </Link>
+           </div>
+        )}
         
         <div className="bg-white rounded-[24px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
           
