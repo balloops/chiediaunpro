@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../types';
@@ -21,7 +22,8 @@ import {
   Euro, 
   Box,
   AlertCircle,
-  LayoutDashboard
+  LayoutDashboard,
+  Bot
 } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
 import { jobService } from '../services/jobService';
@@ -89,6 +91,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
       case ServiceCategory.MARKETING: return { icon: <BarChart3 />, color: 'text-indigo-500', desc: 'Social, Ads, SEO' };
       case ServiceCategory.SOFTWARE: return { icon: <AppWindow />, color: 'text-slate-700', desc: 'SaaS, Gestionali' };
       case ServiceCategory.THREE_D: return { icon: <Box />, color: 'text-cyan-500', desc: 'Rendering, 3D' };
+      case ServiceCategory.AI: return { icon: <Bot />, color: 'text-fuchsia-500', desc: 'Chatbot, Automazione, ML' };
       default: return { icon: <Plus />, color: 'text-slate-400', desc: 'Servizi personalizzati' };
     }
   };
