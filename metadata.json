@@ -1,6 +1,5 @@
-
 {
-  "name": "LavoraBene",
+  "name": "LavoraBene 1.2",
   "description": "Una piattaforma di matching per servizi digitali che mette in contatto professionisti e clienti per preventivi rapidi e mirati.",
   "requestFramePermissions": [
     "geolocation"

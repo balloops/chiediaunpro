@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory } from '../../types';
 import { 
@@ -7,7 +6,7 @@ import {
   Code, ShoppingCart, Palette, Camera, Video, BarChart3, AppWindow, Box, 
   Briefcase, HelpCircle, LogOut, Coins, RefreshCw, WifiOff,
   User as UserIcon, TrendingUp, Euro, Filter, ChevronDown, ArrowUp, ArrowDown,
-  Trash2, Edit3, XCircle, Save, X, Ban, Archive, Bot
+  Trash2, Edit3, XCircle, Save, X, Ban, Archive
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { jobService } from '../../services/jobService';
@@ -890,7 +889,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
       case ServiceCategory.MARKETING: return <BarChart3 size={24} />;
       case ServiceCategory.SOFTWARE: return <AppWindow size={24} />;
       case ServiceCategory.THREE_D: return <Box size={24} />;
-      case ServiceCategory.AI: return <Bot size={24} />;
       default: return <FileText size={24} />;
     }
   };
@@ -1234,9 +1232,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                              </p>
                                              
                                              <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                                 <span className="flex items-center gap-1"><MapPin size={12}/> <span>{job?.location?.city || 'Remoto'}</span></span>
-                                                 <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> <span>Tua Offerta: {quote.price}€</span></span>
-                                                 <span className="flex items-center gap-1"><Clock size={12}/> <span>Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span></span>
+                                                 <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
+                                                 <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
+                                                 <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
                                              </div>
                                          </div>
 
@@ -1532,7 +1530,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   return (
     <div className="bg-slate-50 min-h-screen flex">
         {/* Sidebar */}
-        <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col px-6 py-4 sticky top-[72px] h-[calc(100vh-72px)] z-20 shrink-0">
+        <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
              <div className="space-y-2 flex-grow">
                 {[
                     { id: 'leads', label: 'Opportunità', icon: <Star size={20} />, role: 'pro' },
