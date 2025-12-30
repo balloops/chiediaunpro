@@ -4,14 +4,14 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { User, UserRole, AuthState } from './types';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import LandingPage from './views/LandingPage';
-import Dashboard from './views/Dashboard';
-import LoginView from './views/LoginView';
-import RegisterView from './views/RegisterView';
-import PublicPostJobView from './views/PublicPostJobView';
-import AdminDashboard from './views/AdminDashboard';
-import HowItWorksView from './views/HowItWorksView';
-import HelpView from './views/HelpView';
+import LandingPage from './src/views/LandingPage';
+import Dashboard from './src/views/Dashboard';
+import LoginView from './src/views/LoginView';
+import RegisterView from './src/views/RegisterView';
+import PublicPostJobView from './src/views/PublicPostJobView';
+import AdminDashboard from './src/views/AdminDashboard';
+import HowItWorksView from './src/views/HowItWorksView';
+import HelpView from './src/views/HelpView';
 import GDPRBanner from './components/GDPRBanner';
 import { authService } from './services/authService';
 import { supabase } from './services/supabaseClient';
@@ -100,7 +100,7 @@ const App: React.FC = () => {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50 flex-col space-y-6">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <p className="text-slate-400 text-sm font-medium animate-pulse">Caricamento ChiediUnPro...</p>
+        <p className="text-slate-400 text-sm font-medium animate-pulse">Caricamento LavoraBene...</p>
         
         {showReload && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center">

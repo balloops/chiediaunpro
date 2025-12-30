@@ -30,7 +30,7 @@ const GDPRBanner: React.FC = () => {
             <h4 className="font-black text-lg mb-1">La tua privacy è importante</h4>
             <p className="text-slate-400 text-sm font-medium leading-relaxed">
               Utilizziamo i cookie per migliorare la tua esperienza e per fini analitici. 
-              Navigando su ChiediaunPro accetti i nostri <span className="text-white underline cursor-pointer">termini di servizio</span>.
+              Navigando su LavoraBene accetti i nostri <span className="text-white underline cursor-pointer">termini di servizio</span>.
             </p>
           </div>
         </div>

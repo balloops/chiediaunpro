@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, UserRole, ServiceCategory, SiteContent } from '../types';
+import { User, UserRole, ServiceCategory, SiteContent } from '../../types';
 import { 
   Code, 
   Palette, 
@@ -18,7 +18,7 @@ import {
   Plus,
   Bot
 } from 'lucide-react';
-import { contentService } from '../services/contentService';
+import { contentService } from '../../services/contentService';
 
 interface LandingPageProps {
   user: User | null;

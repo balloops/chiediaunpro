@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { User, UserRole, ServiceCategory } from '../types';
+import { User, UserRole, ServiceCategory } from '../../types';
 import { User as UserIcon, Briefcase, Mail, Lock, UserCheck, ArrowRight, ShieldCheck, ArrowLeft, MapPin, Globe, FileText, CreditCard, Zap, AlertCircle, Check, Phone, Star } from 'lucide-react';
-import { authService } from '../services/authService';
-import { contentService } from '../services/contentService';
+import { authService } from '../../services/authService';
+import { contentService } from '../../services/contentService';
 
 interface RegisterViewProps {
   onLogin: (user: User) => void;
@@ -110,7 +110,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               </div>
               
               <h1 className="text-4xl lg:text-5xl font-black mb-6 leading-[1.1]">
-                {role === UserRole.PROFESSIONAL ? 'Fai crescere il tuo business.' : 'Unisciti alla rivoluzione.'}
+                {role === UserRole.PROFESSIONAL ? 'Fai crescere il tuo business.' : 'Racconta cosa ti serve.'}
               </h1>
               
               <p className="text-indigo-100 text-lg leading-relaxed max-w-md opacity-90">

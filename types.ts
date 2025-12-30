@@ -14,6 +14,7 @@ export enum ServiceCategory {
   VIDEO = 'Video & Motion',
   MARKETING = 'Social Media & Marketing',
   SOFTWARE = 'Sviluppo Software & App',
+  AI = 'Intelligenza Artificiale',
   THREE_D = '3D & Animazione',
   CUSTOM = 'Altro'
 }

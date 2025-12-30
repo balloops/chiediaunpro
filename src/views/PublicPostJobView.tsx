@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../types';
+import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../../types';
 import { 
   ArrowLeft, 
   ChevronRight, 
@@ -25,11 +25,11 @@ import {
   LayoutDashboard,
   Bot
 } from 'lucide-react';
-import { geminiService } from '../services/geminiService';
-import { jobService } from '../services/jobService';
-import { contentService } from '../services/contentService';
-import { authService } from '../services/authService'; // Import authService
-import ServiceForm from '../components/ServiceForm';
+import { geminiService } from '../../services/geminiService';
+import { jobService } from '../../services/jobService';
+import { contentService } from '../../services/contentService';
+import { authService } from '../../services/authService';
+import ServiceForm from '../../components/ServiceForm';
 
 interface PublicPostJobViewProps {
   user: User | null;

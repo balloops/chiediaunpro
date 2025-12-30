@@ -2,13 +2,14 @@
 import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
-const PLANS_KEY = 'chiediunpro_plans';
-const CATEGORIES_KEY = 'chiediunpro_categories';
-const FORMS_KEY = 'chiediunpro_forms';
+// CAMBIO CHIAVI PER FORZARE IL RESET DELLA CACHE LOCALE
+const PLANS_KEY = 'lavorabene_plans_v1';
+const CATEGORIES_KEY = 'lavorabene_categories_v1';
+const FORMS_KEY = 'lavorabene_forms_v1';
 
 const defaultContent: SiteContent = {
   branding: {
-    platformName: 'ChiediUnPro',
+    platformName: 'LavoraBene',
     logoUrl: ''
   },
   home: {
@@ -73,7 +74,7 @@ const defaultContent: SiteContent = {
     items: [
       {
         question: "È gratuito pubblicare una richiesta?",
-        answer: "Assolutamente sì. Pubblicare una richiesta su ChiediUnPro è completamente gratuito per i clienti.",
+        answer: "Assolutamente sì. Pubblicare una richiesta su LavoraBene è completamente gratuito per i clienti.",
         category: 'general'
       },
       {
@@ -244,6 +245,28 @@ const defaultForms: FormDefinition[] = [
     ]
   },
   {
+    categoryId: ServiceCategory.AI, // Intelligenza Artificiale
+    descriptionPlaceholder: "Es. Vorrei integrare un assistente virtuale sul mio sito ecommerce per rispondere alle domande frequenti...",
+    askLocation: false,
+    budgetOptions: ['< 1.000€', '1.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
+    fields: [
+      {
+        id: 'ai_type',
+        label: 'Tipo di Soluzione',
+        type: 'select',
+        options: ['Chatbot & Assistenti Virtuali', 'Automazione Processi (RPA)', 'Machine Learning / Predizioni', 'Generazione Contenuti (Testo/Img)', 'Consulenza Strategica AI', 'Altro'],
+        required: true
+      },
+      {
+        id: 'integration',
+        label: 'Integrazione Richiesta',
+        type: 'checkbox_group',
+        options: ['Sito Web', 'WhatsApp / Telegram', 'Software Gestionale (ERP/CRM)', 'App Mobile', 'Nessuna / Standalone'],
+        required: false
+      }
+    ]
+  },
+  {
     categoryId: ServiceCategory.BRANDING, // Branding & Grafica
     descriptionPlaceholder: "Es. Sto aprendo un ristorante e mi serve logo, menu e biglietti da visita...",
     askLocation: true,
@@ -314,8 +337,15 @@ export const contentService = {
       }
 
       if (data && data.content) {
-        // Merge to ensure new fields are present if DB is outdated structure
-        cachedContent = { ...defaultContent, ...data.content };
+        // DB FIX: Se il database ha ancora il vecchio nome, forziamo l'aggiornamento
+        if (data.content.branding?.platformName === 'ChiediUnPro') {
+            console.log("DB Migration: Updating Platform Name to LavoraBene...");
+            const updatedContent = { ...defaultContent, ...data.content, branding: { ...data.content.branding, platformName: 'LavoraBene' } };
+            cachedContent = updatedContent;
+            await this.saveContent(updatedContent); // Salva la correzione
+        } else {
+            cachedContent = { ...defaultContent, ...data.content };
+        }
       } else {
         // DB is empty or row missing, seed it with defaults
         await this.saveContent(defaultContent);
@@ -355,6 +385,7 @@ export const contentService = {
   getCategories(): string[] {
     const data = localStorage.getItem(CATEGORIES_KEY);
     try {
+        // Se non ci sono dati o la chiave è vecchia, restituisci l'enum che contiene AI
         return data ? JSON.parse(data) : Object.values(ServiceCategory);
     } catch (e) {
         return Object.values(ServiceCategory);

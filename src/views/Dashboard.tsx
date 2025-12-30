@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { User, UserRole, JobRequest, Quote, ServiceCategory } from '../types';
+import { User, UserRole, JobRequest, Quote, ServiceCategory } from '../../types';
 import { 
   FileText, Send, Settings, Plus, Star, Trophy, MapPin, Wallet, Clock, 
   ChevronRight, ArrowLeft, ArrowRight, Check, Phone, Lock, 
@@ -10,11 +10,11 @@ import {
   Trash2, Edit3, XCircle, Save, X, Ban, Archive, Bot
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
-import { jobService } from '../services/jobService';
-import { notificationService } from '../services/notificationService';
-import { authService } from '../services/authService';
-import { contentService } from '../services/contentService';
-import { supabase } from '../services/supabaseClient';
+import { jobService } from '../../services/jobService';
+import { notificationService } from '../../services/notificationService';
+import { authService } from '../../services/authService';
+import { contentService } from '../../services/contentService';
+import { supabase } from '../../services/supabaseClient';
 
 interface DashboardProps {
   user: User;
