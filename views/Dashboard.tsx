@@ -959,23 +959,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 {/* --- PROFILE HUB --- */}
                 {currentTab === 'settings' && (
                      <div className="animate-in fade-in duration-300">
-                        {/* Profile Header */}
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center space-x-4">
-                                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-200">
-                                    {getInitials(user.name)}
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl font-black text-slate-900">{user.name}</h2>
-                                    <p className="text-slate-500 font-medium">{user.role === UserRole.PROFESSIONAL ? 'Professionista Verificato' : 'Cliente'}</p>
+                        {/* Profile Header - Visible only in Menu */}
+                        {settingsView === 'menu' ? (
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center space-x-4">
+                                    <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-200">
+                                        {getInitials(user.name)}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-black text-slate-900">{user.name}</h2>
+                                        <p className="text-slate-500 font-medium">{user.role === UserRole.PROFESSIONAL ? 'Professionista Verificato' : 'Cliente'}</p>
+                                    </div>
                                 </div>
                             </div>
-                            {settingsView !== 'menu' && (
-                                <button onClick={() => { setSettingsView('menu'); setPasswordMessage(''); }} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
-                                    <X size={20} />
-                                </button>
-                            )}
-                        </div>
+                        ) : (
+                            <button 
+                                onClick={() => { setSettingsView('menu'); setPasswordMessage(''); }} 
+                                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
+                            >
+                                <ArrowLeft size={18} className="mr-2" /> Torna al menu
+                            </button>
+                        )}
 
                         {/* MENU VIEW */}
                         {settingsView === 'menu' && (
@@ -1087,6 +1091,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         {/* EDIT PROFILE VIEW */}
                         {settingsView === 'profile_edit' && (
                             <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
+                                {/* Title Context */}
+                                <div className="mb-6">
+                                    <h2 className="text-3xl font-black text-slate-900">Il mio Profilo</h2>
+                                    <p className="text-slate-500">Gestisci le tue informazioni personali.</p>
+                                </div>
+
                                 <div>
                                     <h2 className="text-xl font-black text-slate-900 mb-6">Dati Personali</h2>
                                     <div className="space-y-4">
@@ -1156,7 +1166,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         {/* SERVICES VIEW */}
                         {settingsView === 'services' && (
                             <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
-                                <h2 className="text-xl font-black text-slate-900 mb-6">Gestisci Servizi</h2>
+                                <h2 className="text-3xl font-black text-slate-900 mb-2">Gestisci Servizi</h2>
+                                <p className="text-slate-500 mb-8">Seleziona le categorie di servizi che offri.</p>
+                                
                                 <div className="grid grid-cols-2 gap-3 mb-8">
                                     {Object.values(ServiceCategory).map(cat => {
                                         const isSelected = profileForm.offeredServices?.includes(cat);
