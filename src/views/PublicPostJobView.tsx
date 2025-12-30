@@ -81,6 +81,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
   const getCategoryIcon = (name: string) => {
     // Map standard categories to icons, fallback for custom/new ones
+    // Colors synchronized with LandingPage.tsx
     switch(name) {
       case ServiceCategory.WEBSITE: return { icon: <Code />, color: 'text-blue-500', desc: 'Siti aziendali, Landing' };
       case ServiceCategory.ECOMMERCE: return { icon: <ShoppingCart />, color: 'text-emerald-500', desc: 'Vendi prodotti online' };
@@ -88,7 +89,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
       case ServiceCategory.BRANDING: return { icon: <Palette />, color: 'text-pink-500', desc: 'Loghi, Identità Visiva' };
       case ServiceCategory.PHOTOGRAPHY: return { icon: <Camera />, color: 'text-orange-500', desc: 'Prodotti, Ritratti' };
       case ServiceCategory.VIDEO: return { icon: <Video />, color: 'text-red-500', desc: 'Editing, Motion' };
-      case ServiceCategory.MARKETING: return { icon: <BarChart3 />, color: 'text-indigo-500', desc: 'Social, Ads, SEO' };
+      case ServiceCategory.MARKETING: return { icon: <BarChart3 />, color: 'text-emerald-500', desc: 'Social, Ads, SEO' }; // Updated to Emerald/Green match Home
       case ServiceCategory.SOFTWARE: return { icon: <AppWindow />, color: 'text-slate-700', desc: 'SaaS, Gestionali' };
       case ServiceCategory.THREE_D: return { icon: <Box />, color: 'text-cyan-500', desc: 'Rendering, 3D' };
       case ServiceCategory.AI: return { icon: <Bot />, color: 'text-fuchsia-500', desc: 'Chatbot, Automazione, ML' };
@@ -231,7 +232,8 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
           <div className="p-8 lg:p-12">
             {step === 'category' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              // UPDATED GRID LAYOUT HERE: xl:grid-cols-4 and gap-6
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {categories.map((cat) => {
                   const info = getCategoryIcon(cat);
                   return (

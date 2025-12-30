@@ -16,7 +16,9 @@ import {
   Star,
   Box,
   Plus,
-  Bot
+  Bot,
+  ShoppingCart,
+  AppWindow
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
 
@@ -41,10 +43,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   const getCategoryIcon = (name: string) => {
     switch(name) {
       case ServiceCategory.WEBSITE: return <Code className="text-blue-500" />;
+      case ServiceCategory.ECOMMERCE: return <ShoppingCart className="text-emerald-500" />;
       case ServiceCategory.DESIGN: return <Palette className="text-purple-500" />;
+      case ServiceCategory.BRANDING: return <Palette className="text-pink-500" />;
       case ServiceCategory.PHOTOGRAPHY: return <Camera className="text-orange-500" />;
       case ServiceCategory.VIDEO: return <Video className="text-red-500" />;
-      case ServiceCategory.MARKETING: return <BarChart3 className="text-green-500" />;
+      case ServiceCategory.MARKETING: return <BarChart3 className="text-emerald-500" />;
+      case ServiceCategory.SOFTWARE: return <AppWindow className="text-slate-700" />;
       case ServiceCategory.THREE_D: return <Box className="text-cyan-500" />;
       case ServiceCategory.AI: return <Bot className="text-fuchsia-500" />;
       default: return <Plus className="text-slate-400" />;

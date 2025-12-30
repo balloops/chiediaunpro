@@ -627,6 +627,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   // Filter & Sort State
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterQuoteStatus, setFilterQuoteStatus] = useState<'all' | 'with_quotes' | 'without_quotes'>('all');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // Data State
@@ -664,6 +665,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   useEffect(() => {
       setSortOrder('newest');
       setFilterCategory('all');
+      setFilterQuoteStatus('all');
   }, [currentTab]);
 
   // Load categories for filter
@@ -917,6 +919,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
               </div>
           </div>
 
+          {currentTab === 'my-requests' && (
+              <div className="relative group">
+                  <select
+                      value={filterQuoteStatus}
+                      onChange={(e) => setFilterQuoteStatus(e.target.value as any)}
+                      className="appearance-none bg-white border border-slate-200 text-slate-700 py-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:border-indigo-300 w-full sm:w-auto"
+                  >
+                      <option value="all">Tutti gli stati</option>
+                      <option value="with_quotes">Con Preventivi</option>
+                      <option value="without_quotes">Senza Preventivi</option>
+                  </select>
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-indigo-600 transition-colors">
+                      <Filter size={16} />
+                  </div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <ChevronDown size={16} />
+                  </div>
+              </div>
+          )}
+
           <div className="relative group">
               <select
                   value={filterCategory}
@@ -953,6 +975,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const filteredMyJobs = myJobs
     .filter(job => job.status !== 'ARCHIVED')
     .filter(job => filterCategory === 'all' || job.category === filterCategory)
+    .filter(job => {
+        if (filterQuoteStatus === 'all') return true;
+        const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
+        if (filterQuoteStatus === 'with_quotes') return quoteCount > 0;
+        if (filterQuoteStatus === 'without_quotes') return quoteCount === 0;
+        return true;
+    })
     .sort((a, b) => {
         const dateA = new Date(a.createdAt).getTime();
         const dateB = new Date(b.createdAt).getTime();
