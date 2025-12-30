@@ -2,9 +2,10 @@
 import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
-const PLANS_KEY = 'chiediunpro_plans';
-const CATEGORIES_KEY = 'chiediunpro_categories';
-const FORMS_KEY = 'chiediunpro_forms';
+// CAMBIO CHIAVI PER FORZARE IL RESET DELLA CACHE LOCALE
+const PLANS_KEY = 'lavorabene_plans_v1';
+const CATEGORIES_KEY = 'lavorabene_categories_v1';
+const FORMS_KEY = 'lavorabene_forms_v1';
 
 const defaultContent: SiteContent = {
   branding: {
@@ -336,8 +337,15 @@ export const contentService = {
       }
 
       if (data && data.content) {
-        // Merge to ensure new fields are present if DB is outdated structure
-        cachedContent = { ...defaultContent, ...data.content };
+        // DB FIX: Se il database ha ancora il vecchio nome, forziamo l'aggiornamento
+        if (data.content.branding?.platformName === 'ChiediUnPro') {
+            console.log("DB Migration: Updating Platform Name to LavoraBene...");
+            const updatedContent = { ...defaultContent, ...data.content, branding: { ...data.content.branding, platformName: 'LavoraBene' } };
+            cachedContent = updatedContent;
+            await this.saveContent(updatedContent); // Salva la correzione
+        } else {
+            cachedContent = { ...defaultContent, ...data.content };
+        }
       } else {
         // DB is empty or row missing, seed it with defaults
         await this.saveContent(defaultContent);
@@ -377,6 +385,7 @@ export const contentService = {
   getCategories(): string[] {
     const data = localStorage.getItem(CATEGORIES_KEY);
     try {
+        // Se non ci sono dati o la chiave è vecchia, restituisci l'enum che contiene AI
         return data ? JSON.parse(data) : Object.values(ServiceCategory);
     } catch (e) {
         return Object.values(ServiceCategory);
