@@ -201,7 +201,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     : '/';
 
   return (
-    <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 md:px-6 py-3 md:py-4">
+    <nav className="bg-white border-b border-slate-200 sticky top-0 z-[100] px-4 md:px-6 py-3 md:py-4">
       <div className={`${isBackend ? 'w-full' : 'max-w-[1250px] mx-auto'} flex items-center justify-between`}>
         
         {/* LEFT: Logo */}
@@ -305,8 +305,8 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               {/* Desktop User Profile Dropdown */}
               <div className="hidden md:flex items-center space-x-3 border-l pl-6 border-slate-200 relative" ref={profileDropdownRef}>
                 <button 
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center space-x-2 group outline-none"
+                  onClick={() => setShowProfileDropdown((prev) => !prev)}
+                  className="flex items-center space-x-2 group outline-none cursor-pointer"
                 >
                   <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all overflow-hidden border border-slate-200">
                     {user.avatar ? (
@@ -323,7 +323,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
                 {/* Dropdown Menu */}
                 {showProfileDropdown && (
-                  <div className="absolute right-0 top-full mt-4 w-64 bg-white border border-slate-100 rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 origin-top-right z-50">
+                  <div className="absolute right-0 top-full mt-4 w-64 bg-white border border-slate-100 rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 origin-top-right z-[100]">
                     <div className="p-5 border-b border-slate-50 bg-slate-50/50">
                       <p className="text-sm font-black text-slate-900">{user.name}</p>
                       <p className="text-xs text-slate-500 font-medium truncate">{user.email}</p>

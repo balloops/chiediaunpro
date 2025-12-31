@@ -4,22 +4,16 @@ import { User, UserRole, JobRequest, PricingPlan, SiteContent, EventLog, FormDef
 import { 
   Users, Briefcase, BarChart3, Trash2, ShieldCheck, Search, AlertCircle, TrendingUp, 
   FileText, MessageSquare, CheckCircle, XCircle, Layers, Plus, Terminal, Clock, 
-  Layout, CreditCard, Edit3, Save, Globe, Settings, LogOut, Euro, X, Check, 
+  Layout, CreditCard, Edit3, Save, Globe, Settings, Euro, X, Check, 
   ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
 import { logService } from '../../services/logService';
 import { contentService } from '../../services/contentService';
-import { Link, useSearchParams } from 'react-router-dom';
 
 const AdminDashboard: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'overview';
-  
-  const setActiveTab = (tab: string) => {
-    setSearchParams({ tab });
-  };
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'requests' | 'categories' | 'plans' | 'cms' | 'logs'>('overview');
   
   // Data State
   const [stats, setStats] = useState({
@@ -300,7 +294,6 @@ const AdminDashboard: React.FC = () => {
           </button>
         ))}
       </div>
-      {/* Logout Removed from Sidebar - Handled by Navbar */}
     </aside>
   );
 
@@ -885,10 +878,8 @@ const AdminDashboard: React.FC = () => {
                                type="text" 
                                value={item.title} 
                                onChange={e => {
-                                  // Fix: Avoid mutating state directly
-                                  const newItems = cmsContent.home.features.items.map((it, i) => 
-                                    i === idx ? { ...it, title: e.target.value } : it
-                                  );
+                                  const newItems = [...cmsContent.home.features.items];
+                                  newItems[idx].title = e.target.value;
                                   updateCmsHome('features', 'items', newItems);
                                }}
                                className="w-full p-3 bg-white border border-slate-200 rounded-lg font-bold text-sm"
@@ -898,10 +889,8 @@ const AdminDashboard: React.FC = () => {
                                rows={2}
                                value={item.description}
                                onChange={e => {
-                                  // Fix: Avoid mutating state directly
-                                  const newItems = cmsContent.home.features.items.map((it, i) => 
-                                    i === idx ? { ...it, description: e.target.value } : it
-                                  );
+                                  const newItems = [...cmsContent.home.features.items];
+                                  newItems[idx].description = e.target.value;
                                   updateCmsHome('features', 'items', newItems);
                                }}
                                className="w-full p-3 bg-white border border-slate-200 rounded-lg text-sm resize-none"
