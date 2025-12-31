@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
@@ -357,15 +356,17 @@ export const contentService = {
   },
 
   async saveContent(content: SiteContent) {
-    cachedContent = content;
+    cachedContent = content; // Update local cache immediately
+    
+    // NOTA: Rimuoviamo 'updated_at' dal payload per evitare errori se la colonna non esiste nel DB
     const { error } = await supabase.from('site_content').upsert({ 
       id: 1, 
-      content: content,
-      updated_at: new Date().toISOString()
+      content: content
     });
     
     if (error) {
-      console.warn("Supabase Warning: Error saving content (DB might be missing 'site_content' table):", error.message || error);
+      console.error("Supabase Error saving content:", error.message);
+      throw new Error(`Errore salvataggio DB: ${error.message}`);
     }
   },
 

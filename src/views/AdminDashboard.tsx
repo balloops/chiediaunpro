@@ -201,8 +201,12 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSaveCMS = async () => {
-    await contentService.saveContent(cmsContent);
-    alert('Contenuti del sito aggiornati su Database! Ricarica la pagina per vedere le modifiche nel menu/footer.');
+    try {
+        await contentService.saveContent(cmsContent);
+        alert('Contenuti salvati correttamente su Database! Le modifiche sono ora visibili a tutti.');
+    } catch (e: any) {
+        alert('Errore durante il salvataggio su Database: ' + e.message);
+    }
   };
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -886,8 +890,10 @@ const AdminDashboard: React.FC = () => {
                                type="text" 
                                value={item.title} 
                                onChange={e => {
-                                  const newItems = [...cmsContent.home.features.items];
-                                  newItems[idx].title = e.target.value;
+                                  // Fix: Avoid mutating state directly
+                                  const newItems = cmsContent.home.features.items.map((it, i) => 
+                                    i === idx ? { ...it, title: e.target.value } : it
+                                  );
                                   updateCmsHome('features', 'items', newItems);
                                }}
                                className="w-full p-3 bg-white border border-slate-200 rounded-lg font-bold text-sm"
@@ -897,8 +903,10 @@ const AdminDashboard: React.FC = () => {
                                rows={2}
                                value={item.description}
                                onChange={e => {
-                                  const newItems = [...cmsContent.home.features.items];
-                                  newItems[idx].description = e.target.value;
+                                  // Fix: Avoid mutating state directly
+                                  const newItems = cmsContent.home.features.items.map((it, i) => 
+                                    i === idx ? { ...it, description: e.target.value } : it
+                                  );
                                   updateCmsHome('features', 'items', newItems);
                                }}
                                className="w-full p-3 bg-white border border-slate-200 rounded-lg text-sm resize-none"
@@ -937,8 +945,7 @@ const AdminDashboard: React.FC = () => {
                            <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative group">
                               <button 
                                  onClick={() => {
-                                    const newItems = [...cmsContent.helpCenter.items];
-                                    newItems.splice(idx, 1);
+                                    const newItems = cmsContent.helpCenter.items.filter((_, i) => i !== idx);
                                     setCmsContent({...cmsContent, helpCenter: {...cmsContent.helpCenter, items: newItems}});
                                  }}
                                  className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
@@ -950,8 +957,9 @@ const AdminDashboard: React.FC = () => {
                                  <input 
                                     value={faq.question}
                                     onChange={e => {
-                                       const newItems = [...cmsContent.helpCenter.items];
-                                       newItems[idx].question = e.target.value;
+                                       const newItems = cmsContent.helpCenter.items.map((it, i) => 
+                                          i === idx ? { ...it, question: e.target.value } : it
+                                       );
                                        setCmsContent({...cmsContent, helpCenter: {...cmsContent.helpCenter, items: newItems}});
                                     }}
                                     className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold outline-none"
@@ -961,8 +969,9 @@ const AdminDashboard: React.FC = () => {
                                     rows={2}
                                     value={faq.answer}
                                     onChange={e => {
-                                       const newItems = [...cmsContent.helpCenter.items];
-                                       newItems[idx].answer = e.target.value;
+                                       const newItems = cmsContent.helpCenter.items.map((it, i) => 
+                                          i === idx ? { ...it, answer: e.target.value } : it
+                                       );
                                        setCmsContent({...cmsContent, helpCenter: {...cmsContent.helpCenter, items: newItems}});
                                     }}
                                     className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none resize-none"
@@ -971,8 +980,9 @@ const AdminDashboard: React.FC = () => {
                                  <select
                                     value={faq.category}
                                     onChange={e => {
-                                       const newItems = [...cmsContent.helpCenter.items];
-                                       newItems[idx].category = e.target.value as any;
+                                       const newItems = cmsContent.helpCenter.items.map((it, i) => 
+                                          i === idx ? { ...it, category: e.target.value as any } : it
+                                       );
                                        setCmsContent({...cmsContent, helpCenter: {...cmsContent.helpCenter, items: newItems}});
                                     }}
                                     className="text-xs bg-white border border-slate-200 rounded px-2 py-1 outline-none font-medium text-slate-600"
@@ -1016,13 +1026,11 @@ const AdminDashboard: React.FC = () => {
                           <div key={idx} className="mb-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                              <div className="space-y-3">
                                 <input value={step.title} onChange={e => {
-                                   const newSteps = [...cmsContent.howItWorks.clientSteps];
-                                   newSteps[idx].title = e.target.value;
+                                   const newSteps = cmsContent.howItWorks.clientSteps.map((s, i) => i === idx ? { ...s, title: e.target.value } : s);
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, clientSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm font-bold" />
                                 <textarea value={step.description} onChange={e => {
-                                   const newSteps = [...cmsContent.howItWorks.clientSteps];
-                                   newSteps[idx].description = e.target.value;
+                                   const newSteps = cmsContent.howItWorks.clientSteps.map((s, i) => i === idx ? { ...s, description: e.target.value } : s);
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, clientSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm" rows={2} />
                              </div>
@@ -1035,13 +1043,11 @@ const AdminDashboard: React.FC = () => {
                           <div key={idx} className="mb-4 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
                              <div className="space-y-3">
                                 <input value={step.title} onChange={e => {
-                                   const newSteps = [...cmsContent.howItWorks.proSteps];
-                                   newSteps[idx].title = e.target.value;
+                                   const newSteps = cmsContent.howItWorks.proSteps.map((s, i) => i === idx ? { ...s, title: e.target.value } : s);
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, proSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm font-bold" />
                                 <textarea value={step.description} onChange={e => {
-                                   const newSteps = [...cmsContent.howItWorks.proSteps];
-                                   newSteps[idx].description = e.target.value;
+                                   const newSteps = cmsContent.howItWorks.proSteps.map((s, i) => i === idx ? { ...s, description: e.target.value } : s);
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, proSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm" rows={2} />
                              </div>
