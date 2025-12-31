@@ -632,8 +632,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const isPro = activeRole === UserRole.PROFESSIONAL;
   
   // URL Driven State (Source of Truth)
-  const currentTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests');
-  const currentTabRef = useRef(currentTab); // Ref to access current tab inside closure
+  const rawTab = searchParams.get('tab');
+  // Logic to determine active view tab. 
+  // We map sub-pages 'services' and 'profile' to the main 'settings' tab container for the layout,
+  // while the internal state manages which sub-view to show.
+  let currentTab = rawTab || (isPro ? 'leads' : 'my-requests');
+  if (['services', 'profile'].includes(currentTab)) {
+      currentTab = 'settings';
+  }
+
+  const currentTabRef = useRef(currentTab); 
 
   // Filter & Sort State
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -662,7 +670,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [hasUnseenWon, setHasUnseenWon] = useState(false); // Sidebar notification for Won jobs
 
   // Profile Hub State
-  const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>('menu');
+  // Initialize based on the raw URL parameter
+  const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>(() => {
+      if (rawTab === 'services') return 'services';
+      if (rawTab === 'profile') return 'profile_edit';
+      return 'menu';
+  });
+  
   const [profileForm, setProfileForm] = useState<User>(user);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   
@@ -670,6 +684,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
+
+  // Sync internal view with URL changes
+  useEffect(() => {
+      if (rawTab === 'services') setSettingsView('services');
+      else if (rawTab === 'profile') setSettingsView('profile_edit');
+      else if (rawTab === 'settings') setSettingsView('menu');
+  }, [rawTab]);
 
   // Reset filters when changing tabs
   useEffect(() => {

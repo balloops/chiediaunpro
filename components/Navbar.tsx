@@ -5,7 +5,7 @@ import { User, UserRole, Notification, SiteContent } from '../types';
 import { 
   LayoutDashboard, LogOut, User as UserIcon, Bell, Check, Clock, Menu, X, 
   Star, FileText, Send, Trophy, Archive, Settings, Coins, Users, Briefcase, 
-  BarChart3, Layers, CreditCard, Globe, Terminal 
+  BarChart3, Layers, CreditCard, Globe, Terminal, ChevronDown, HelpCircle
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
 import { contentService } from '../services/contentService';
@@ -19,9 +19,13 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [content, setContent] = useState<SiteContent>(contentService.getContent());
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -73,8 +77,13 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      // Close Notification Dropdown
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(event.target as Node)) {
         setShowNotifDropdown(false);
+      }
+      // Close Profile Dropdown
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -225,7 +234,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           {user ? (
             <>
               {/* Notification Bell */}
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={notifDropdownRef}>
                 <button 
                   onClick={() => setShowNotifDropdown(!showNotifDropdown)}
                   className={`p-2 rounded-xl transition-all relative ${showNotifDropdown ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-indigo-600'}`}
@@ -293,9 +302,12 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 <UserIcon size={20} />
               </Link>
 
-              {/* Desktop User Profile */}
-              <div className="hidden md:flex items-center space-x-3 border-l pl-6 border-slate-200">
-                <Link to={isBackend ? '#' : '/dashboard'} className="flex items-center space-x-2 group">
+              {/* Desktop User Profile Dropdown */}
+              <div className="hidden md:flex items-center space-x-3 border-l pl-6 border-slate-200 relative" ref={profileDropdownRef}>
+                <button 
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="flex items-center space-x-2 group outline-none"
+                >
                   <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all overflow-hidden border border-slate-200">
                     {user.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
@@ -303,15 +315,87 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                       <span className="text-xs font-bold">{getInitials(user.name)}</span>
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-slate-700 hidden sm:inline">{user.name}</span>
-                </Link>
-                <button 
-                  onClick={onLogout}
-                  className="text-slate-400 hover:text-red-500 transition-colors p-1"
-                  title="Logout"
-                >
-                  <LogOut size={18} />
+                  <span className="text-sm font-semibold text-slate-700 hidden sm:inline group-hover:text-indigo-600 transition-colors">
+                    {user.name}
+                  </span>
+                  <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${showProfileDropdown ? 'rotate-180' : ''}`} />
                 </button>
+
+                {/* Dropdown Menu */}
+                {showProfileDropdown && (
+                  <div className="absolute right-0 top-full mt-4 w-64 bg-white border border-slate-100 rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 origin-top-right z-50">
+                    <div className="p-5 border-b border-slate-50 bg-slate-50/50">
+                      <p className="text-sm font-black text-slate-900">{user.name}</p>
+                      <p className="text-xs text-slate-500 font-medium truncate">{user.email}</p>
+                      <div className="mt-2 inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase rounded-md tracking-wider">
+                        {user.role}
+                      </div>
+                    </div>
+                    <div className="p-2">
+                      <Link 
+                        to={user.role === UserRole.ADMIN ? '/admin?tab=overview' : '/dashboard'} 
+                        onClick={() => setShowProfileDropdown(false)}
+                        className="flex items-center px-4 py-3 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                      >
+                        <LayoutDashboard size={18} className="mr-3" />
+                        Dashboard
+                      </Link>
+                      
+                      <Link 
+                        to="/dashboard?tab=profile" 
+                        onClick={() => setShowProfileDropdown(false)}
+                        className="flex items-center px-4 py-3 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                      >
+                        <UserIcon size={18} className="mr-3" />
+                        Profilo
+                      </Link>
+
+                      {user.role === UserRole.PROFESSIONAL && (
+                        <Link 
+                          to="/dashboard?tab=services" 
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center px-4 py-3 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                        >
+                          <Briefcase size={18} className="mr-3" />
+                          I miei servizi
+                        </Link>
+                      )}
+
+                      {user.role === UserRole.PROFESSIONAL && (
+                        <Link 
+                          to="/dashboard?tab=billing" 
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center px-4 py-3 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                        >
+                          <Coins size={18} className="mr-3" />
+                          Crediti
+                        </Link>
+                      )}
+                      
+                      <Link 
+                        to="/help" 
+                        onClick={() => setShowProfileDropdown(false)}
+                        className="flex items-center px-4 py-3 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                      >
+                        <HelpCircle size={18} className="mr-3" />
+                        Assistenza
+                      </Link>
+
+                      <div className="h-px bg-slate-100 my-1"></div>
+
+                      <button 
+                        onClick={() => {
+                          onLogout();
+                          setShowProfileDropdown(false);
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      >
+                        <LogOut size={18} className="mr-3" />
+                        Esci
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Mobile Menu Toggle - Placed at the end */}

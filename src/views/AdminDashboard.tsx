@@ -300,12 +300,7 @@ const AdminDashboard: React.FC = () => {
           </button>
         ))}
       </div>
-      <div className="p-4 border-t border-slate-100">
-        <Link to="/" className="flex items-center space-x-3 p-3 text-slate-500 hover:text-indigo-600 transition-colors">
-          <LogOut size={20} />
-          <span className="font-bold text-sm hidden lg:block">Esci</span>
-        </Link>
-      </div>
+      {/* Logout Removed from Sidebar - Handled by Navbar */}
     </aside>
   );
 
@@ -378,7 +373,7 @@ const AdminDashboard: React.FC = () => {
               {[
                 { label: 'Utenti Totali', value: stats.totalUsers, sub: `${stats.proCount} Pro / ${stats.clientCount} Clienti`, icon: <Users className="text-blue-500" />, color: 'bg-blue-50' },
                 { label: 'Job Attivi', value: stats.totalJobs, sub: 'Richieste sulla piattaforma', icon: <Briefcase className="text-indigo-500" />, color: 'bg-indigo-50' },
-                { label: 'Proposte', value: stats.totalQuotes, sub: `Media: ${stats.avgQuotes} per job`, icon: <MessageSquare className="text-emerald-500" />, color: 'bg-emerald-50' },
+                { label: 'Preventivi', value: stats.totalQuotes, sub: `Media: ${stats.avgQuotes} per job`, icon: <MessageSquare className="text-emerald-500" />, color: 'bg-emerald-50' },
                 { label: 'Success Rate', value: `${stats.successRate}%`, sub: 'Job conclusi con successo', icon: <TrendingUp className="text-amber-500" />, color: 'bg-amber-50' }
               ].map((s, idx) => (
                 <div key={idx} className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm">
@@ -1026,11 +1021,13 @@ const AdminDashboard: React.FC = () => {
                           <div key={idx} className="mb-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                              <div className="space-y-3">
                                 <input value={step.title} onChange={e => {
-                                   const newSteps = cmsContent.howItWorks.clientSteps.map((s, i) => i === idx ? { ...s, title: e.target.value } : s);
+                                   const newSteps = [...cmsContent.howItWorks.clientSteps];
+                                   newSteps[idx].title = e.target.value;
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, clientSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm font-bold" />
                                 <textarea value={step.description} onChange={e => {
-                                   const newSteps = cmsContent.howItWorks.clientSteps.map((s, i) => i === idx ? { ...s, description: e.target.value } : s);
+                                   const newSteps = [...cmsContent.howItWorks.clientSteps];
+                                   newSteps[idx].description = e.target.value;
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, clientSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm" rows={2} />
                              </div>
@@ -1043,11 +1040,13 @@ const AdminDashboard: React.FC = () => {
                           <div key={idx} className="mb-4 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
                              <div className="space-y-3">
                                 <input value={step.title} onChange={e => {
-                                   const newSteps = cmsContent.howItWorks.proSteps.map((s, i) => i === idx ? { ...s, title: e.target.value } : s);
+                                   const newSteps = [...cmsContent.howItWorks.proSteps];
+                                   newSteps[idx].title = e.target.value;
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, proSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm font-bold" />
                                 <textarea value={step.description} onChange={e => {
-                                   const newSteps = cmsContent.howItWorks.proSteps.map((s, i) => i === idx ? { ...s, description: e.target.value } : s);
+                                   const newSteps = [...cmsContent.howItWorks.proSteps];
+                                   newSteps[idx].description = e.target.value;
                                    setCmsContent(prev => ({...prev, howItWorks: {...prev.howItWorks, proSteps: newSteps}}));
                                 }} className="w-full p-2 bg-white border border-slate-200 rounded text-sm" rows={2} />
                              </div>
