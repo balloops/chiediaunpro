@@ -9,8 +9,8 @@ interface ServiceFormProps {
   setDescription: (val: string) => void;
   details: Record<string, any>;
   setDetails: (val: any) => void;
-  onRefine: () => void;
-  isRefining: boolean;
+  onRefine?: () => void;
+  isRefining?: boolean;
 }
 
 const ServiceForm: React.FC<ServiceFormProps> = ({ 
@@ -18,9 +18,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   description, 
   setDescription, 
   details, 
-  setDetails, 
+  setDetails,
   onRefine,
-  isRefining 
+  isRefining
 }) => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [descTouched, setDescTouched] = useState(false);
@@ -216,7 +216,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           </div>
           <div>
              <h4 className="text-xl font-black text-slate-900 leading-tight uppercase tracking-tight">Dettagli del Progetto</h4>
-             <p className="text-base text-slate-500 font-medium mt-1">Descrivi la tua idea liberamente. L'AI può aiutarti a migliorarla.</p>
+             <p className="text-base text-slate-500 font-medium mt-1">Descrivi la tua idea liberamente.</p>
           </div>
         </div>
         
@@ -233,14 +233,17 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           <div className={`p-4 rounded-b-xl md:rounded-b-[24px] border-t flex items-center justify-end ${isDescError ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
              {isDescError && <span className="text-xs font-bold text-red-500 mr-auto ml-2">Campo obbligatorio</span>}
              
-             {/* AI Button */}
-             <button
-               onClick={onRefine}
-               disabled={isRefining || !description}
-               className="mr-auto text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center hover:underline disabled:opacity-50"
-             >
-                {isRefining ? <span className="animate-pulse">Miglioramento in corso...</span> : <> <Sparkles size={14} className="mr-1" /> Migliora con AI</>}
-             </button>
+             {onRefine && (
+               <button 
+                 onClick={onRefine}
+                 disabled={isRefining || !description || description.length < 10}
+                 className="mr-3 flex items-center space-x-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 hover:border-indigo-200"
+                 type="button"
+               >
+                 <Sparkles size={14} className={isRefining ? "animate-spin" : ""} />
+                 <span>{isRefining ? 'Miglioramento...' : 'Migliora con AI'}</span>
+               </button>
+             )}
 
             <div className="text-[10px] text-slate-400 font-mono mr-4 font-bold bg-white px-2 py-1 rounded-md border border-slate-200">
               {description.length} caratteri

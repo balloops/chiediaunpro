@@ -25,7 +25,6 @@ import {
   LayoutDashboard,
   Bot
 } from 'lucide-react';
-import { geminiService } from '../../services/geminiService';
 import { jobService } from '../../services/jobService';
 import { contentService } from '../../services/contentService';
 import { authService } from '../../services/authService';
@@ -50,7 +49,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   const [jobDescription, setJobDescription] = useState('');
   const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
   const [budget, setBudget] = useState('');
-  const [isRefining, setIsRefining] = useState(false);
   const [locationCity, setLocationCity] = useState('');
 
   // Auth Interstitial State
@@ -94,19 +92,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
       case ServiceCategory.THREE_D: return { icon: <Box />, color: 'text-cyan-500', desc: 'Rendering, 3D' };
       case ServiceCategory.AI: return { icon: <Bot />, color: 'text-fuchsia-500', desc: 'Chatbot, Automazione, ML' };
       default: return { icon: <Plus />, color: 'text-slate-400', desc: 'Servizi personalizzati' };
-    }
-  };
-
-  const handleRefineDescription = async () => {
-    if (!jobDescription) return;
-    setIsRefining(true);
-    try {
-      const refined = await geminiService.refineJobDescription(jobDescription);
-      if (refined) setJobDescription(refined);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -270,8 +255,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                   setDescription={setJobDescription}
                   details={jobDetails}
                   setDetails={setJobDetails}
-                  onRefine={handleRefineDescription}
-                  isRefining={isRefining}
                 />
 
                 <section className="space-y-6 md:space-y-10 px-1 sm:px-4">
