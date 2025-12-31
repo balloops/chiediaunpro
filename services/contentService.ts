@@ -15,9 +15,9 @@ const defaultContent: SiteContent = {
   home: {
     hero: {
       title: 'Trova il Pro giusto per il tuo progetto.',
-      subtitle: 'Dal sito web alla strategia social: ricevi fino a 5 preventivi gratuiti dai migliori professionisti digitali in meno di 24 ore.',
+      subtitle: 'Dal sito web alla strategia social: ricevi fino a 5 proposte gratuite dai migliori professionisti digitali in meno di 24 ore.',
       badgeText: 'La piattaforma #1 per il digital business',
-      ctaPrimary: 'Chiedi un preventivo',
+      ctaPrimary: 'Chiedi una proposta',
       ctaSecondary: 'Lavora come Pro',
       reviewScore: '4.9/5',
       reviewCount: '5.000 progetti'
@@ -31,7 +31,7 @@ const defaultContent: SiteContent = {
       title: 'Perché scegliere noi?',
       description: 'Velocità, qualità e sicurezza. Abbiamo ridefinito il modo di trovare esperti digitali.',
       items: [
-        { title: 'Velocità Ibrida', description: 'Ricevi preventivi mirati in poche ore, non giorni.' },
+        { title: 'Velocità Ibrida', description: 'Ricevi proposte mirate in poche ore, non giorni.' },
         { title: 'Qualità Certificata', description: 'Verifichiamo manualmente ogni singolo professionista iscritto.' },
         { title: 'Zero Commissioni', description: 'Non paghi commissioni sui lavori trovati tramite noi.' }
       ]
@@ -39,7 +39,7 @@ const defaultContent: SiteContent = {
     cta: {
       title: 'Pronto a lanciare il tuo progetto?',
       description: 'Unisciti a migliaia di aziende e professionisti che stanno già rivoluzionando il modo di lavorare nel digitale.',
-      buttonClient: 'Chiedi un preventivo',
+      buttonClient: 'Chiedi una proposta',
       buttonPro: 'Crea Profilo Pro'
     }
   },
@@ -53,14 +53,14 @@ const defaultContent: SiteContent = {
       proLabel: 'Per i Professionisti'
     },
     clientSteps: [
-      { title: "1. Descrivi il tuo progetto", description: "Compila un modulo semplice e intuitivo. L'AI ti aiuterà a definire i dettagli tecnici per ottenere preventivi precisi." },
-      { title: "2. Ricevi proposte mirate", description: "In poche ore ricevi fino a 5 preventivi da professionisti qualificati e verificati, interessati al tuo lavoro." },
+      { title: "1. Descrivi il tuo progetto", description: "Compila un modulo semplice e intuitivo. L'AI ti aiuterà a definire i dettagli tecnici per ottenere proposte precise." },
+      { title: "2. Ricevi proposte mirate", description: "In poche ore ricevi fino a 5 proposte da professionisti qualificati e verificati, interessati al tuo lavoro." },
       { title: "3. Scegli il migliore", description: "Confronta profili, portfolio e prezzi. Scegli il Pro giusto e inizia a collaborare senza commissioni aggiuntive." }
     ],
     proSteps: [
       { title: "1. Crea il tuo profilo Pro", description: "Registrati gratuitamente, inserisci le tue competenze, il portfolio e definisci i tuoi servizi digitali." },
       { title: "2. Trova nuovi clienti", description: "Accedi a una bacheca di opportunità filtrate in base alle tue skills. Niente più ricerca a freddo." },
-      { title: "3. Invia preventivi e vinci", description: "Usa i tuoi crediti per rispondere alle richieste. Se il cliente ti sceglie, il lavoro è tutto tuo." }
+      { title: "3. Invia proposte e vinci", description: "Usa i tuoi crediti per rispondere alle richieste. Se il cliente ti sceglie, il lavoro è tutto tuo." }
     ],
     cta: {
       titleClient: 'Hai un progetto in mente?',
@@ -79,7 +79,7 @@ const defaultContent: SiteContent = {
       },
       {
         question: "Come scelgo il professionista giusto?",
-        answer: "Guarda il portfolio, le recensioni e l'esperienza. Confronta i preventivi sulla qualità, non solo sul prezzo.",
+        answer: "Guarda il portfolio, le recensioni e l'esperienza. Confronta le proposte sulla qualità, non solo sul prezzo.",
         category: 'trust'
       },
       {
@@ -89,7 +89,7 @@ const defaultContent: SiteContent = {
       },
       {
         question: "Come funzionano i Crediti?",
-        answer: "I crediti servono per inviare preventivi. Il piano FREE ne include 3/mese, PRO 20/mese.",
+        answer: "I crediti servono per inviare proposte. Il piano FREE ne include 3/mese, PRO 20/mese.",
         category: 'payments'
       }
     ]
@@ -106,14 +106,14 @@ const defaultPlans: PricingPlan[] = [
     name: 'Starter',
     price: 0,
     credits: 3,
-    features: ['3 Preventivi/mese', 'Profilo Base', 'Supporto Email'],
+    features: ['3 Proposte/mese', 'Profilo Base', 'Supporto Email'],
   },
   {
     id: 'PRO',
     name: 'Pro',
     price: 29,
     credits: 20,
-    features: ['20 Preventivi/mese', 'Profilo in Evidenza', 'Badge "Verificato"', 'Supporto Prioritario'],
+    features: ['20 Proposte/mese', 'Profilo in Evidenza', 'Badge "Verificato"', 'Supporto Prioritario'],
     isPopular: true,
   },
   {
@@ -121,7 +121,7 @@ const defaultPlans: PricingPlan[] = [
     name: 'Agency',
     price: 99,
     credits: 'UNLIMITED',
-    features: ['Preventivi Illimitati', 'Multi-account', 'API Access', 'Account Manager Dedicato'],
+    features: ['Proposte Illimitate', 'Multi-account', 'API Access', 'Account Manager Dedicato'],
   }
 ];
 

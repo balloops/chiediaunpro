@@ -117,8 +117,8 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     const links = [];
     if (isPro) {
       links.push({ to: '/dashboard?tab=leads', label: 'Opportunità', icon: <Star size={18} /> });
-      links.push({ to: '/dashboard?tab=quotes', label: 'Preventivi Inviati', icon: <Send size={18} /> });
-      links.push({ to: '/dashboard?tab=won', label: 'Lavori Ottenuti', icon: <Trophy size={18} /> });
+      links.push({ to: '/dashboard?tab=quotes', label: 'Proposte Inviate', icon: <Send size={18} /> });
+      links.push({ to: '/dashboard?tab=won', label: 'Lavori accettati', icon: <Trophy size={18} /> });
       links.push({ to: '/dashboard?tab=billing', label: 'Crediti', icon: <Coins size={18} /> });
     } else {
       links.push({ to: '/dashboard?tab=my-requests', label: 'Le mie Richieste', icon: <FileText size={18} /> });

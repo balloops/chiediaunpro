@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { User, UserRole } from '../types';
 
@@ -43,7 +44,7 @@ export const authService = {
             phone_number: metaData.phone_number,
             vat_number: metaData.vat_number,
             offered_services: metaData.offered_services,
-            credits: metaData.role === 'PROFESSIONAL' ? 3 : 0,
+            credits: metaData.role === 'PROFESSIONAL' ? 30 : 0,
             plan: 'FREE',
             is_verified: false,
             updated_at: new Date().toISOString()
@@ -104,7 +105,7 @@ export const authService = {
       location: profile?.location || meta.location,
       bio: profile?.bio || meta.bio,
       phoneNumber: profile?.phone_number || meta.phone_number,
-      credits: profile?.credits ?? (meta.role === 'PROFESSIONAL' ? 3 : 0),
+      credits: profile?.credits ?? (meta.role === 'PROFESSIONAL' ? 30 : 0),
       plan: profile?.plan || 'FREE',
       isVerified: profile?.is_verified || false,
       offeredServices: profile?.offered_services || meta.offered_services || [],

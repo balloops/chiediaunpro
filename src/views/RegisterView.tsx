@@ -120,7 +120,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               <div className="mt-12 space-y-5">
                  {[
                    'Verifica istantanea',
-                   role === UserRole.PROFESSIONAL ? 'Clienti di alta qualità' : 'Preventivi mirati AI',
+                   role === UserRole.PROFESSIONAL ? 'Clienti di alta qualità' : 'Proposte mirate AI',
                    'Pagamenti sicuri',
                    'Zero costi fissi'
                  ].map((item, i) => (

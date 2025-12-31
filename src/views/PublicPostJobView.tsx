@@ -315,7 +315,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     {user ? 'Invia Richiesta Pro' : 'Continua e Pubblica'}
                     <ChevronRight className="ml-3 group-hover:translate-x-2 transition-transform" size={24} />
                   </button>
-                  <p className="text-center text-slate-400 text-xs md:text-sm mt-6 font-medium">Riceverai i primi preventivi in meno di 24 ore.</p>
+                  <p className="text-center text-slate-400 text-xs md:text-sm mt-6 font-medium">Riceverai le prime proposte in meno di 24 ore.</p>
                 </div>
               </div>
             )}

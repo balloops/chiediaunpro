@@ -97,7 +97,7 @@ export const notificationService = {
     await this.addNotification({
       userId: clientId,
       type: NotificationType.NEW_QUOTE,
-      title: 'Nuovo Preventivo Ricevuto',
+      title: 'Nuova Proposta Ricevuta',
       message: `${proName} ha inviato una proposta per il tuo progetto ${category}.`,
       link: `/dashboard/job/${jobId}`, // Client goes to Job Detail to see quotes
       metadata: { jobId }

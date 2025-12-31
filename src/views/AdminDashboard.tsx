@@ -374,7 +374,7 @@ const AdminDashboard: React.FC = () => {
               {[
                 { label: 'Utenti Totali', value: stats.totalUsers, sub: `${stats.proCount} Pro / ${stats.clientCount} Clienti`, icon: <Users className="text-blue-500" />, color: 'bg-blue-50' },
                 { label: 'Job Attivi', value: stats.totalJobs, sub: 'Richieste sulla piattaforma', icon: <Briefcase className="text-indigo-500" />, color: 'bg-indigo-50' },
-                { label: 'Preventivi', value: stats.totalQuotes, sub: `Media: ${stats.avgQuotes} per job`, icon: <MessageSquare className="text-emerald-500" />, color: 'bg-emerald-50' },
+                { label: 'Proposte', value: stats.totalQuotes, sub: `Media: ${stats.avgQuotes} per job`, icon: <MessageSquare className="text-emerald-500" />, color: 'bg-emerald-50' },
                 { label: 'Success Rate', value: `${stats.successRate}%`, sub: 'Job conclusi con successo', icon: <TrendingUp className="text-amber-500" />, color: 'bg-amber-50' }
               ].map((s, idx) => (
                 <div key={idx} className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm">

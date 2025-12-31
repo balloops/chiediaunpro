@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { JobRequest, Quote, User, ServiceCategory, JobLocation, UserRole, Review } from '../types';
 import { notificationService } from './notificationService';
@@ -227,11 +228,20 @@ export const jobService = {
   },
 
   async updateUserPlan(userId: string, plan: 'FREE' | 'PRO' | 'AGENCY'): Promise<void> {
-    let creditsToAdd = 0;
-    if (plan === 'PRO') creditsToAdd = 20;
-    
     const { data: user } = await supabase.from('profiles').select('credits').eq('id', userId).single();
-    const newCredits = plan === 'AGENCY' ? 9999 : (user?.credits || 0) + creditsToAdd;
+    let currentCredits = user?.credits || 0;
+    let newCredits = currentCredits;
+
+    if (plan === 'PRO') {
+        // Launch Phase Logic: Set to max 30 (Top-Up)
+        newCredits = 30;
+        // Safety: Don't reduce credits if user somehow has more (e.g. Agency downgrade or Admin bonus)
+        if (newCredits < currentCredits) newCredits = currentCredits;
+    } else if (plan === 'AGENCY') {
+        newCredits = 9999;
+    } else {
+        // FREE Plan reset logic if needed, currently no-op for credits
+    }
 
     await supabase.from('profiles').update({ 
       plan, 

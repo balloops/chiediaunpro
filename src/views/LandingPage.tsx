@@ -154,7 +154,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 <div className="text-xs md:text-sm text-slate-500 mb-0 md:mb-4">Esperti Disponibili</div>
                 {/* Hide hover text on mobile to save vertical space */}
                 <div className="hidden md:flex items-center text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                  Richiedi preventivi <ChevronRight size={16} className="ml-1" />
+                  Richiedi proposte <ChevronRight size={16} className="ml-1" />
                 </div>
               </Link>
             ))}
