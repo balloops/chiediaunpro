@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory } from '../../types';
 import { 
@@ -19,6 +20,16 @@ interface DashboardProps {
   user: User;
   onLogout: () => void;
 }
+
+// Helper per formattare la data in dd/mm/yyyy
+const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
 
 // --- SUB COMPONENTS (PAGES) ---
 
@@ -189,7 +200,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                     <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
                                         <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
                                         <span className="flex items-center"><Wallet size={16} className="mr-1"/> {job.budget}</span>
-                                        <span className="flex items-center"><Clock size={16} className="mr-1"/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                        <span className="flex items-center"><Clock size={16} className="mr-1"/> {formatDate(job.createdAt)}</span>
                                     </div>
                                 ) : (
                                     <div className="flex flex-wrap gap-4 mt-2">
@@ -1119,7 +1130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                             <span className="flex items-center gap-1"><MapPin size={12}/> {job.location?.city || 'Remoto'}</span>
                                             <span className="flex items-center gap-1"><Wallet size={12}/> {job.budget}</span>
-                                            <span className="flex items-center gap-1"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                            <span className="flex items-center gap-1"><Clock size={12}/> {formatDate(job.createdAt)}</span>
                                         </div>
                                     </div>
                                     <div className="self-center">
@@ -1170,7 +1181,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                                 </span>
                                             )}
                                             
-                                            <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                            <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {formatDate(job.createdAt)}</span>
                                         </div>
                                     </div>
                                     <div className="self-center">
@@ -1205,7 +1216,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                                 Archiviata
                                             </span>
                                             <span>{quoteCount} Preventivi</span>
-                                            <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
+                                            <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {formatDate(job.createdAt)}</span>
                                         </div>
                                     </div>
                                     <div className="self-center">
@@ -1263,7 +1274,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                              <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                                  <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
                                                  <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
-                                                 <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
+                                                 <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {formatDate(quote.createdAt)}</span>
                                              </div>
                                          </div>
 
