@@ -137,21 +137,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             <p className="text-lg text-slate-600">Esplora le categorie principali e trova il talento ideale per scalare il tuo business digitale.</p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Mobile Optimization: tighter gap (gap-3), 2 cols, reduced padding (p-4) */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {dynamicCategories.map((cat, idx) => (
               <Link 
                 to="/post-job"
                 state={{ selectedCategory: cat }}
                 key={idx}
-                className="group bg-white p-8 rounded-[24px] border border-slate-100 hover:border-indigo-500 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 cursor-pointer text-left block"
+                className="group bg-white p-4 md:p-8 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-500 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 cursor-pointer text-left block h-full"
               >
-                <div className="mb-6 p-4 rounded-2xl bg-slate-50 inline-block group-hover:bg-indigo-50 transition-colors">
+                <div className="mb-3 md:mb-6 p-3 md:p-4 rounded-2xl bg-slate-50 inline-block group-hover:bg-indigo-50 transition-colors">
                   {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
-                  {React.cloneElement(getCategoryIcon(cat) as React.ReactElement<any>, { size: 32 })}
+                  {React.cloneElement(getCategoryIcon(cat) as React.ReactElement<any>, { size: window.innerWidth < 768 ? 24 : 32 })}
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{cat}</h3>
-                <div className="text-sm text-slate-500 mb-4">Esperti Disponibili</div>
-                <div className="flex items-center text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <h3 className="text-sm md:text-xl font-bold text-slate-900 mb-1 md:mb-2 leading-tight">{cat}</h3>
+                <div className="text-xs md:text-sm text-slate-500 mb-0 md:mb-4">Esperti Disponibili</div>
+                {/* Hide hover text on mobile to save vertical space */}
+                <div className="hidden md:flex items-center text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                   Richiedi preventivi <ChevronRight size={16} className="ml-1" />
                 </div>
               </Link>

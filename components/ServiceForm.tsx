@@ -55,7 +55,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                   value={details[field.id] || ''}
                   onChange={(e) => updateDetail(field.id, e.target.value)}
                   onBlur={() => handleBlur(field.id)}
-                  className={`w-full bg-white border-2 rounded-2xl px-6 py-4 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-indigo-500/10 outline-none appearance-none transition-all shadow-sm ${borderClass}`}
+                  className={`w-full bg-white border-2 rounded-2xl px-4 py-3 md:px-6 md:py-4 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-indigo-500/10 outline-none appearance-none transition-all shadow-sm ${borderClass}`}
                >
                   <option value="">Seleziona...</option>
                   {field.options?.map(opt => (
@@ -74,14 +74,14 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         return (
           <div key={field.id} className="space-y-4">
             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
-            <div className="grid grid-cols-2 gap-4" onMouseLeave={() => handleBlur(field.id)}>
+            <div className="grid grid-cols-2 gap-3 md:gap-4" onMouseLeave={() => handleBlur(field.id)}>
               {field.options?.map(opt => {
                 const isSelected = details[field.id] === opt;
                 return (
                   <button
                     key={opt}
                     onClick={() => updateDetail(field.id, opt)}
-                    className={`py-4 px-6 text-sm font-black rounded-2xl transition-all border-2 ${
+                    className={`py-3 md:py-4 px-4 md:px-6 text-sm font-black rounded-xl md:rounded-2xl transition-all border-2 ${
                       isSelected 
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-200' 
                         : isError 
@@ -102,11 +102,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         return (
           <div key={field.id} className="space-y-4">
             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
-            <div className="flex flex-wrap gap-3" onMouseLeave={() => handleBlur(field.id)}>
+            <div className="flex flex-wrap gap-2 md:gap-3" onMouseLeave={() => handleBlur(field.id)}>
               {field.options?.map(opt => {
-                const isSelected = details[field.id] === opt; // Current implementation treats checkbox group as single select in styling often, but logically usually multiple. 
-                // However, based on the prompt "Funzionalità Extra" it should be multiple. Let's fix logic to allow multiple if needed, or stick to single if that's the current usage.
-                // Assuming checkbox_group implies multiple selection for "features".
                 const currentVal = details[field.id] || [];
                 const isChecked = Array.isArray(currentVal) ? currentVal.includes(opt) : currentVal === opt;
 
@@ -118,7 +115,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                         const next = prev.includes(opt) ? prev.filter((i:string) => i !== opt) : [...prev, opt];
                         updateDetail(field.id, next);
                     }}
-                    className={`py-3 px-5 text-xs font-bold rounded-xl transition-all border ${
+                    className={`py-2 px-3 md:py-3 md:px-5 text-xs font-bold rounded-lg md:rounded-xl transition-all border ${
                       isChecked 
                         ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
                         : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
@@ -137,7 +134,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         return (
            <div key={field.id} className="space-y-4">
               <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3" onMouseLeave={() => handleBlur(field.id)}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3" onMouseLeave={() => handleBlur(field.id)}>
                  {field.options?.map(opt => {
                     const current = details[field.id] || [];
                     const isSelected = current.includes(opt);
@@ -148,7 +145,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                              const next = isSelected ? current.filter((i: string) => i !== opt) : [...current, opt];
                              updateDetail(field.id, next);
                           }}
-                          className={`p-4 rounded-xl border-2 transition-all text-center text-xs font-bold ${
+                          className={`p-3 md:p-4 rounded-xl border-2 transition-all text-center text-xs font-bold ${
                              isSelected
                                 ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
                                 : isError ? 'border-red-300 bg-red-50 text-red-600' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300'
@@ -173,7 +170,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                   onChange={(e) => updateDetail(field.id, e.target.value)}
                   onBlur={() => handleBlur(field.id)}
                   placeholder={field.placeholder || ''}
-                  className={`w-full bg-white border-2 rounded-2xl px-6 py-4 text-sm font-bold text-slate-900 outline-none transition-all ${borderClass}`}
+                  className={`w-full bg-white border-2 rounded-2xl px-4 py-3 md:px-6 md:py-4 text-sm font-bold text-slate-900 outline-none transition-all ${borderClass}`}
                />
                {isError && <p className="text-red-500 text-xs font-bold ml-1">Campo obbligatorio</p>}
             </div>
@@ -189,7 +186,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                   onChange={(e) => updateDetail(field.id, e.target.value)}
                   onBlur={() => handleBlur(field.id)}
                   placeholder={field.placeholder || ''}
-                  className={`w-full bg-white border-2 rounded-2xl px-6 py-4 text-sm font-medium text-slate-900 outline-none transition-all resize-none ${borderClass}`}
+                  className={`w-full bg-white border-2 rounded-2xl px-4 py-3 md:px-6 md:py-4 text-sm font-medium text-slate-900 outline-none transition-all resize-none ${borderClass}`}
                />
                {isError && <p className="text-red-500 text-xs font-bold ml-1">Campo obbligatorio</p>}
             </div>
@@ -223,17 +220,17 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           </div>
         </div>
         
-        <div className={`relative group bg-white rounded-[24px] border-2 p-2 transition-all shadow-sm ${isDescError ? 'border-red-500 bg-red-50' : 'border-slate-200 focus-within:border-indigo-600 focus-within:shadow-[0_0_0_4px_rgba(0,96,227,0.1)] hover:border-slate-300'}`}>
+        <div className={`relative group bg-white rounded-2xl md:rounded-[24px] border-2 p-2 transition-all shadow-sm ${isDescError ? 'border-red-500 bg-red-50' : 'border-slate-200 focus-within:border-indigo-600 focus-within:shadow-[0_0_0_4px_rgba(0,96,227,0.1)] hover:border-slate-300'}`}>
           <textarea 
             rows={8}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => setDescTouched(true)}
-            className="w-full bg-transparent border-none p-8 text-slate-800 text-lg focus:outline-none leading-relaxed placeholder:text-slate-300 placeholder:font-normal font-medium resize-none"
+            className="w-full bg-transparent border-none p-4 md:p-8 text-slate-800 text-base md:text-lg focus:outline-none leading-relaxed placeholder:text-slate-300 placeholder:font-normal font-medium resize-none"
             placeholder={formDefinition.descriptionPlaceholder || "Descrivi il tuo progetto qui..."}
           />
           
-          <div className={`p-4 rounded-b-[24px] border-t flex items-center justify-end ${isDescError ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
+          <div className={`p-4 rounded-b-xl md:rounded-b-[24px] border-t flex items-center justify-end ${isDescError ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
              {isDescError && <span className="text-xs font-bold text-red-500 mr-auto ml-2">Campo obbligatorio</span>}
              
              {/* AI Button */}

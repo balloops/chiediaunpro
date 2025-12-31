@@ -182,34 +182,34 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-20">
             <button 
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 md:mb-6 font-bold text-sm transition-colors pl-1"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna alla lista
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                 {/* Left: Job Details */}
-                <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
+                <div className="lg:col-span-2 space-y-6 md:space-y-8">
+                    <div className="bg-white p-5 md:p-8 rounded-2xl md:rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
                         
                         {/* Header & Status */}
-                        <div className="flex justify-between items-start mb-6 relative z-10">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6 relative z-10 gap-4 md:gap-0">
                             <div>
-                                <h1 className="text-3xl font-black text-slate-900 mb-2">{job.category}</h1>
+                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">{job.category}</h1>
                                 {!isEditing ? (
-                                    <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
-                                        <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
-                                        <span className="flex items-center"><Wallet size={16} className="mr-1"/> {job.budget}</span>
-                                        <span className="flex items-center"><Clock size={16} className="mr-1"/> {formatDate(job.createdAt)}</span>
+                                    <div className="flex flex-wrap gap-3 md:gap-4 text-xs md:text-sm font-medium text-slate-500">
+                                        <span className="flex items-center"><MapPin size={14} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
+                                        <span className="flex items-center"><Wallet size={14} className="mr-1"/> {job.budget}</span>
+                                        <span className="flex items-center"><Clock size={14} className="mr-1"/> {formatDate(job.createdAt)}</span>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-wrap gap-4 mt-2">
+                                    <div className="flex flex-wrap gap-3 mt-2">
                                          <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-200">
                                             <MapPin size={14} className="text-slate-400 mr-2"/>
                                             <input 
                                                 value={editData.city} 
                                                 onChange={e => setEditData({...editData, city: e.target.value})}
-                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-32"
+                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-28 md:w-32"
                                                 placeholder="Città"
                                             />
                                          </div>
@@ -218,7 +218,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                             <input 
                                                 value={editData.budget} 
                                                 onChange={e => setEditData({...editData, budget: e.target.value})}
-                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-32"
+                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-28 md:w-32"
                                                 placeholder="Budget"
                                             />
                                          </div>
@@ -231,14 +231,14 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 if (!isPro && (job.status === 'OPEN' || job.status === 'IN_PROGRESS')) {
                                     if (quotes.length > 0) {
                                         return (
-                                            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
-                                                {quotes.length === 1 ? '1 PREVENTIVO RICEVUTO' : `${quotes.length} PREVENTIVI RICEVUTI`}
+                                            <span className="self-start px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
+                                                {quotes.length === 1 ? '1 PREVENTIVO' : `${quotes.length} PREVENTIVI`}
                                             </span>
                                         );
                                     } else {
                                         return (
-                                            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
-                                                IN ATTESA DI PREVENTIVI
+                                            <span className="self-start px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
+                                                IN ATTESA
                                             </span>
                                         );
                                     }
@@ -246,7 +246,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 
                                 // Default labels for Pro or other statuses
                                 return (
-                                    <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${
+                                    <span className={`self-start px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider ${
                                         job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
                                         job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
                                         job.status === 'ARCHIVED' ? 'bg-slate-100 text-slate-600' :
@@ -260,13 +260,13 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
 
                         {/* Description */}
                         <div className="space-y-6 relative z-10">
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-100">
                                 <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase flex justify-between">
                                     Descrizione
                                     {isEditing && <span className="text-indigo-600 text-xs">Modifica in corso...</span>}
                                 </h3>
                                 {!isEditing ? (
-                                    <p className="text-slate-700 leading-relaxed whitespace-pre-line">{job.description}</p>
+                                    <p className="text-slate-700 leading-relaxed whitespace-pre-line text-sm md:text-base">{job.description}</p>
                                 ) : (
                                     <textarea 
                                         value={editData.description}
@@ -297,7 +297,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 {isEditing ? (
                                     <>
                                         <button onClick={handleUpdateJob} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-indigo-700">
-                                            <Save size={16} /> Salva Modifiche
+                                            <Save size={16} /> Salva
                                         </button>
                                         <button onClick={() => setIsEditing(false)} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200">
                                             <X size={16} /> Annulla
@@ -317,7 +317,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                         )}
                                         {canClose && (
                                             <button onClick={handleCloseJob} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200 hover:text-slate-800 transition-colors">
-                                                <Ban size={16} /> Chiudi Richiesta
+                                                <Ban size={16} /> Chiudi
                                             </button>
                                         )}
                                         {canArchive && (
@@ -344,14 +344,14 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                     {/* CLIENT VIEW: List Quotes */}
                     {!isPro && (
                         <div className="space-y-4">
-                            <h2 className="text-2xl font-black text-slate-900">Preventivi Ricevuti ({quotes.length})</h2>
+                            <h2 className="text-xl md:text-2xl font-black text-slate-900 px-1">Preventivi Ricevuti ({quotes.length})</h2>
                             {quotes.length === 0 ? (
                                 <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
                                     Nessun preventivo ancora ricevuto. Modifica la richiesta per renderla più appetibile!
                                 </div>
                             ) : (
                                 quotes.map(q => (
-                                    <div key={q.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                    <div key={q.id} className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                         <div>
                                             <div className="font-black text-lg text-slate-900">{q.proName}</div>
                                             <div className="text-2xl font-black text-indigo-600 my-1">{q.price} €</div>
@@ -389,7 +389,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 {/* Right: Action / Quote Form */}
                 <div className="lg:col-span-1">
                     {isPro ? (
-                        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl sticky top-24">
+                        <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-[32px] border border-slate-100 shadow-xl sticky top-24">
                             {myQuote ? (
                                 <div className="text-center py-8">
                                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -424,7 +424,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                         </div>
                     ) : (
                         // Client Side Panel Info
-                        <div className="bg-indigo-50 p-6 rounded-[32px] sticky top-24">
+                        <div className="bg-indigo-50 p-5 md:p-6 rounded-2xl md:rounded-[32px] sticky top-24">
                             <h3 className="font-bold text-indigo-900 mb-2">Consiglio</h3>
                             <p className="text-sm text-indigo-700/80 mb-4">Riceverai una notifica per ogni nuovo preventivo. Controlla spesso questa pagina.</p>
                         </div>
@@ -491,32 +491,32 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
              <button 
                 // Back button goes to the specific tab
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 md:mb-6 font-bold text-sm transition-colors pl-1"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna indietro
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                 {/* Left Side: Original Job Details (Context) */}
-                <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+                <div className="lg:col-span-2 space-y-6 md:space-y-8">
+                    <div className="bg-white p-5 md:p-8 rounded-2xl md:rounded-[32px] border border-slate-100 shadow-sm">
                         <div className="flex items-center space-x-3 mb-6">
                             <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
                                 <FileText size={24} />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900">{job.category}</h2>
+                                <h2 className="text-xl md:text-2xl font-black text-slate-900">{job.category}</h2>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Richiesta Originale Cliente</p>
                             </div>
                         </div>
 
                         <div className="space-y-6">
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-100">
                                 <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase">Descrizione Progetto</h3>
-                                <p className="text-slate-700 leading-relaxed whitespace-pre-line">{job.description}</p>
+                                <p className="text-slate-700 leading-relaxed whitespace-pre-line text-sm md:text-base">{job.description}</p>
                             </div>
                             
-                            <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
+                            <div className="flex flex-wrap gap-4 text-xs md:text-sm font-medium text-slate-500">
                                 <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
                                 <span className="flex items-center"><Wallet size={16} className="mr-1"/> Budget: {job.budget}</span>
                                 <span className="flex items-center"><UserIcon size={16} className="mr-1"/> {job.clientName}</span>
@@ -541,14 +541,14 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
 
                 {/* Right Side: Quote Details & Status */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
-                        <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
+                    <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
+                        <div className={`p-6 md:p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <div className="text-white/60 font-bold uppercase tracking-widest text-xs mb-2">
                                         {isPro ? 'Il tuo preventivo' : 'Preventivo ricevuto'}
                                     </div>
-                                    <h1 className="text-4xl font-black">{quote.price} €</h1>
+                                    <h1 className="text-3xl md:text-4xl font-black">{quote.price} €</h1>
                                     <div className="text-white/80 font-medium mt-1">Tempistiche: {quote.timeline}</div>
                                 </div>
                                 {isAccepted && (
@@ -559,11 +559,11 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                             </div>
                         </div>
 
-                        <div className="p-8 space-y-8">
+                        <div className="p-5 md:p-8 space-y-8">
                             {/* Message */}
                             <div>
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Messaggio</h3>
-                                <div className="bg-slate-50 p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-base leading-relaxed">
+                                <div className="bg-slate-50 p-4 md:p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-sm md:text-base leading-relaxed">
                                     "{quote.message}"
                                 </div>
                             </div>
@@ -1078,16 +1078,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         {/* Tab Content (Show only if not loading AND no error) */}
         {!isLoadingData && !fetchError && (
             <>
-                {/* ... (Lists Rendering - Unchanged) ... */}
-                {/* I kept the existing lists rendering logic but removed redundancy for brevity in this response. 
-                    The XML content below should contain the full original file content with just the Sidebar className change. 
-                    Wait, I must output the FULL content. Re-inserting list rendering logic... */}
-                
                 {currentTab === 'leads' && (
                     <div className="space-y-6">
                         {filteredLeads.length > 0 ? (
                             filteredLeads.map(({ job, matchScore }) => (
-                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-5 md:p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                     <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1128,7 +1123,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-5 md:p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1178,7 +1173,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {filteredArchivedJobs.length > 0 ? filteredArchivedJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-5 md:p-6 rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
                                      <div className="w-14 h-14 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1216,7 +1211,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                  const job = allJobsCache.find(j => j.id === quote.jobId);
                                  const category = job?.category || 'Servizio';
                                  return (
-                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-5 md:p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             {getCategoryIcon(category)}
                                          </div>
@@ -1235,6 +1230,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                                      </span>
                                                  )}
                                                  
+                                                 {/* Dot for new won jobs */}
                                                  {currentTab === 'won' && !viewedWonIds.has(quote.id) && (
                                                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-200 shrink-0 self-center" title="Nuovo lavoro vinto"></div>
                                                  )}
@@ -1580,7 +1576,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         </aside>
 
         {/* Main Content Area - Routes */}
-        <main className="flex-grow p-8 lg:p-12 overflow-x-hidden">
+        <main className="flex-grow p-4 md:p-8 lg:p-12 overflow-x-hidden">
              <Routes>
                  <Route path="/" element={renderDashboardContent()} />
                  <Route path="/job/:id" element={<JobDetailView user={user} isPro={isPro} refreshParent={refreshData} />} />
