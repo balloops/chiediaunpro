@@ -11,10 +11,15 @@ import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
 import { logService } from '../../services/logService';
 import { contentService } from '../../services/contentService';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'requests' | 'categories' | 'plans' | 'cms' | 'logs'>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
+  
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab });
+  };
   
   // Data State
   const [stats, setStats] = useState({
@@ -260,7 +265,7 @@ const AdminDashboard: React.FC = () => {
   // --- Render Components ---
 
   const renderSidebar = () => (
-    <aside className="w-20 lg:w-72 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
+    <aside className="hidden lg:flex w-20 lg:w-72 bg-white border-r border-slate-200 flex-col fixed h-full z-20">
       <div className="p-6 border-b border-slate-100 flex items-center space-x-3">
         <div className="bg-slate-900 text-white p-2 rounded-xl">
           <ShieldCheck size={24} />
@@ -348,7 +353,7 @@ const AdminDashboard: React.FC = () => {
     <div className="bg-slate-50 min-h-screen flex">
       {renderSidebar()}
       
-      <main className="flex-grow ml-20 lg:ml-72 p-8 lg:p-12">
+      <main className="flex-grow ml-0 lg:ml-72 p-8 lg:p-12">
         <header className="mb-10">
           <h1 className="text-3xl font-black text-slate-900 mb-2">
             {activeTab === 'overview' && 'Panoramica'}
