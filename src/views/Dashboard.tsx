@@ -169,10 +169,10 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const canArchive = !isPro && hasQuotes && job.status !== 'ARCHIVED';
 
     return (
-        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-20">
+        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-10 md:pb-20">
             <button 
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors px-6 md:px-0 mt-6 md:mt-0"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna alla lista
             </button>
@@ -180,7 +180,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left: Job Details */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
+                    {/* Main Card: Full width on mobile (no rounded corners, no borders side) */}
+                    <div className="bg-white p-6 md:p-8 rounded-none md:rounded-[32px] border-x-0 border-y md:border border-slate-100 shadow-none md:shadow-sm relative overflow-hidden">
                         
                         {/* Header & Status */}
                         <div className="flex justify-between items-start mb-6 relative z-10">
@@ -333,7 +334,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
 
                     {/* CLIENT VIEW: List Quotes */}
                     {!isPro && (
-                        <div className="space-y-4">
+                        <div className="space-y-4 px-4 md:px-0">
                             <h2 className="text-2xl font-black text-slate-900">Preventivi Ricevuti ({quotes.length})</h2>
                             {quotes.length === 0 ? (
                                 <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
@@ -379,7 +380,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 {/* Right: Action / Quote Form */}
                 <div className="lg:col-span-1">
                     {isPro ? (
-                        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl sticky top-24">
+                        <div className="bg-white p-6 md:p-6 rounded-[24px] md:rounded-[32px] mx-4 md:mx-0 border border-slate-100 shadow-xl sticky top-24">
                             {myQuote ? (
                                 <div className="text-center py-8">
                                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -414,7 +415,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                         </div>
                     ) : (
                         // Client Side Panel Info
-                        <div className="bg-indigo-50 p-6 rounded-[32px] sticky top-24">
+                        <div className="bg-indigo-50 p-6 rounded-[24px] md:rounded-[32px] mx-4 md:mx-0 sticky top-24">
                             <h3 className="font-bold text-indigo-900 mb-2">Consiglio</h3>
                             <p className="text-sm text-indigo-700/80 mb-4">Riceverai una notifica per ogni nuovo preventivo. Controlla spesso questa pagina.</p>
                         </div>
@@ -481,7 +482,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
              <button 
                 // Back button goes to the specific tab
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors px-6 md:px-0 mt-6 md:mt-0"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna indietro
             </button>
@@ -489,7 +490,8 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Side: Original Job Details (Context) */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+                    {/* Full width card on mobile */}
+                    <div className="bg-white p-6 md:p-8 rounded-none md:rounded-[32px] border-x-0 border-y md:border border-slate-100 shadow-none md:shadow-sm">
                         <div className="flex items-center space-x-3 mb-6">
                             <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
                                 <FileText size={24} />
@@ -531,7 +533,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
 
                 {/* Right Side: Quote Details & Status */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
+                    <div className="bg-white rounded-[24px] md:rounded-[32px] mx-4 md:mx-0 border border-slate-100 overflow-hidden shadow-xl sticky top-24">
                         <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
@@ -908,7 +910,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   // Filter Bar Component
   const FilterControls = () => (
-      <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-in fade-in">
+      <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-in fade-in px-6 md:px-0">
           {/* Status Filter (Only for Client Requests) */}
           {currentTab === 'my-requests' && (
               <div className="relative group">
@@ -1023,9 +1025,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   // --- RENDER CONTENT (LISTS) ---
   const renderDashboardContent = () => (
-      <div className="max-w-[1250px] mx-auto w-full">
+      <div className="max-w-[1250px] mx-auto w-full p-0 md:p-0">
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-8">
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-8 px-6 pt-6 md:p-0">
             <div>
                 <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
                 {currentTab === 'leads' ? 'Opportunità' : 
@@ -1104,12 +1106,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
         {/* Tab Content (Show only if not loading AND no error) */}
         {!isLoadingData && !fetchError && (
-            <>
+            <div className="px-4 md:px-0 pb-6">
                 {currentTab === 'leads' && (
                     <div className="space-y-6">
                         {filteredLeads.length > 0 ? (
                             filteredLeads.map(({ job, matchScore }) => (
-                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                     <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1151,7 +1153,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1202,7 +1204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {filteredArchivedJobs.length > 0 ? filteredArchivedJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-2xl md:rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
                                      <div className="w-14 h-14 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1240,7 +1242,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                  const job = allJobsCache.find(j => j.id === quote.jobId);
                                  const category = job?.category || 'Servizio';
                                  return (
-                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             {getCategoryIcon(category)}
                                          </div>
@@ -1307,10 +1309,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                 {/* --- PROFILE HUB --- */}
                 {currentTab === 'settings' && (
-                     <div className="animate-in fade-in duration-300">
+                     <div className="animate-in fade-in duration-300 px-2 md:px-0">
                         {/* Profile Header - Visible only in Menu */}
                         {settingsView === 'menu' ? (
-                            <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center justify-between mb-8 px-4 md:px-0 mt-4 md:mt-0">
                                 <div className="flex items-center space-x-4">
                                     <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-200">
                                         {getInitials(user.name)}
@@ -1324,7 +1326,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         ) : (
                             <button 
                                 onClick={() => { setSettingsView('menu'); setPasswordMessage(''); }} 
-                                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
+                                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors px-4 md:px-0 mt-6 md:mt-0"
                             >
                                 <ArrowLeft size={18} className="mr-2" /> Torna al menu
                             </button>
@@ -1332,7 +1334,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                         {/* MENU VIEW */}
                         {settingsView === 'menu' && (
-                            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                            <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
                                 <div className="divide-y divide-slate-50">
                                     {/* Item: Profile */}
                                     <div onClick={() => setSettingsView('profile_edit')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
@@ -1439,7 +1441,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                         {/* EDIT PROFILE VIEW */}
                         {settingsView === 'profile_edit' && (
-                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
+                            <div className="bg-white p-8 rounded-2xl md:rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
                                 {/* Title Context */}
                                 <div className="mb-6">
                                     <h2 className="text-3xl font-black text-slate-900">Il mio Profilo</h2>
@@ -1514,7 +1516,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                         {/* SERVICES VIEW */}
                         {settingsView === 'services' && (
-                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
+                            <div className="bg-white p-8 rounded-2xl md:rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
                                 <h2 className="text-3xl font-black text-slate-900 mb-2">Gestisci Servizi</h2>
                                 <p className="text-slate-500 mb-8">Seleziona le categorie di servizi che offri.</p>
                                 
@@ -1554,7 +1556,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {currentTab === 'billing' && (
-                    <div className="max-w-2xl mx-auto animate-in fade-in duration-300">
+                    <div className="max-w-2xl mx-auto animate-in fade-in duration-300 px-4 md:px-0">
                         {/* Promo Header */}
                         <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 mb-8">
                             <div className="relative z-10">
@@ -1628,7 +1630,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         </div>
                     </div>
                 )}
-            </>
+            </div>
         )}
       </div>
   );
@@ -1636,7 +1638,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   return (
     <div className="bg-slate-50 min-h-screen flex">
         {/* Sidebar */}
-        <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
+        <aside className="hidden lg:flex w-80 border-r border-slate-100 bg-white flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
              <div className="space-y-2 flex-grow">
                 {[
                     { id: 'leads', label: 'Opportunità', icon: <Star size={20} />, role: 'pro' },
@@ -1672,7 +1674,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         </aside>
 
         {/* Main Content Area - Routes */}
-        <main className="flex-grow p-8 lg:p-12 overflow-x-hidden">
+        <main className="flex-grow p-0 md:p-8 lg:p-12 overflow-x-hidden bg-slate-50">
              <Routes>
                  <Route path="/" element={renderDashboardContent()} />
                  <Route path="/job/:id" element={<JobDetailView user={user} isPro={isPro} refreshParent={refreshData} />} />
