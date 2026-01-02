@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, UserRole, ServiceCategory } from '../../types';
@@ -30,12 +29,12 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
   const [location, setLocation] = useState('');
   const [bio, setBio] = useState('');
   const [vatNumber, setVatNumber] = useState('');
-  const [offeredServices, setOfferedServices] = useState<ServiceCategory[]>([]);
+  const [offeredServices, setOfferedServices] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const toggleService = (cat: ServiceCategory) => {
+  const toggleService = (cat: string) => {
     setOfferedServices(prev => 
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
@@ -326,7 +325,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3">
-                    {Object.values(ServiceCategory).map(cat => (
+                    {contentService.getCategories().map(cat => (
                       <button 
                         key={cat} 
                         onClick={() => toggleService(cat)} 

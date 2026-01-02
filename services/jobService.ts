@@ -1,26 +1,68 @@
-
 import { supabase } from './supabaseClient';
-import { JobRequest, Quote, User, ServiceCategory, JobLocation, UserRole, Review } from '../types';
-import { notificationService } from './notificationService';
+import { JobRequest, Quote, User, UserRole } from '../types';
 
 export const jobService = {
-  
+  async createJob(jobData: Partial<JobRequest>): Promise<JobRequest> {
+    const newJob = {
+      client_id: jobData.clientId,
+      client_name: jobData.clientName,
+      title: jobData.category, // Using category as title for now as per UI
+      description: jobData.description,
+      category: jobData.category,
+      details: jobData.details,
+      budget: jobData.budget,
+      location: jobData.location,
+      status: 'OPEN',
+      tags: [],
+    };
+
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert([newJob])
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    return {
+      id: data.id,
+      clientId: data.client_id,
+      clientName: data.client_name,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      details: data.details,
+      budget: data.budget,
+      timeline: data.timeline,
+      tags: data.tags,
+      location: data.location,
+      status: data.status,
+      createdAt: data.created_at
+    };
+  },
+
   async getJobs(): Promise<JobRequest[]> {
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
       .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error(error);
-      return [];
-    }
 
-    return data.map((job: any) => ({
-      ...job,
-      clientId: job.client_id,
-      clientName: job.client_name,
-      createdAt: job.created_at
+    if (error) throw error;
+
+    return data.map((j: any) => ({
+      id: j.id,
+      clientId: j.client_id,
+      clientName: j.client_name,
+      title: j.title,
+      description: j.description,
+      category: j.category,
+      details: j.details,
+      budget: j.budget,
+      timeline: j.timeline,
+      tags: j.tags,
+      location: j.location,
+      status: j.status,
+      createdAt: j.created_at
     }));
   },
 
@@ -30,13 +72,17 @@ export const jobService = {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) return [];
+    if (error) throw error;
 
     return data.map((q: any) => ({
-      ...q,
+      id: q.id,
       jobId: q.job_id,
       proId: q.pro_id,
       proName: q.pro_name,
+      price: q.price,
+      message: q.message,
+      timeline: q.timeline,
+      status: q.status,
       createdAt: q.created_at
     }));
   },
@@ -48,323 +94,158 @@ export const jobService = {
       .eq('job_id', jobId)
       .order('created_at', { ascending: false });
 
-    if (error) return [];
+    if (error) throw error;
 
     return data.map((q: any) => ({
-      ...q,
+      id: q.id,
       jobId: q.job_id,
       proId: q.pro_id,
       proName: q.pro_name,
+      price: q.price,
+      message: q.message,
+      timeline: q.timeline,
+      status: q.status,
       createdAt: q.created_at
     }));
   },
 
+  async sendQuote(quoteData: any): Promise<void> {
+    const { error } = await supabase
+      .from('quotes')
+      .insert([{
+        job_id: quoteData.jobId,
+        pro_id: quoteData.proId,
+        pro_name: quoteData.proName,
+        price: quoteData.price,
+        message: quoteData.message,
+        timeline: quoteData.timeline,
+        status: 'PENDING'
+      }]);
+
+    if (error) throw error;
+  },
+
+  async updateQuoteStatus(quote: Quote, status: string): Promise<void> {
+    const { error } = await supabase
+      .from('quotes')
+      .update({ status })
+      .eq('id', quote.id);
+
+    if (error) throw error;
+  },
+
+  async updateJobDetails(jobId: string, updates: any): Promise<void> {
+     const dbUpdates: any = {};
+     if (updates.description) dbUpdates.description = updates.description;
+     if (updates.budget) dbUpdates.budget = updates.budget;
+     if (updates.location) dbUpdates.location = updates.location;
+
+     const { error } = await supabase.from('jobs').update(dbUpdates).eq('id', jobId);
+     if (error) throw error;
+  },
+
+  async updateJobStatus(jobId: string, status: string): Promise<void> {
+    const { error } = await supabase.from('jobs').update({ status }).eq('id', jobId);
+    if (error) throw error;
+  },
+
+  async deleteJob(jobId: string): Promise<void> {
+    const { error } = await supabase.from('jobs').delete().eq('id', jobId);
+    if (error) throw error;
+  },
+
+  async getMatchesForPro(user: User): Promise<{ job: JobRequest; matchScore: number }[]> {
+    const allJobs = await this.getJobs();
+    
+    // Filter active jobs
+    const activeJobs = allJobs.filter(j => j.status === 'OPEN' || j.status === 'IN_PROGRESS');
+
+    const matches = activeJobs.map(job => {
+        let score = 0;
+        // Category match
+        if (user.offeredServices?.includes(job.category)) {
+            score += 60;
+        } else {
+            return { job, matchScore: 0 };
+        }
+
+        // Location match (simple string check)
+        if (user.location && job.location?.city) {
+             if (job.location.city.toLowerCase().includes(user.location.toLowerCase()) || 
+                 user.location.toLowerCase().includes(job.location.city.toLowerCase()) ||
+                 job.location.city.toLowerCase() === 'remoto') {
+                 score += 30;
+             }
+        }
+
+        // Basic score just for existing
+        score += 10;
+
+        return { job, matchScore: score };
+    }).filter(m => m.matchScore > 0).sort((a, b) => b.matchScore - a.matchScore);
+
+    return matches;
+  },
+
   async getUserProfile(userId: string): Promise<User | null> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
     if (error || !data) return null;
-
+    
     return {
       id: data.id,
       email: data.email,
       name: data.name,
-      role: data.role as UserRole,
+      role: data.role,
       avatar: data.avatar,
       brandName: data.brand_name,
       location: data.location,
       bio: data.bio,
       phoneNumber: data.phone_number,
-      isVerified: data.is_verified,
+      vatNumber: data.vat_number,
       offeredServices: data.offered_services,
       credits: data.credits,
-      plan: data.plan
+      plan: data.plan,
+      isVerified: data.is_verified
     };
-  },
-
-  async createJob(params: {
-    clientId: string;
-    clientName: string;
-    category: string;
-    description: string;
-    details: Record<string, any>;
-    budget: string;
-    location?: JobLocation;
-  }): Promise<JobRequest | null> {
-    
-    if (!params.clientId) throw new Error("ID Cliente mancante. Effettua nuovamente il login.");
-
-    const newJob = {
-      client_id: params.clientId,
-      client_name: params.clientName,
-      title: `${params.category}: ${params.description.substring(0, 30)}...`,
-      description: params.description,
-      category: params.category,
-      details: params.details,
-      budget: params.budget,
-      location: params.location || null,
-      status: 'OPEN'
-    };
-
-    const { data, error } = await supabase
-      .from('jobs')
-      .insert([newJob])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('SUPABASE ERROR creating job:', error);
-      throw new Error(`Errore database: ${error.message}`);
-    }
-
-    return {
-      ...data,
-      clientId: data.client_id,
-      clientName: data.client_name,
-      createdAt: data.created_at,
-      tags: [data.category] 
-    };
-  },
-
-  async updateJobDetails(jobId: string, updates: {
-    description?: string;
-    details?: Record<string, any>;
-    budget?: string;
-    location?: JobLocation;
-  }): Promise<void> {
-    const dbUpdates: any = {};
-    if (updates.description) dbUpdates.description = updates.description;
-    if (updates.details) dbUpdates.details = updates.details;
-    if (updates.budget) dbUpdates.budget = updates.budget;
-    if (updates.location) dbUpdates.location = updates.location;
-
-    const { error } = await supabase.from('jobs').update(dbUpdates).eq('id', jobId);
-    
-    if (error) throw new Error(`Errore aggiornamento job: ${error.message}`);
-  },
-
-  async sendQuote(params: {
-    jobId: string;
-    proId: string;
-    proName: string;
-    price: number;
-    message: string;
-    timeline: string;
-    clientOwnerId?: string; 
-    category?: string; 
-  }): Promise<Quote | null> {
-    
-    const { data: pro } = await supabase.from('profiles').select('credits, plan').eq('id', params.proId).single();
-    
-    if (pro && pro.plan !== 'AGENCY') {
-        if ((pro.credits || 0) <= 0) throw new Error("Crediti insufficienti. Ricarica il tuo profilo.");
-        await supabase.from('profiles').update({ credits: pro.credits - 1 }).eq('id', params.proId);
-    }
-
-    const newQuote = {
-      job_id: params.jobId,
-      pro_id: params.proId,
-      pro_name: params.proName,
-      price: params.price,
-      message: params.message,
-      timeline: params.timeline,
-      status: 'PENDING'
-    };
-
-    const { data, error } = await supabase
-      .from('quotes')
-      .insert([newQuote])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      ...data,
-      jobId: data.job_id,
-      proId: data.pro_id,
-      proName: data.pro_name,
-      createdAt: data.created_at
-    };
-  },
-
-  async updateQuoteStatus(quote: Quote, status: Quote['status'], jobTitle?: string): Promise<void> {
-    await supabase.from('quotes').update({ status }).eq('id', quote.id);
-    
-    if (status === 'ACCEPTED') {
-       await this.updateJobStatus(quote.jobId, 'IN_PROGRESS');
-    }
-  },
-
-  async updateJobStatus(jobId: string, status: JobRequest['status']): Promise<void> {
-    const { error } = await supabase.from('jobs').update({ status }).eq('id', jobId);
-    if (error) throw new Error(`Errore aggiornamento stato: ${error.message}`);
-  },
-
-  async deleteJob(jobId: string): Promise<void> {
-    // 1. Tenta di eliminare prima i preventivi associati (Manual Cascade)
-    // Questo previene errori di Foreign Key se il DB non ha CASCADE DELETE configurato
-    const { error: quoteError } = await supabase.from('quotes').delete().eq('job_id', jobId);
-    if (quoteError) {
-      console.warn("Avviso pulizia preventivi (potrebbe fallire se non sei il proprietario dei preventivi):", quoteError.message);
-    }
-
-    // 2. Elimina il Job
-    const { error, count } = await supabase
-      .from('jobs')
-      .delete()
-      .eq('id', jobId)
-      .select('*', { count: 'exact' });
-
-    if (error) throw new Error(`Errore eliminazione: ${error.message}`);
-    
-    // Controllo se è stato effettivamente cancellato qualcosa
-    if (count === 0) {
-      throw new Error("Impossibile eliminare: richiesta non trovata o permessi insufficienti.");
-    }
-  },
-
-  async updateUserPlan(userId: string, plan: 'FREE' | 'PRO' | 'AGENCY'): Promise<void> {
-    const { data: user } = await supabase.from('profiles').select('credits').eq('id', userId).single();
-    let currentCredits = user?.credits || 0;
-    let newCredits = currentCredits;
-
-    if (plan === 'PRO') {
-        // Launch Phase Logic: Set to max 30 (Top-Up)
-        newCredits = 30;
-        // Safety: Don't reduce credits if user somehow has more (e.g. Agency downgrade or Admin bonus)
-        if (newCredits < currentCredits) newCredits = currentCredits;
-    } else if (plan === 'AGENCY') {
-        newCredits = 9999;
-    } else {
-        // FREE Plan reset logic if needed, currently no-op for credits
-    }
-
-    await supabase.from('profiles').update({ 
-      plan, 
-      credits: newCredits 
-    }).eq('id', userId);
   },
 
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
-      // 1. Prepare DB Payload
-      const dbUpdates: any = {
-          id: userId, 
-          updated_at: new Date().toISOString()
-      };
-      
-      // Mappatura esplicita per evitare errori di tipo
-      if (updates.name !== undefined) dbUpdates.name = updates.name;
-      if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
-      if (updates.location !== undefined) dbUpdates.location = updates.location;
-      if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
-      if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
-      if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
+    const dbUpdates: any = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.brandName) dbUpdates.brand_name = updates.brandName;
+    if (updates.location) dbUpdates.location = updates.location;
+    if (updates.bio) dbUpdates.bio = updates.bio;
+    if (updates.phoneNumber) dbUpdates.phone_number = updates.phoneNumber;
+    if (updates.offeredServices) dbUpdates.offered_services = updates.offeredServices;
 
-      // 2. TENTATIVO Aggiornamento DB (Non bloccante)
-      // Usiamo try-catch locale per permettere all'app di continuare anche se il DB fallisce (es. RLS, trigger rotti)
-      try {
-          const { error } = await supabase
-            .from('profiles')
-            .upsert(dbUpdates)
-            .select();
+    const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', userId);
+    if (error) throw error;
 
-          if (error) {
-              console.warn("DB Update Warning (procedo con fallback metadata):", error.message);
-          }
-      } catch (dbError) {
-          console.warn("DB Update Exception (procedo con fallback metadata):", dbError);
-      }
-
-      // 3. Aggiornamento Metadati Auth (STRATEGIA DOUBLE SAFETY)
-      // Questo è il salvataggio che conta per l'interfaccia utente immediata
-      const metaUpdates: any = {};
-      if (updates.name) metaUpdates.name = updates.name;
-      if (updates.brandName) metaUpdates.brand_name = updates.brandName;
-      if (updates.location) metaUpdates.location = updates.location;
-      if (updates.bio) metaUpdates.bio = updates.bio;
-      if (updates.phoneNumber) metaUpdates.phone_number = updates.phoneNumber;
-      if (updates.offeredServices) metaUpdates.offered_services = updates.offeredServices;
-      
-      if (Object.keys(metaUpdates).length > 0) {
-          const { error: authError } = await supabase.auth.updateUser({ data: metaUpdates });
-          if (authError) throw authError; // Se fallisce anche questo, allora è un vero errore.
-      }
-  },
-
-  async getMatchesForPro(pro: User): Promise<{ job: JobRequest; matchScore: number }[]> {
-    const { data: allJobs } = await supabase.from('jobs').select('*').eq('status', 'OPEN');
-    if (!allJobs) return [];
-
-    const { data: myQuotes } = await supabase.from('quotes').select('job_id').eq('pro_id', pro.id);
-    const quotedJobIds = new Set(myQuotes?.map((q: any) => q.job_id));
-
-    const jobs = allJobs.map((job: any) => ({
-      ...job,
-      clientId: job.client_id,
-      clientName: job.client_name,
-      createdAt: job.created_at,
-      tags: job.tags || [job.category] 
-    }));
-
-    const relevantJobs = jobs.filter((j: any) => !quotedJobIds.has(j.id));
-
-    if (!pro.offeredServices) {
-       return relevantJobs
-         .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-         .map((j: any) => ({ job: j, matchScore: 50 }));
-    }
-
-    return relevantJobs.map((job: any) => {
-      let score = 0;
-      if (pro.offeredServices?.includes(job.category)) score += 60;
-      
-      const jobCity = job.location?.city?.toLowerCase();
-      const proCity = pro.location?.toLowerCase();
-
-      if (jobCity && proCity) {
-        if (jobCity === proCity) score += 20;
-        else if (jobCity === 'remoto' || proCity === 'remoto') score += 15;
-      } else {
-        score += 10;
-      }
-      
-      return { job, matchScore: Math.min(score, 100) };
-    })
-    .sort((a: any, b: any) => new Date(b.job.createdAt).getTime() - new Date(a.job.createdAt).getTime());
-  },
-
-  async getReviews(userId: string): Promise<Review[]> {
-    const { error } = await supabase.from('reviews').select('id').limit(1);
+    // Sync Auth Metadata
+    const metaUpdates: any = {};
+    if (updates.name) metaUpdates.name = updates.name;
+    if (updates.brandName) metaUpdates.brand_name = updates.brandName;
+    if (updates.location) metaUpdates.location = updates.location;
+    if (updates.bio) metaUpdates.bio = updates.bio;
+    if (updates.phoneNumber) metaUpdates.phone_number = updates.phoneNumber;
+    if (updates.offeredServices !== undefined) metaUpdates.offered_services = updates.offeredServices;
     
-    if (error) {
-      return [
-        {
-          id: '1',
-          jobId: 'job-123',
-          clientId: 'client-abc',
-          clientName: 'Marco Bianchi',
-          proId: userId,
-          rating: 5,
-          comment: 'Professionista eccezionale! Lavoro consegnato in anticipo e qualità top.',
-          createdAt: new Date().toISOString()
-        }
-      ];
+    if (Object.keys(metaUpdates).length > 0) {
+        const { error: authError } = await supabase.auth.updateUser({ data: metaUpdates });
+        if (authError) console.warn("Auth metadata update failed", authError);
     }
+  },
 
-    const { data } = await supabase.from('reviews').select('*').eq('pro_id', userId).order('created_at', { ascending: false });
-    return data?.map((r: any) => ({
-      id: r.id,
-      jobId: r.job_id,
-      clientId: r.client_id,
-      clientName: r.client_name,
-      proId: r.pro_id,
-      rating: r.rating,
-      comment: r.comment,
-      createdAt: r.created_at
-    })) || [];
+  async updateUserPlan(userId: string, plan: string): Promise<void> {
+     let credits = 0;
+     if (plan === 'PRO') credits = 50;
+     if (plan === 'AGENCY') credits = 9999;
+
+     const { error } = await supabase
+       .from('profiles')
+       .update({ plan, credits })
+       .eq('id', userId);
+    
+    if (error) throw error;
   }
 };

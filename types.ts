@@ -134,7 +134,7 @@ export interface User {
   vatNumber?: string;
   experienceLevel?: 'Junior' | 'Mid' | 'Senior' | 'Agency';
   priceRange?: 'Budget' | 'Standard' | 'Premium';
-  offeredServices?: ServiceCategory[];
+  offeredServices?: string[]; // Changed from ServiceCategory[] to string[] to support dynamic categories
   // Monetization fields
   credits?: number;
   plan?: PlanType;

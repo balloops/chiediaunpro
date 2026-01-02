@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory } from '../../types';
 import { 
@@ -7,7 +6,7 @@ import {
   Code, ShoppingCart, Palette, Camera, Video, BarChart3, AppWindow, Box, 
   Briefcase, HelpCircle, LogOut, Coins, RefreshCw, WifiOff,
   User as UserIcon, TrendingUp, Euro, Filter, ChevronDown, ArrowUp, ArrowDown,
-  Trash2, Edit3, XCircle, Save, X, Ban, Archive, Rocket, Zap, Sparkles, AlertTriangle
+  Trash2, Edit3, XCircle, Save, X, Ban, Archive
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { jobService } from '../../services/jobService';
@@ -20,16 +19,6 @@ interface DashboardProps {
   user: User;
   onLogout: () => void;
 }
-
-// Helper per formattare la data in dd/mm/yyyy
-const formatDate = (dateString: string) => {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString('it-IT', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
 
 // --- SUB COMPONENTS (PAGES) ---
 
@@ -91,7 +80,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 category: job.category
             });
             await notificationService.notifyNewQuote(job.clientId, user.brandName || user.name, job.category, job.id);
-            alert("Proposta inviata!");
+            alert("Preventivo inviato!");
             // Redirect to Quotes tab explicitly
             navigate('/dashboard?tab=quotes');
         } catch (e: any) {
@@ -100,7 +89,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     };
 
     const handleAcceptQuote = async (quote: Quote) => {
-        if (window.confirm("Confermi di voler accettare questa proposta?")) {
+        if (window.confirm("Confermi di voler accettare questo preventivo?")) {
             try {
                 await jobService.updateQuoteStatus(quote, 'ACCEPTED');
                 await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
@@ -182,34 +171,34 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-20">
             <button 
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 md:mb-6 font-bold text-sm transition-colors pl-1"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna alla lista
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left: Job Details */}
-                <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                    <div className="bg-white p-5 md:p-8 rounded-2xl md:rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
                         
                         {/* Header & Status */}
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6 relative z-10 gap-4 md:gap-0">
+                        <div className="flex justify-between items-start mb-6 relative z-10">
                             <div>
-                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">{job.category}</h1>
+                                <h1 className="text-3xl font-black text-slate-900 mb-2">{job.category}</h1>
                                 {!isEditing ? (
-                                    <div className="flex flex-wrap gap-3 md:gap-4 text-xs md:text-sm font-medium text-slate-500">
-                                        <span className="flex items-center"><MapPin size={14} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
-                                        <span className="flex items-center"><Wallet size={14} className="mr-1"/> {job.budget}</span>
-                                        <span className="flex items-center"><Clock size={14} className="mr-1"/> {formatDate(job.createdAt)}</span>
+                                    <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
+                                        <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
+                                        <span className="flex items-center"><Wallet size={16} className="mr-1"/> {job.budget}</span>
+                                        <span className="flex items-center"><Clock size={16} className="mr-1"/> {new Date(job.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-wrap gap-3 mt-2">
+                                    <div className="flex flex-wrap gap-4 mt-2">
                                          <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-200">
                                             <MapPin size={14} className="text-slate-400 mr-2"/>
                                             <input 
                                                 value={editData.city} 
                                                 onChange={e => setEditData({...editData, city: e.target.value})}
-                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-28 md:w-32"
+                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-32"
                                                 placeholder="Città"
                                             />
                                          </div>
@@ -218,7 +207,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                             <input 
                                                 value={editData.budget} 
                                                 onChange={e => setEditData({...editData, budget: e.target.value})}
-                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-28 md:w-32"
+                                                className="bg-transparent py-1 text-sm font-bold text-slate-700 outline-none w-32"
                                                 placeholder="Budget"
                                             />
                                          </div>
@@ -231,14 +220,14 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 if (!isPro && (job.status === 'OPEN' || job.status === 'IN_PROGRESS')) {
                                     if (quotes.length > 0) {
                                         return (
-                                            <span className="self-start px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
-                                                {quotes.length === 1 ? '1 PROPOSTA' : `${quotes.length} PROPOSTE`}
+                                            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
+                                                {quotes.length === 1 ? '1 PREVENTIVO RICEVUTO' : `${quotes.length} PREVENTIVI RICEVUTI`}
                                             </span>
                                         );
                                     } else {
                                         return (
-                                            <span className="self-start px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
-                                                IN ATTESA
+                                            <span className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
+                                                IN ATTESA DI PREVENTIVI
                                             </span>
                                         );
                                     }
@@ -246,7 +235,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 
                                 // Default labels for Pro or other statuses
                                 return (
-                                    <span className={`self-start px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider ${
+                                    <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${
                                         job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
                                         job.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
                                         job.status === 'ARCHIVED' ? 'bg-slate-100 text-slate-600' :
@@ -260,13 +249,13 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
 
                         {/* Description */}
                         <div className="space-y-6 relative z-10">
-                            <div className="bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                 <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase flex justify-between">
                                     Descrizione
                                     {isEditing && <span className="text-indigo-600 text-xs">Modifica in corso...</span>}
                                 </h3>
                                 {!isEditing ? (
-                                    <p className="text-slate-700 leading-relaxed whitespace-pre-line text-sm md:text-base">{job.description}</p>
+                                    <p className="text-slate-700 leading-relaxed whitespace-pre-line">{job.description}</p>
                                 ) : (
                                     <textarea 
                                         value={editData.description}
@@ -297,7 +286,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 {isEditing ? (
                                     <>
                                         <button onClick={handleUpdateJob} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-indigo-700">
-                                            <Save size={16} /> Salva
+                                            <Save size={16} /> Salva Modifiche
                                         </button>
                                         <button onClick={() => setIsEditing(false)} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200">
                                             <X size={16} /> Annulla
@@ -317,7 +306,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                         )}
                                         {canClose && (
                                             <button onClick={handleCloseJob} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200 hover:text-slate-800 transition-colors">
-                                                <Ban size={16} /> Chiudi
+                                                <Ban size={16} /> Chiudi Richiesta
                                             </button>
                                         )}
                                         {canArchive && (
@@ -344,14 +333,14 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                     {/* CLIENT VIEW: List Quotes */}
                     {!isPro && (
                         <div className="space-y-4">
-                            <h2 className="text-xl md:text-2xl font-black text-slate-900 px-1">Proposte Ricevute ({quotes.length})</h2>
+                            <h2 className="text-2xl font-black text-slate-900">Preventivi Ricevuti ({quotes.length})</h2>
                             {quotes.length === 0 ? (
                                 <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
-                                    Nessuna proposta ancora ricevuta. Modifica la richiesta per renderla più appetibile!
+                                    Nessun preventivo ancora ricevuto. Modifica la richiesta per renderla più appetibile!
                                 </div>
                             ) : (
                                 quotes.map(q => (
-                                    <div key={q.id} className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                    <div key={q.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                         <div>
                                             <div className="font-black text-lg text-slate-900">{q.proName}</div>
                                             <div className="text-2xl font-black text-indigo-600 my-1">{q.price} €</div>
@@ -389,21 +378,21 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 {/* Right: Action / Quote Form */}
                 <div className="lg:col-span-1">
                     {isPro ? (
-                        <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-[32px] border border-slate-100 shadow-xl sticky top-24">
+                        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl sticky top-24">
                             {myQuote ? (
                                 <div className="text-center py-8">
                                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <Check size={32} />
                                     </div>
-                                    <h3 className="font-black text-xl text-slate-900">Proposta Inviata</h3>
+                                    <h3 className="font-black text-xl text-slate-900">Preventivo Inviato</h3>
                                     <p className="text-slate-500 text-sm mt-2 mb-6">Hai già risposto a questa richiesta.</p>
                                     <button onClick={() => navigate(`/dashboard/quote/${myQuote.id}?tab=${activeTab}`)} className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl">
-                                        Vedi la tua proposta
+                                        Vedi il tuo preventivo
                                     </button>
                                 </div>
                             ) : (
                                 <div className="space-y-5">
-                                    <h3 className="font-black text-xl text-slate-900">Invia Proposta</h3>
+                                    <h3 className="font-black text-xl text-slate-900">Invia Preventivo</h3>
                                     <div>
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">Prezzo (€)</label>
                                         <input type="number" value={quotePrice} onChange={e=>setQuotePrice(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="0.00" />
@@ -417,16 +406,16 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                         <textarea value={quoteMessage} onChange={e=>setQuoteMessage(e.target.value)} rows={4} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" placeholder="Descrivi la tua offerta..." />
                                     </div>
                                     <button onClick={handleSendQuote} className="w-full py-4 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all">
-                                        Invia Proposta
+                                        Invia Offerta
                                     </button>
                                 </div>
                             )}
                         </div>
                     ) : (
                         // Client Side Panel Info
-                        <div className="bg-indigo-50 p-5 md:p-6 rounded-2xl md:rounded-[32px] sticky top-24">
+                        <div className="bg-indigo-50 p-6 rounded-[32px] sticky top-24">
                             <h3 className="font-bold text-indigo-900 mb-2">Consiglio</h3>
-                            <p className="text-sm text-indigo-700/80 mb-4">Riceverai una notifica per ogni nuova proposta. Controlla spesso questa pagina.</p>
+                            <p className="text-sm text-indigo-700/80 mb-4">Riceverai una notifica per ogni nuovo preventivo. Controlla spesso questa pagina.</p>
                         </div>
                     )}
                 </div>
@@ -473,7 +462,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
 
     const handleAccept = async () => {
         if (!quote || !job) return;
-        if(window.confirm("Sei sicuro di voler accettare questa proposta e sbloccare i contatti?")) {
+        if(window.confirm("Sei sicuro di voler accettare questo preventivo e sbloccare i contatti?")) {
             await jobService.updateQuoteStatus(quote, 'ACCEPTED');
             await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
             // Reload to fetch contact info
@@ -482,7 +471,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     };
 
     if (loading) return <div className="p-10 text-center">Caricamento...</div>;
-    if (!quote || !job) return <div className="p-10 text-center">Proposta non trovata.</div>;
+    if (!quote || !job) return <div className="p-10 text-center">Preventivo non trovato.</div>;
 
     const isAccepted = quote.status === 'ACCEPTED';
 
@@ -491,32 +480,32 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
              <button 
                 // Back button goes to the specific tab
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 md:mb-6 font-bold text-sm transition-colors pl-1"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna indietro
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Side: Original Job Details (Context) */}
-                <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                    <div className="bg-white p-5 md:p-8 rounded-2xl md:rounded-[32px] border border-slate-100 shadow-sm">
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
                         <div className="flex items-center space-x-3 mb-6">
                             <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
                                 <FileText size={24} />
                             </div>
                             <div>
-                                <h2 className="text-xl md:text-2xl font-black text-slate-900">{job.category}</h2>
+                                <h2 className="text-2xl font-black text-slate-900">{job.category}</h2>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Richiesta Originale Cliente</p>
                             </div>
                         </div>
 
                         <div className="space-y-6">
-                            <div className="bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                 <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase">Descrizione Progetto</h3>
-                                <p className="text-slate-700 leading-relaxed whitespace-pre-line text-sm md:text-base">{job.description}</p>
+                                <p className="text-slate-700 leading-relaxed whitespace-pre-line">{job.description}</p>
                             </div>
                             
-                            <div className="flex flex-wrap gap-4 text-xs md:text-sm font-medium text-slate-500">
+                            <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
                                 <span className="flex items-center"><MapPin size={16} className="mr-1"/> {job.location?.city || 'Remoto'}</span>
                                 <span className="flex items-center"><Wallet size={16} className="mr-1"/> Budget: {job.budget}</span>
                                 <span className="flex items-center"><UserIcon size={16} className="mr-1"/> {job.clientName}</span>
@@ -541,14 +530,14 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
 
                 {/* Right Side: Quote Details & Status */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
-                        <div className={`p-6 md:p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
+                    <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
+                        <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <div className="text-white/60 font-bold uppercase tracking-widest text-xs mb-2">
-                                        {isPro ? 'La tua proposta' : 'Proposta ricevuta'}
+                                        {isPro ? 'Il tuo preventivo' : 'Preventivo ricevuto'}
                                     </div>
-                                    <h1 className="text-3xl md:text-4xl font-black">{quote.price} €</h1>
+                                    <h1 className="text-4xl font-black">{quote.price} €</h1>
                                     <div className="text-white/80 font-medium mt-1">Tempistiche: {quote.timeline}</div>
                                 </div>
                                 {isAccepted && (
@@ -559,11 +548,11 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                             </div>
                         </div>
 
-                        <div className="p-5 md:p-8 space-y-8">
+                        <div className="p-8 space-y-8">
                             {/* Message */}
                             <div>
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Messaggio</h3>
-                                <div className="bg-slate-50 p-4 md:p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-sm md:text-base leading-relaxed">
+                                <div className="bg-slate-50 p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-base leading-relaxed">
                                     "{quote.message}"
                                 </div>
                             </div>
@@ -605,7 +594,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                                     </button>
                                 )}
                                 {isPro && !isAccepted && (
-                                    <p className="text-xs text-slate-400">I contatti del cliente saranno visibili solo se accetta la tua proposta.</p>
+                                    <p className="text-xs text-slate-400">I contatti del cliente saranno visibili solo se accetta il tuo preventivo.</p>
                                 )}
                             </div>
                         </div>
@@ -632,16 +621,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const isPro = activeRole === UserRole.PROFESSIONAL;
   
   // URL Driven State (Source of Truth)
-  const rawTab = searchParams.get('tab');
-  // Logic to determine active view tab. 
-  // We map sub-pages 'services' and 'profile' to the main 'settings' tab container for the layout,
-  // while the internal state manages which sub-view to show.
-  let currentTab = rawTab || (isPro ? 'leads' : 'my-requests');
-  if (['services', 'profile'].includes(currentTab)) {
-      currentTab = 'settings';
-  }
-
-  const currentTabRef = useRef(currentTab); 
+  const currentTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests');
+  const currentTabRef = useRef(currentTab); // Ref to access current tab inside closure
 
   // Filter & Sort State
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -670,13 +651,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [hasUnseenWon, setHasUnseenWon] = useState(false); // Sidebar notification for Won jobs
 
   // Profile Hub State
-  // Initialize based on the raw URL parameter
-  const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>(() => {
-      if (rawTab === 'services') return 'services';
-      if (rawTab === 'profile') return 'profile_edit';
-      return 'menu';
-  });
-  
+  const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>('menu');
   const [profileForm, setProfileForm] = useState<User>(user);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   
@@ -684,13 +659,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
-
-  // Sync internal view with URL changes
-  useEffect(() => {
-      if (rawTab === 'services') setSettingsView('services');
-      else if (rawTab === 'profile') setSettingsView('profile_edit');
-      else if (rawTab === 'settings') setSettingsView('menu');
-  }, [rawTab]);
 
   // Reset filters when changing tabs
   useEffect(() => {
@@ -863,13 +831,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   };
 
   const handleUpgrade = async (plan: any) => {
-    if (user.credits && user.credits >= 30 && plan === 'PRO') {
-        alert("Hai già il massimo dei crediti gratuiti (30) per la fase di lancio.");
-        return;
-    }
     await jobService.updateUserPlan(user.id, plan);
     refreshData();
-    alert(`Ricarica effettuata! Il tuo saldo è stato aggiornato.`);
+    alert(`Piano ${plan} attivato!`);
   };
 
   const handleRoleSwitch = () => {
@@ -1028,10 +992,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
             <div>
                 <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
                 {currentTab === 'leads' ? 'Opportunità' : 
-                    currentTab === 'quotes' ? 'Proposte Inviate' :
+                    currentTab === 'quotes' ? 'Preventivi Inviati' :
                     currentTab === 'my-requests' ? 'Le mie Richieste' :
                     currentTab === 'archived' ? 'Richieste Archiviate' :
-                    currentTab === 'won' ? 'Lavori accettati' :
+                    currentTab === 'won' ? 'I tuoi Successi' :
                     currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
                     currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
                 </h1>
@@ -1107,7 +1071,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     <div className="space-y-6">
                         {filteredLeads.length > 0 ? (
                             filteredLeads.map(({ job, matchScore }) => (
-                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                     <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1149,7 +1113,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1161,7 +1125,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                             {job.status === 'OPEN' || job.status === 'IN_PROGRESS' ? (
                                                 quoteCount > 0 ? (
                                                     <span className="px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-700">
-                                                        {quoteCount === 1 ? '1 PROPOSTA' : `${quoteCount} PROPOSTE`}
+                                                        {quoteCount === 1 ? '1 PREVENTIVO' : `${quoteCount} PREVENTIVI`}
                                                     </span>
                                                 ) : (
                                                     <span className="px-2 py-0.5 rounded uppercase bg-amber-100 text-amber-700">
@@ -1200,7 +1164,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                          {filteredArchivedJobs.length > 0 ? filteredArchivedJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-[24px] border border-slate-200 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
                                      <div className="w-14 h-14 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1211,7 +1175,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                             <span className="px-2 py-0.5 rounded uppercase bg-slate-200 text-slate-500">
                                                 Archiviata
                                             </span>
-                                            <span>{quoteCount} Proposte</span>
+                                            <span>{quoteCount} Preventivi</span>
                                             <span className="flex items-center gap-1 ml-auto sm:ml-0"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
                                         </div>
                                     </div>
@@ -1238,7 +1202,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                  const job = allJobsCache.find(j => j.id === quote.jobId);
                                  const category = job?.category || 'Servizio';
                                  return (
-                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             {getCategoryIcon(category)}
                                          </div>
@@ -1270,7 +1234,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                              <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                                  <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
                                                  <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
-                                                 <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {formatDate(quote.createdAt)}</span>
+                                                 <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
                                              </div>
                                          </div>
 
@@ -1294,7 +1258,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                  ) : (
                                     <>
                                         <Send size={48} className="mx-auto mb-4 text-slate-300" />
-                                        <p>Nessuna proposta trovata.</p>
+                                        <p>Nessun preventivo trovato.</p>
                                         <button onClick={() => navigate('/dashboard?tab=leads')} className="text-indigo-600 font-bold hover:underline mt-2">Trova opportunità</button>
                                     </>
                                  )}
@@ -1304,7 +1268,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {/* --- PROFILE HUB --- */}
-                {/* ... (Existing Profile Hub Code - Just ensuring it's included) ... */}
                 {currentTab === 'settings' && (
                      <div className="animate-in fade-in duration-300">
                         {/* Profile Header - Visible only in Menu */}
@@ -1436,6 +1399,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                             </div>
                         )}
 
+                        {/* EDIT PROFILE VIEW */}
                         {settingsView === 'profile_edit' && (
                             <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
                                 {/* Title Context */}
@@ -1552,64 +1516,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {currentTab === 'billing' && (
-                    <div className="space-y-8 animate-in fade-in duration-500">
-                        {/* Balance Card */}
-                        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-[32px] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 max-w-3xl">
-                           {/* Decorators */}
-                           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                           <div className="relative z-10">
-                               <div className="flex items-center space-x-2 text-indigo-200 mb-2">
-                                   <Sparkles size={18} />
-                                   <span className="text-sm font-bold uppercase tracking-widest">Early Access</span>
-                               </div>
-                               <div className="text-xs font-medium text-indigo-100 mb-6">Attualmente in fase di Beta Test</div>
-
-                               <div className="text-7xl md:text-8xl font-black mb-6 tracking-tighter">
-                                   {user.credits && user.credits >= 999 ? '∞' : (user.credits ?? 0)}
-                               </div>
-
-                               <div className="flex flex-col sm:flex-row gap-4">
-                                   <button 
-                                      onClick={() => handleUpgrade('PRO')} 
-                                      disabled={(user.credits || 0) >= 30}
-                                      className={`px-8 py-4 rounded-2xl font-black shadow-lg transition-all flex items-center justify-center gap-2 ${
-                                          (user.credits || 0) >= 30 
-                                          ? 'bg-indigo-500/50 text-indigo-100 cursor-not-allowed shadow-none' 
-                                          : 'bg-white text-indigo-600 hover:bg-indigo-50'
-                                      }`}
-                                   >
-                                       <Zap size={20} className={(user.credits || 0) >= 30 ? "fill-indigo-100" : "fill-indigo-600"} />
-                                       {(user.credits || 0) >= 30 ? 'Massimo Raggiunto (30)' : 'Ricarica Gratis (Max 30)'}
-                                   </button>
-                               </div>
-                           </div>
-                        </div>
-
-                        {/* Info Card */}
-                        <div className="bg-amber-50 border border-amber-100 rounded-[32px] p-8 md:p-10 max-w-3xl">
-                            <div className="flex items-start gap-6">
-                                <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shrink-0">
-                                    <Rocket size={28} />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-black text-slate-900 mb-2">Siamo in fase di lancio! 🚀</h3>
-                                    <p className="text-slate-600 leading-relaxed mb-4">
-                                        Benvenuto nella versione Beta di LavoraBene. Stiamo ancora testando la piattaforma per offrirti la migliore esperienza possibile.
-                                    </p>
-                                    <ul className="space-y-3">
-                                        <li className="flex items-start gap-3 text-sm font-medium text-slate-700">
-                                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></div>
-                                            Potresti riscontrare qualche piccolo disservizio o bug. Stiamo lavorando sodo per risolverli.
-                                        </li>
-                                        <li className="flex items-start gap-3 text-sm font-medium text-slate-700">
-                                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></div>
-                                            <span className="font-bold text-slate-900">I crediti sono offerti da noi.</span> Durante questa fase, ricaricare il portafoglio è completamente gratuito (Max 30 crediti).
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 max-w-2xl">
+                        <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">Bilancio Crediti</div>
+                        <div className="text-7xl font-black mb-2 tracking-tighter">{user.credits && user.credits >= 999 ? '∞' : (user.credits ?? 0)}</div>
+                        <button onClick={() => handleUpgrade('PRO')} className="mt-4 bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold">Ricarica Crediti</button>
                     </div>
                 )}
             </>
@@ -1620,13 +1530,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   return (
     <div className="bg-slate-50 min-h-screen flex">
         {/* Sidebar */}
-        <aside className="hidden lg:flex w-20 lg:w-80 border-r border-slate-100 bg-white flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
+        <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
              <div className="space-y-2 flex-grow">
                 {[
                     { id: 'leads', label: 'Opportunità', icon: <Star size={20} />, role: 'pro' },
                     { id: 'my-requests', label: 'Mie Richieste', icon: <FileText size={20} />, role: 'client' },
-                    { id: 'quotes', label: 'Proposte Inviate', icon: <Send size={20} />, role: 'pro' },
-                    { id: 'won', label: 'Lavori accettati', icon: <Trophy size={20} />, role: 'pro' },
+                    { id: 'quotes', label: 'Preventivi Inviati', icon: <Send size={20} />, role: 'pro' },
+                    { id: 'won', label: 'Lavori Ottenuti', icon: <Trophy size={20} />, role: 'pro' },
                     { id: 'archived', label: 'Archiviate', icon: <Archive size={20} />, role: 'client' },
                     { id: 'settings', label: 'Profilo', icon: <Settings size={20} />, role: 'all' },
                     { id: 'billing', label: 'Crediti', icon: <Coins size={20} />, role: 'pro' }
@@ -1656,7 +1566,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         </aside>
 
         {/* Main Content Area - Routes */}
-        <main className="flex-grow p-4 md:p-8 lg:p-12 overflow-x-hidden">
+        <main className="flex-grow p-8 lg:p-12 overflow-x-hidden">
              <Routes>
                  <Route path="/" element={renderDashboardContent()} />
                  <Route path="/job/:id" element={<JobDetailView user={user} isPro={isPro} refreshParent={refreshData} />} />
