@@ -5,62 +5,68 @@ import { User, UserRole } from '../types';
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
     // 1. Preparazione Dati Puliti (Sanitization)
-    // Assicuriamo che nessun campo sia 'undefined', ma 'null' o valore di default.
-    // Questo è fondamentale per il Trigger SQL e per jsonb.
-    const metaData = {
+    // Passiamo solo i dati ESSENZIALI al trigger di Supabase per evitare errori SQL
+    // (es. "Database error saving new user" causato da campi mancanti o tipi errati nel trigger)
+    const initialMetaData = {
       name: userData.name,
       role: userData.role || 'CLIENT',
-      brand_name: userData.brandName ?? null,
-      location: userData.location ?? null,
-      bio: userData.bio ?? null,
-      vat_number: userData.vatNumber ?? null,
-      phone_number: userData.phoneNumber ?? null,
-      offered_services: userData.offeredServices ?? [], // Array vuoto se null
     };
 
-    // 2. Registrazione Auth con Metadati
+    // 2. Registrazione Auth con Metadati Minimi
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: metaData
+        data: initialMetaData
       }
     });
 
     if (authError) throw authError;
     if (!authData.user) throw new Error('Registrazione fallita: Utente non creato.');
 
-    // 3. Salvataggio Manuale Profilo (Backup Frontend - Double Safety)
-    // Se il Trigger SQL fallisce per qualsiasi motivo, questo blocco tenterà di salvare il profilo.
+    // 3. Salvataggio Completo Profilo (Backup Frontend)
+    // Ora che l'utente è creato (e il trigger base è passato), salviamo tutti i dettagli
+    // direttamente nella tabella profiles. Questo bypassa le limitazioni del trigger.
     try {
-        const userProfile = {
+        const fullProfile = {
             id: authData.user.id,
             email: email,
-            name: metaData.name,
-            role: metaData.role,
-            brand_name: metaData.brand_name,
-            location: metaData.location,
-            bio: metaData.bio,
-            phone_number: metaData.phone_number,
-            vat_number: metaData.vat_number,
-            offered_services: metaData.offered_services,
-            credits: metaData.role === 'PROFESSIONAL' ? 30 : 0,
+            name: userData.name,
+            role: userData.role || 'CLIENT',
+            brand_name: userData.brandName ?? null,
+            location: userData.location ?? null,
+            bio: userData.bio ?? null,
+            phone_number: userData.phoneNumber ?? null,
+            vat_number: userData.vatNumber ?? null,
+            offered_services: userData.offeredServices ?? [], 
+            credits: userData.role === 'PROFESSIONAL' ? 30 : 0,
             plan: 'FREE',
             is_verified: false,
             updated_at: new Date().toISOString()
         };
 
+        // Usiamo upsert per garantire che se il trigger ha creato una riga parziale, noi la aggiorniamo
         const { error: profileError } = await supabase
             .from('profiles')
-            .upsert(userProfile)
+            .upsert(fullProfile)
             .select();
 
         if (profileError) {
-            // Logghiamo solo come warning perché è probabile che il trigger abbia già fatto il lavoro
-            console.warn("Info salvataggio manuale (normale se il trigger ha funzionato):", profileError.message);
+            console.warn("Info salvataggio profilo (non bloccante):", profileError.message);
         }
+
+        // 4. Sincronizziamo i metadati Auth completi (opzionale, per coerenza sessione)
+        await supabase.auth.updateUser({
+            data: {
+                brand_name: userData.brandName ?? null,
+                location: userData.location ?? null,
+                phone_number: userData.phoneNumber ?? null,
+                // Aggiungere altri campi se necessario in sessione
+            }
+        });
+
     } catch (e) {
-        console.warn("Errore non critico nel salvataggio profilo manuale:", e);
+        console.warn("Errore non critico nel salvataggio dettagli profilo:", e);
     }
 
     return authData.user;
@@ -91,7 +97,7 @@ export const authService = {
       .eq('id', session.user.id)
       .single();
 
-    // Recupero metadati dalla sessione (Fallback immediato se il DB è lento o il trigger sta ancora lavorando)
+    // Recupero metadati dalla sessione (Fallback immediato)
     const meta = session.user.user_metadata || {};
 
     // Costruiamo l'oggetto utente fondendo DB e Metadati

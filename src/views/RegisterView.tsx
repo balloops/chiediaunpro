@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, UserRole, ServiceCategory } from '../../types';
@@ -84,6 +85,8 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
          setError("Errore configurazione Supabase: Disabilita 'Confirm Email' nel pannello Admin di Supabase.");
       } else if (err.message && err.message.includes("already registered")) {
          setError("Questa email è già registrata. Prova ad accedere.");
+      } else if (err.message && err.message.includes("Database error saving new user")) {
+         setError("Errore tecnico del server (Trigger DB). Riprova o contatta l'assistenza.");
       } else {
          setError(err.message || 'Errore durante la registrazione.');
       }
