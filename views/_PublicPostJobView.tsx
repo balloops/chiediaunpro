@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../../types';
+import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../types';
 import { 
   ArrowLeft, 
   ChevronRight, 
@@ -24,11 +24,11 @@ import {
   AlertCircle,
   LayoutDashboard
 } from 'lucide-react';
-import { geminiService } from '../../services/geminiService';
-import { jobService } from '../../services/jobService';
-import { contentService } from '../../services/contentService';
-import { authService } from '../../services/authService'; // Import authService
-import ServiceForm from '../../components/ServiceForm';
+import { geminiService } from '../services/geminiService';
+import { jobService } from '../services/jobService';
+import { contentService } from '../services/contentService';
+import { authService } from '../services/authService'; // Import authService
+import ServiceForm from '../components/ServiceForm';
 
 interface PublicPostJobViewProps {
   user: User | null;
@@ -177,12 +177,12 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   const progress = step === 'category' ? 33 : step === 'details' ? 66 : 100;
 
   return (
-    <div className="min-h-screen bg-white md:bg-slate-50 pt-0 md:pt-12 pb-32 px-0 md:px-6">
+    <div className="min-h-screen bg-slate-50 pt-12 pb-32 px-6">
       <div className="max-w-[1250px] mx-auto">
         
-        {/* Back to Dashboard Link (Only if Logged In) - Hidden on mobile during flow */}
+        {/* Back to Dashboard Link (Only if Logged In) */}
         {user && (
-           <div className="hidden md:block mb-6 animate-in fade-in slide-in-from-left-4">
+           <div className="mb-6 animate-in fade-in slide-in-from-left-4">
               <Link to="/dashboard" className="inline-flex items-center space-x-2 text-slate-500 hover:text-indigo-600 font-bold text-sm transition-colors">
                  <LayoutDashboard size={18} />
                  <span>Torna alla Dashboard</span>
@@ -190,11 +190,11 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
            </div>
         )}
         
-        <div className="bg-white md:rounded-[24px] md:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] md:border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-screen md:min-h-0">
+        <div className="bg-white rounded-[24px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
           
           {/* Header */}
-          <div className="px-6 py-6 md:px-10 md:py-8 border-b border-slate-200 bg-white sticky top-0 z-10 backdrop-blur-md bg-white/95">
-            <div className="flex items-center space-x-4 md:space-x-6 w-full">
+          <div className="px-10 py-8 border-b border-slate-200 bg-white sticky top-0 z-10 backdrop-blur-md bg-white/95">
+            <div className="flex items-center space-x-6 w-full">
               {(step === 'details' || (step === 'auth' && authMode !== 'choice')) && (
                 <button 
                   onClick={() => {
@@ -202,22 +202,22 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                      else setStep('category');
                      window.scrollTo(0, 0);
                   }} 
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-50 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/10 text-slate-400 hover:text-indigo-600 rounded-xl md:rounded-[18px] transition-all border border-transparent hover:border-indigo-100 shrink-0"
+                  className="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/10 text-slate-400 hover:text-indigo-600 rounded-[18px] transition-all border border-transparent hover:border-indigo-100 shrink-0"
                 >
-                  <ArrowLeft size={20} />
+                  <ArrowLeft size={22} />
                 </button>
               )}
               <div className="flex-1">
-                <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight tracking-tight">
+                <h2 className="text-3xl font-black text-slate-900 leading-tight tracking-tight">
                   {step === 'category' ? 'Di cosa hai bisogno?' : 
                    step === 'details' ? selectedCategory : 'Ultimo passaggio!'}
                 </h2>
-                <p className="text-slate-400 text-xs md:text-base mt-1 font-medium">
+                <p className="text-slate-400 text-base mt-1 font-medium">
                   {step === 'category' ? 'Seleziona una categoria per iniziare.' : 
                    step === 'details' ? 'Definiamo insieme i contorni della tua idea.' : 
                    'Accedi per salvare la tua richiesta.'}
                 </p>
-                <div className="mt-4 md:mt-5 h-1.5 w-full max-w-sm bg-slate-100 rounded-full overflow-hidden">
+                <div className="mt-5 h-1.5 w-full max-w-sm bg-slate-100 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-indigo-600 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,96,227,0.3)]"
                       style={{ width: `${progress}%` }}
@@ -227,29 +227,28 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
             </div>
           </div>
 
-          <div className="p-6 md:p-8 lg:p-12">
+          <div className="p-8 lg:p-12">
             {step === 'category' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {categories.map((cat) => {
                   const info = getCategoryIcon(cat);
                   return (
                     <button
                       key={cat}
                       onClick={() => handleCategorySelect(cat)}
-                      className="group p-6 md:p-10 rounded-[24px] border-2 border-slate-100 bg-white hover:border-indigo-600 hover:shadow-[0_20px_50px_rgba(0,96,227,0.1)] transition-all text-left flex flex-row md:flex-col items-center md:items-start justify-between md:justify-between h-auto md:h-72 gap-4 md:gap-0"
+                      className="group p-10 rounded-[24px] border-2 border-slate-100 bg-white hover:border-indigo-600 hover:shadow-[0_20px_50px_rgba(0,96,227,0.1)] transition-all text-left flex flex-col justify-between h-72"
                     >
-                      <div className={`w-12 h-12 md:w-16 md:h-16 rounded-[18px] md:rounded-[22px] bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all ${info.color} shadow-sm group-hover:scale-110 shrink-0`}>
+                      <div className={`w-16 h-16 rounded-[22px] bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all ${info.color} shadow-sm group-hover:scale-110`}>
                         {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
-                        {React.cloneElement(info.icon as React.ReactElement<any>, { size: window.innerWidth < 768 ? 24 : 32 })}
+                        {React.cloneElement(info.icon as React.ReactElement<any>, { size: 32 })}
                       </div>
-                      <div className="flex-1 md:mt-8">
-                        <div className="font-black text-slate-900 text-lg md:text-2xl group-hover:text-indigo-600 transition-colors leading-tight">{cat}</div>
-                        <div className="text-xs md:text-sm text-slate-400 font-medium mt-1 md:mt-2">{info.desc}</div>
-                        <div className="hidden md:flex items-center text-[10px] text-indigo-600 font-black uppercase tracking-widest mt-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                      <div className="mt-8">
+                        <div className="font-black text-slate-900 text-2xl group-hover:text-indigo-600 transition-colors leading-tight">{cat}</div>
+                        <div className="text-sm text-slate-400 font-medium mt-2">{info.desc}</div>
+                        <div className="flex items-center text-[10px] text-indigo-600 font-black uppercase tracking-widest mt-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                           Seleziona categoria <ChevronRight size={12} className="ml-1" />
                         </div>
                       </div>
-                      <ChevronRight size={20} className="text-slate-300 md:hidden" />
                     </button>
                   );
                 })}
@@ -257,7 +256,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
             )}
 
             {step === 'details' && formDefinition && (
-              <div className="space-y-12 md:space-y-20 w-full">
+              <div className="space-y-20 w-full">
                 <ServiceForm 
                   formDefinition={formDefinition}
                   description={jobDescription}
@@ -268,7 +267,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                   isRefining={isRefining}
                 />
 
-                <section className="space-y-8 md:space-y-10 px-1 sm:px-4">
+                <section className="space-y-10">
                    <div className="flex items-start space-x-5 mb-6">
                     <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
                       <Euro size={24} />
@@ -279,7 +278,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-6">
                       <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Budget Stimato</label>
                       <div className="grid grid-cols-2 gap-4">
@@ -287,7 +286,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                           <button 
                             key={b}
                             onClick={() => setBudget(b)}
-                            className={`py-4 md:py-5 px-4 rounded-[20px] md:rounded-[24px] text-xs md:text-sm font-black border-2 transition-all duration-200 ${
+                            className={`py-5 px-4 rounded-[24px] text-sm font-black border-2 transition-all duration-200 ${
                               budget === b 
                                 ? 'border-indigo-600 bg-indigo-600 text-white shadow-xl shadow-indigo-200 scale-[1.02]' 
                                 : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 bg-white'
@@ -317,26 +316,26 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                   </div>
                 </section>
 
-                <div className="pt-4 px-1 sm:px-4">
+                <div className="pt-8">
                   <button 
                     disabled={!jobDescription || !budget}
-                    className="w-full py-5 md:py-7 bg-indigo-600 text-white font-black rounded-[20px] md:rounded-[24px] hover:bg-indigo-700 shadow-[0_20px_60px_-10px_rgba(0,96,227,0.3)] transition-all text-xl md:text-2xl flex items-center justify-center disabled:opacity-50 disabled:shadow-none group"
+                    className="w-full py-7 bg-indigo-600 text-white font-black rounded-[24px] hover:bg-indigo-700 shadow-[0_20px_60px_-10px_rgba(0,96,227,0.3)] transition-all text-2xl flex items-center justify-center disabled:opacity-50 disabled:shadow-none group"
                     onClick={handleFinalSubmit}
                   >
                     {user ? 'Invia Richiesta Pro' : 'Continua e Pubblica'}
                     <ChevronRight className="ml-3 group-hover:translate-x-2 transition-transform" size={28} />
                   </button>
-                  <p className="text-center text-slate-400 text-xs md:text-sm mt-6 font-medium">Riceverai i primi preventivi in meno di 24 ore.</p>
+                  <p className="text-center text-slate-400 text-sm mt-8 font-medium">Riceverai i primi preventivi in meno di 24 ore.</p>
                 </div>
               </div>
             )}
 
             {step === 'auth' && (
-              <div className="max-w-md mx-auto py-8 md:py-12">
+              <div className="max-w-md mx-auto py-12">
                 {authMode === 'choice' ? (
                   <div className="space-y-12 text-center animate-in zoom-in-95 duration-500">
-                    <div className="w-20 h-20 md:w-24 md:h-24 bg-indigo-50 text-indigo-600 rounded-[24px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-indigo-100">
-                      <UserCheck size={40} className="md:w-12 md:h-12" />
+                    <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-[24px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-indigo-100">
+                      <UserCheck size={48} />
                     </div>
                     <div>
                       <h3 className="text-3xl font-black text-slate-900 mb-2">Un'ultima cosa...</h3>
@@ -346,20 +345,20 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     <div className="flex flex-col space-y-4">
                       <button 
                         onClick={() => setAuthMode('register')}
-                        className="w-full py-5 md:py-6 bg-indigo-600 text-white font-black rounded-[20px] md:rounded-[24px] hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center text-lg"
+                        className="w-full py-6 bg-indigo-600 text-white font-black rounded-[24px] hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center text-lg"
                       >
                         Registrati come cliente
                       </button>
                       <button 
                         onClick={() => setAuthMode('login')}
-                        className="w-full py-5 md:py-6 bg-white border-2 border-slate-100 text-slate-700 font-bold rounded-[20px] md:rounded-[24px] hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center"
+                        className="w-full py-6 bg-white border-2 border-slate-100 text-slate-700 font-bold rounded-[24px] hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center"
                       >
                         Ho già un account
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <form onSubmit={handleAuthSubmit} className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                  <form onSubmit={handleAuthSubmit} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                     {error && (
                         <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600">
                             <AlertCircle size={20} />
@@ -368,44 +367,44 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     )}
                     
                     {authMode === 'register' && (
-                      <div className="space-y-2 md:space-y-3">
+                      <div className="space-y-3">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nome e Cognome</label>
                         <input 
                           type="text" 
                           required
                           value={authData.name}
                           onChange={e => setAuthData({...authData, name: e.target.value})}
-                          className="w-full bg-slate-50 border-2 border-slate-100 py-4 md:py-5 px-6 md:px-8 rounded-2xl focus:border-indigo-500 outline-none transition-all text-base md:text-lg font-medium"
+                          className="w-full bg-slate-50 border-2 border-slate-100 py-5 px-8 rounded-2xl focus:border-indigo-500 outline-none transition-all text-lg font-medium"
                           placeholder="es. Mario Rossi"
                         />
                       </div>
                     )}
-                    <div className="space-y-2 md:space-y-3">
+                    <div className="space-y-3">
                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
                       <input 
                         type="email" 
                         required
                         value={authData.email}
                         onChange={e => setAuthData({...authData, email: e.target.value})}
-                        className="w-full bg-slate-50 border-2 border-slate-100 py-4 md:py-5 px-6 md:px-8 rounded-2xl focus:border-indigo-500 outline-none transition-all text-base md:text-lg font-medium"
+                        className="w-full bg-slate-50 border-2 border-slate-100 py-5 px-8 rounded-2xl focus:border-indigo-500 outline-none transition-all text-lg font-medium"
                         placeholder="nome@email.it"
                       />
                     </div>
-                    <div className="space-y-2 md:space-y-3">
+                    <div className="space-y-3">
                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
                       <input 
                         type="password" 
                         required
                         value={authData.password}
                         onChange={e => setAuthData({...authData, password: e.target.value})}
-                        className="w-full bg-slate-50 border-2 border-slate-100 py-4 md:py-5 px-6 md:px-8 rounded-2xl focus:border-indigo-500 outline-none transition-all text-base md:text-lg font-medium"
+                        className="w-full bg-slate-50 border-2 border-slate-100 py-5 px-8 rounded-2xl focus:border-indigo-500 outline-none transition-all text-lg font-medium"
                         placeholder="••••••••"
                       />
                     </div>
                     <button 
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-5 md:py-6 bg-indigo-600 text-white font-black rounded-[20px] md:rounded-[24px] hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center justify-center text-lg md:text-xl disabled:opacity-70"
+                      className="w-full py-6 bg-indigo-600 text-white font-black rounded-[24px] hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center justify-center text-xl disabled:opacity-70"
                     >
                       {isSubmitting ? 'Elaborazione...' : (authMode === 'register' ? 'Registrati e Chiedi' : 'Accedi e Chiedi')}
                     </button>
