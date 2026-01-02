@@ -80,15 +80,21 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
          setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err: any) {
-      console.error(err);
+      console.error("Registration Error Detail:", err);
+      
       if (err.message && err.message.includes("confirmation email")) {
-         setError("Errore configurazione Supabase: Disabilita 'Confirm Email' nel pannello Admin di Supabase.");
+         setError("Errore configurazione: Disabilita 'Confirm Email' in Supabase.");
+      } else if (err.message && err.message.includes("CONFLICT_PROFILE")) {
+         setError("Questa email è già associata a un account. Prova ad accedere.");
       } else if (err.message && err.message.includes("already registered")) {
-         setError("Questa email è già registrata. Prova ad accedere.");
+         setError("Email già registrata. Vai al login.");
       } else if (err.message && err.message.includes("Database error saving new user")) {
-         setError("Errore tecnico del server (Trigger DB). Riprova o contatta l'assistenza.");
+         // Messaggio più tecnico ma utile se il problema persiste
+         setError(`Errore Database: Il sistema non riesce a creare il profilo. Assicurati di usare un'email nuova. (Dettaglio: ${err.message})`);
+      } else if (err.message && err.message.includes("Password should be")) {
+         setError("La password è troppo debole. Usa almeno 6 caratteri.");
       } else {
-         setError(err.message || 'Errore durante la registrazione.');
+         setError(err.message || 'Errore sconosciuto durante la registrazione. Riprova.');
       }
     } finally {
       setIsLoading(false);

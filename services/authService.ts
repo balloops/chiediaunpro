@@ -4,72 +4,80 @@ import { User, UserRole } from '../types';
 
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
-    // 1. Preparazione Dati Puliti (Sanitization)
-    // Inviamo un set completo di metadati per soddisfare vari tipi di trigger Supabase standard
-    // Alcuni trigger richiedono 'email' nei metadati, altri 'username', altri 'full_name'.
-    const initialMetaData = {
-      name: userData.name,
-      full_name: userData.name, 
-      email: email, // Fondamentale per trigger che copiano l'email in public.profiles
-      username: email.split('@')[0], // Fallback per trigger che richiedono username
-      role: userData.role || 'CLIENT',
-      avatar_url: userData.avatar || '',
+    // 0. PRE-CHECK: Verifica esistenza profilo (Best effort)
+    const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+    if (existingProfile) {
+        throw new Error('CONFLICT_PROFILE: Questa email è già associata a un profilo esistente.');
+    }
+
+    // 1. Generazione Username ULTRA-SICURA
+    // Rimuoviamo qualsiasi carattere speciale e limitiamo la lunghezza.
+    // Esempio: "Mario Rossi" -> "mariorossi4821"
+    const namePart = (userData.name || 'user').replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 10);
+    const randomPart = Math.floor(1000 + Math.random() * 9000).toString();
+    const uniqueUsername = `${namePart}${randomPart}`; // Max 14 chars, solo lettere/numeri
+
+    const userRole = (userData.role || 'CLIENT') as UserRole;
+
+    // 2. Metadati Standardizzati per Trigger
+    // Inviamo solo dati essenziali e puliti per evitare errori SQL nel trigger
+    const metaData = {
+      full_name: userData.name || 'Utente',
+      name: userData.name || 'Utente',
+      username: uniqueUsername,
+      role: userRole,
+      email: email
     };
 
-    // 2. Registrazione Auth con Metadati
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: initialMetaData
+        data: metaData
       }
     });
 
     if (authError) throw authError;
     if (!authData.user) throw new Error('Registrazione fallita: Utente non creato.');
 
-    // 3. Salvataggio Completo Profilo (Backup Frontend)
-    // Anche se il trigger dovesse funzionare parzialmente, assicuriamo che i dati completi siano nel DB
+    // 3. Fallback Upsert Profilo
+    // Eseguiamo upsert per garantire consistenza dati
     try {
-        const fullProfile = {
+        const profileData = {
             id: authData.user.id,
             email: email,
             name: userData.name,
-            role: userData.role || 'CLIENT',
-            brand_name: userData.brandName ?? null,
-            location: userData.location ?? null,
-            bio: userData.bio ?? null,
-            phone_number: userData.phoneNumber ?? null,
-            vat_number: userData.vatNumber ?? null,
-            offered_services: userData.offeredServices ?? [], 
-            credits: userData.role === 'PROFESSIONAL' ? 30 : 0,
+            username: uniqueUsername,
+            role: userRole,
+            full_name: userData.name,
+            avatar_url: userData.avatar || null,
+            brand_name: userData.brandName || null,
+            location: userData.location || null,
+            bio: userData.bio || null,
+            phone_number: userData.phoneNumber || null,
+            vat_number: userData.vatNumber || null,
+            offered_services: userData.offeredServices || [],
+            credits: userRole === 'PROFESSIONAL' ? 30 : 0,
             plan: 'FREE',
             is_verified: false,
             updated_at: new Date().toISOString()
         };
 
-        // Usiamo upsert per garantire che se il trigger ha creato una riga parziale, noi la aggiorniamo
         const { error: profileError } = await supabase
             .from('profiles')
-            .upsert(fullProfile)
+            .upsert(profileData)
             .select();
 
         if (profileError) {
-            console.warn("Info salvataggio profilo (non bloccante):", profileError.message);
+            console.warn("Info: Upsert profilo post-auth:", profileError.message);
         }
-
-        // 4. Sincronizziamo i metadati Auth completi (opzionale, per coerenza sessione)
-        await supabase.auth.updateUser({
-            data: {
-                brand_name: userData.brandName ?? null,
-                location: userData.location ?? null,
-                phone_number: userData.phoneNumber ?? null,
-                // Aggiungere altri campi se necessario in sessione
-            }
-        });
-
     } catch (e) {
-        console.warn("Errore non critico nel salvataggio dettagli profilo:", e);
+        console.warn("Errore non critico profilo:", e);
     }
 
     return authData.user;
@@ -93,17 +101,14 @@ export const authService = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
 
-    // Tentativo di recupero profilo dal DB
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
 
-    // Recupero metadati dalla sessione (Fallback immediato)
     const meta = session.user.user_metadata || {};
 
-    // Costruiamo l'oggetto utente fondendo DB e Metadati
     return {
       id: session.user.id,
       email: session.user.email || '',
