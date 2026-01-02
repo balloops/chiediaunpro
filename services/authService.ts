@@ -4,37 +4,24 @@ import { User, UserRole } from '../types';
 
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
-    // 0. PRE-CHECK: Verifica esistenza profilo (Best effort)
-    const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-    if (existingProfile) {
-        throw new Error('CONFLICT_PROFILE: Questa email è già associata a un profilo esistente.');
-    }
-
-    // 1. Generazione Username ULTRA-SICURA
-    // Rimuoviamo qualsiasi carattere speciale e limitiamo la lunghezza.
-    // Esempio: "Mario Rossi" -> "mariorossi4821"
+    // 1. Preparazione Dati Puliti
+    // Generiamo uno username semplice alfanumerico per evitare errori
     const namePart = (userData.name || 'user').replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 10);
     const randomPart = Math.floor(1000 + Math.random() * 9000).toString();
-    const uniqueUsername = `${namePart}${randomPart}`; // Max 14 chars, solo lettere/numeri
-
+    const uniqueUsername = `${namePart}${randomPart}`; 
     const userRole = (userData.role || 'CLIENT') as UserRole;
 
-    // 2. Metadati Standardizzati per Trigger
-    // Inviamo solo dati essenziali e puliti per evitare errori SQL nel trigger
+    // Metadati minimi essenziali per il trigger SQL
     const metaData = {
-      full_name: userData.name || 'Utente',
       name: userData.name || 'Utente',
-      username: uniqueUsername,
+      full_name: userData.name || 'Utente',
       role: userRole,
-      email: email
+      username: uniqueUsername,
     };
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // 2. Chiamata a Supabase Auth
+    // Ora che abbiamo corretto l'SQL, questa chiamata non dovrebbe più fallire
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -42,45 +29,45 @@ export const authService = {
       }
     });
 
-    if (authError) throw authError;
-    if (!authData.user) throw new Error('Registrazione fallita: Utente non creato.');
+    if (error) throw error;
+    if (!data.user) throw new Error('Registrazione completata ma utente nullo.');
 
-    // 3. Fallback Upsert Profilo
-    // Eseguiamo upsert per garantire consistenza dati
+    // 3. Salvataggio Dettagli Aggiuntivi (Upsert)
+    // Anche se il trigger crea il profilo base, aggiorniamo subito con i dati opzionali (bio, telefono, ecc.)
+    // Usiamo 'upsert' così funziona sia se il trigger ha creato il profilo, sia se ha fallito silenziosamente.
     try {
-        const profileData = {
-            id: authData.user.id,
+        const profileUpdates = {
+            id: data.user.id,
             email: email,
-            name: userData.name,
-            username: uniqueUsername,
+            updated_at: new Date().toISOString(),
+            // Campi base (sovrascriviamo per sicurezza)
+            name: userData.name || 'Utente',
             role: userRole,
-            full_name: userData.name,
-            avatar_url: userData.avatar || null,
-            brand_name: userData.brandName || null,
-            location: userData.location || null,
-            bio: userData.bio || null,
-            phone_number: userData.phoneNumber || null,
-            vat_number: userData.vatNumber || null,
-            offered_services: userData.offeredServices || [],
-            credits: userRole === 'PROFESSIONAL' ? 30 : 0,
-            plan: 'FREE',
-            is_verified: false,
-            updated_at: new Date().toISOString()
+            username: uniqueUsername,
+            // Campi opzionali
+            ...(userData.brandName && { brand_name: userData.brandName }),
+            ...(userData.location && { location: userData.location }),
+            ...(userData.bio && { bio: userData.bio }),
+            ...(userData.phoneNumber && { phone_number: userData.phoneNumber }),
+            ...(userData.vatNumber && { vat_number: userData.vatNumber }),
+            ...(userData.offeredServices && { offered_services: userData.offeredServices }),
+            // Crediti iniziali per i PRO
+            ...(userRole === 'PROFESSIONAL' ? { credits: 30 } : {})
         };
 
         const { error: profileError } = await supabase
             .from('profiles')
-            .upsert(profileData)
+            .upsert(profileUpdates)
             .select();
 
         if (profileError) {
-            console.warn("Info: Upsert profilo post-auth:", profileError.message);
+            console.warn("Avviso: Aggiornamento dettagli profilo:", profileError.message);
         }
     } catch (e) {
-        console.warn("Errore non critico profilo:", e);
+        console.warn("Errore non critico nel salvataggio dettagli extra:", e);
     }
 
-    return authData.user;
+    return data.user;
   },
 
   async signIn(email: string, password: string) {
@@ -101,30 +88,32 @@ export const authService = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
 
+    // Recupero dati dal DB
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
 
+    // Fallback sui metadati se il profilo DB non è ancora pronto (es. ritardo trigger)
     const meta = session.user.user_metadata || {};
 
     return {
       id: session.user.id,
       email: session.user.email || '',
-      name: profile?.name || meta.name || meta.full_name || 'Utente',
+      name: profile?.name || meta.name || 'Utente',
       role: (profile?.role || meta.role || UserRole.CLIENT) as UserRole,
-      avatar: profile?.avatar || meta.avatar || meta.avatar_url,
-      brandName: profile?.brand_name || meta.brand_name,
-      location: profile?.location || meta.location,
-      bio: profile?.bio || meta.bio,
-      phoneNumber: profile?.phone_number || meta.phone_number,
+      avatar: profile?.avatar || meta.avatar_url,
+      brandName: profile?.brand_name,
+      location: profile?.location,
+      bio: profile?.bio,
+      phoneNumber: profile?.phone_number,
       credits: profile?.credits ?? (meta.role === 'PROFESSIONAL' ? 30 : 0),
       plan: profile?.plan || 'FREE',
       isVerified: profile?.is_verified || false,
-      offeredServices: profile?.offered_services || meta.offered_services || [],
+      offeredServices: profile?.offered_services || [],
       skills: profile?.skills || [],
-      vatNumber: profile?.vat_number || meta.vat_number
+      vatNumber: profile?.vat_number
     };
   },
 

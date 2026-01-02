@@ -89,8 +89,8 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
       } else if (err.message && err.message.includes("already registered")) {
          setError("Email già registrata. Vai al login.");
       } else if (err.message && err.message.includes("Database error saving new user")) {
-         // Messaggio più tecnico ma utile se il problema persiste
-         setError(`Errore Database: Il sistema non riesce a creare il profilo. Assicurati di usare un'email nuova. (Dettaglio: ${err.message})`);
+         // Messaggio user-friendly per errore tecnico
+         setError("Errore tecnico del server durante la creazione profilo. Riprova con un'altra email o contatta l'assistenza.");
       } else if (err.message && err.message.includes("Password should be")) {
          setError("La password è troppo debole. Usa almeno 6 caratteri.");
       } else {
