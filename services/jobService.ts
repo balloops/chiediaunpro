@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { JobRequest, Quote, User, UserRole } from '../types';
 
@@ -245,6 +246,16 @@ export const jobService = {
        .from('profiles')
        .update({ plan, credits })
        .eq('id', userId);
+    
+    if (error) throw error;
+  },
+
+  // NEW METHOD: Refill credits up to 30 for free (Launch Version)
+  async refillCredits(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ credits: 30 })
+      .eq('id', userId);
     
     if (error) throw error;
   }

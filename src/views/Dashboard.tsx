@@ -6,7 +6,7 @@ import {
   Code, ShoppingCart, Palette, Camera, Video, BarChart3, AppWindow, Box, 
   Briefcase, HelpCircle, LogOut, Coins, RefreshCw, WifiOff,
   User as UserIcon, TrendingUp, Euro, Filter, ChevronDown, ArrowUp, ArrowDown,
-  Trash2, Edit3, XCircle, Save, X, Ban, Archive
+  Trash2, Edit3, XCircle, Save, X, Ban, Archive, Zap
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { jobService } from '../../services/jobService';
@@ -830,10 +830,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
       }
   };
 
-  const handleUpgrade = async (plan: any) => {
-    await jobService.updateUserPlan(user.id, plan);
+  const handleRefill = async () => {
+    if ((user.credits || 0) >= 30) {
+        alert("Hai già il massimo dei crediti gratuiti (30).");
+        return;
+    }
+    await jobService.refillCredits(user.id);
     refreshData();
-    alert(`Piano ${plan} attivato!`);
+    alert("Crediti ricaricati a 30!");
   };
 
   const handleRoleSwitch = () => {
@@ -940,8 +944,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   // --- PROCESSING LISTS ---
   
-  // Leads (Pro)
+  // Leads (Pro) - EXCLUDE jobs already quoted
   const filteredLeads = matchedLeads
+    .filter(item => !sentQuotes.some(q => q.jobId === item.job.id)) // Filter out already quoted jobs
     .filter(item => filterCategory === 'all' || item.job.category === filterCategory)
     .sort((a, b) => {
         const dateA = new Date(a.job.createdAt).getTime();
@@ -997,12 +1002,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     currentTab === 'archived' ? 'Richieste Archiviate' :
                     currentTab === 'won' ? 'I tuoi Successi' :
                     currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
-                    currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
+                    currentTab === 'billing' ? 'Crediti Gratuiti' : 'Dashboard'}
                 </h1>
                 <p className="text-slate-400 font-medium text-lg">
                     {currentTab === 'settings' ? 'Gestisci il tuo profilo e le tue preferenze.' :
                      currentTab === 'won' ? 'Congratulazioni! Ecco i lavori che hai conquistato.' :
                      currentTab === 'archived' ? 'Storico delle tue richieste passate.' :
+                     currentTab === 'billing' ? 'Versione di lancio: i crediti sono offerti da noi.' :
                      newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
@@ -1335,7 +1341,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-slate-900">Il mio conto</h3>
-                                                    <p className="text-xs text-slate-400">Ricarica il tuo conto, controlla il saldo.</p>
+                                                    <p className="text-xs text-slate-400">Ricarica gratuita crediti.</p>
                                                 </div>
                                             </div>
                                             <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
@@ -1399,81 +1405,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                             </div>
                         )}
 
-                        {/* EDIT PROFILE VIEW */}
-                        {settingsView === 'profile_edit' && (
-                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
-                                {/* Title Context */}
-                                <div className="mb-6">
-                                    <h2 className="text-3xl font-black text-slate-900">Il mio Profilo</h2>
-                                    <p className="text-slate-500">Gestisci le tue informazioni personali.</p>
-                                </div>
-
-                                <div>
-                                    <h2 className="text-xl font-black text-slate-900 mb-6">Dati Personali</h2>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase">Nome</label>
-                                            <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                        </div>
-                                        {isPro && (
-                                            <div>
-                                                <label className="text-xs font-black text-slate-400 uppercase">Brand</label>
-                                                <input type="text" value={profileForm.brandName || ''} onChange={e => setProfileForm({...profileForm, brandName: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                            </div>
-                                        )}
-                                        <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase">Località</label>
-                                            <input type="text" value={profileForm.location || ''} onChange={e => setProfileForm({...profileForm, location: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase">Telefono</label>
-                                            <input type="tel" value={profileForm.phoneNumber || ''} onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                                        </div>
-                                        {isPro && (
-                                            <div>
-                                                <label className="text-xs font-black text-slate-400 uppercase">Bio</label>
-                                                <textarea rows={4} value={profileForm.bio || ''} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
-                                            </div>
-                                        )}
-                                        <div className="flex gap-4 pt-4">
-                                            <button onClick={handleSaveProfile} disabled={isSavingProfile} className="flex-1 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
-                                                {isSavingProfile ? 'Salvataggio...' : 'Salva Modifiche'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-8 border-t border-slate-100">
-                                    <h2 className="text-xl font-black text-slate-900 mb-6">Sicurezza</h2>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase">Nuova Password</label>
-                                            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase">Conferma Password</label>
-                                            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
-                                        </div>
-                                        {passwordMessage && (
-                                            <p className={`text-xs font-bold ${passwordMessage.includes('Errore') || passwordMessage.includes('non coincidono') ? 'text-red-500' : 'text-green-500'}`}>
-                                                {passwordMessage}
-                                            </p>
-                                        )}
-                                        <div className="flex gap-4 pt-2">
-                                            <button onClick={handleUpdatePassword} disabled={isSavingProfile || !newPassword} className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all">
-                                                Aggiorna Password
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="pt-4">
-                                    <button onClick={() => setSettingsView('menu')} className="w-full px-6 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
-                                        Indietro
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
                         {/* SERVICES VIEW */}
                         {settingsView === 'services' && (
                             <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
@@ -1516,10 +1447,78 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {currentTab === 'billing' && (
-                    <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 max-w-2xl">
-                        <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">Bilancio Crediti</div>
-                        <div className="text-7xl font-black mb-2 tracking-tighter">{user.credits && user.credits >= 999 ? '∞' : (user.credits ?? 0)}</div>
-                        <button onClick={() => handleUpgrade('PRO')} className="mt-4 bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold">Ricarica Crediti</button>
+                    <div className="max-w-2xl mx-auto animate-in fade-in duration-300">
+                        {/* Promo Header */}
+                        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 mb-8">
+                            <div className="relative z-10">
+                                <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest mb-4 border border-white/20">
+                                    <Zap size={14} className="text-yellow-300 fill-yellow-300" />
+                                    <span>Versione Lancio</span>
+                                </div>
+                                <h2 className="text-4xl font-black mb-4">Crediti Gratuiti per Tutti</h2>
+                                <p className="text-indigo-100 text-lg leading-relaxed max-w-lg mb-8">
+                                    In questa fase di lancio, vogliamo supportare la community. 
+                                    Ricevi 30 crediti alla registrazione e ricaricali gratis quando finiscono.
+                                </p>
+                                
+                                <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                                    <div>
+                                        <div className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Il tuo Saldo</div>
+                                        <div className="text-5xl font-black tracking-tighter">{user.credits}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        {(user.credits || 0) < 30 ? (
+                                            <button 
+                                                onClick={handleRefill}
+                                                className="px-6 py-3 bg-white text-indigo-600 font-black rounded-xl hover:bg-indigo-50 transition-all shadow-lg shadow-black/10 flex items-center space-x-2"
+                                            >
+                                                <RefreshCw size={18} />
+                                                <span>Ricarica a 30</span>
+                                            </button>
+                                        ) : (
+                                            <div className="px-6 py-3 bg-white/20 text-white/50 font-bold rounded-xl cursor-not-allowed border border-white/10">
+                                                Max Raggiunto
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Decorative Background */}
+                            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+                            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-indigo-900/20 rounded-full blur-3xl"></div>
+                        </div>
+
+                        {/* Info Section */}
+                        <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+                            <h3 className="font-bold text-slate-900 mb-6 flex items-center">
+                                <HelpCircle size={20} className="mr-2 text-slate-400" />
+                                Come funzionano i crediti?
+                            </h3>
+                            <div className="space-y-6">
+                                <div className="flex items-start space-x-4">
+                                    <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">1</div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-900 text-sm">Inviare preventivi costa crediti</h4>
+                                        <p className="text-xs text-slate-500 mt-1">Ogni volta che rispondi a una richiesta di lavoro, utilizzi 1 credito.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-4">
+                                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">2</div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-900 text-sm">Ricarica Gratuita (Cap 30)</h4>
+                                        <p className="text-xs text-slate-500 mt-1">Se scendi sotto i 30 crediti, puoi usare il pulsante sopra per tornare a 30 gratuitamente. Non puoi accumulare oltre 30 crediti.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-4">
+                                    <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">3</div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-900 text-sm">Futuro della piattaforma</h4>
+                                        <p className="text-xs text-slate-500 mt-1">In futuro introdurremo piani premium con funzionalità avanzate, ma per ora goditi l'accesso completo gratuito!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </>
