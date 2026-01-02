@@ -76,25 +76,24 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
         onLogin(profile);
         navigate('/dashboard');
       } else {
-         setError('Account creato! Prova ad accedere dalla pagina di login.');
+         // Fallback se il login automatico non va a buon fine immediatamente
+         setError('Account creato con successo! Verrai reindirizzato al login.');
          setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err: any) {
       console.error("Registration Error Detail:", err);
       
       if (err.message && err.message.includes("confirmation email")) {
-         setError("Errore configurazione: Disabilita 'Confirm Email' in Supabase.");
-      } else if (err.message && err.message.includes("CONFLICT_PROFILE")) {
-         setError("Questa email è già associata a un account. Prova ad accedere.");
+         setError("Errore: Disabilita 'Confirm Email' in Supabase Auth Settings.");
       } else if (err.message && err.message.includes("already registered")) {
-         setError("Email già registrata. Vai al login.");
-      } else if (err.message && err.message.includes("Database error saving new user")) {
-         // Messaggio user-friendly per errore tecnico
-         setError("Errore tecnico del server durante la creazione profilo. Riprova con un'altra email o contatta l'assistenza.");
-      } else if (err.message && err.message.includes("Password should be")) {
-         setError("La password è troppo debole. Usa almeno 6 caratteri.");
+         setError("Questa email è già registrata. Vai al login.");
+      } else if (err.message && err.message.includes("Database error")) {
+         // Questo non dovrebbe più accadere col nuovo SQL, ma lo gestiamo
+         setError("Errore tecnico del database. Riprova tra un istante.");
+      } else if (err.message && err.message.includes("Password")) {
+         setError("La password deve essere di almeno 6 caratteri.");
       } else {
-         setError(err.message || 'Errore sconosciuto durante la registrazione. Riprova.');
+         setError(err.message || 'Errore sconosciuto durante la registrazione.');
       }
     } finally {
       setIsLoading(false);
@@ -107,7 +106,6 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
         
         {/* Left Side (Marketing) */}
         <div className="lg:w-5/12 bg-indigo-600 p-12 text-white flex flex-col justify-between relative overflow-hidden m-2 rounded-[24px]">
-           {/* Background Decorations */}
            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none"></div>
            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/50 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none"></div>
 
@@ -128,7 +126,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               <div className="mt-12 space-y-5">
                  {[
                    'Verifica istantanea',
-                   role === UserRole.PROFESSIONAL ? 'Clienti di alta qualità' : 'Proposte mirate AI',
+                   role === UserRole.PROFESSIONAL ? 'Clienti di alta qualità' : 'Preventivi mirati AI',
                    'Pagamenti sicuri',
                    'Zero costi fissi'
                  ].map((item, i) => (
@@ -140,7 +138,6 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               </div>
            </div>
 
-           {/* Testimonial Box Ridisegnato */}
            <div className="relative z-10 mt-auto pt-10 animate-in slide-in-from-bottom-8 duration-700">
               <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-2xl">
                   <div className="flex items-center gap-1 mb-3">
@@ -174,7 +171,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
             </div>
 
             {error && (
-              <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-2xl flex items-center gap-3 border border-red-100">
+              <div className={`mb-8 p-4 rounded-2xl flex items-center gap-3 border ${error.includes('successo') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-100'}`}>
                  <AlertCircle size={20} className="shrink-0" /> 
                  <span className="text-sm font-bold">{error}</span>
               </div>
@@ -182,7 +179,6 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
 
             {step === 1 && (
               <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                {/* Role Selector */}
                 <div className="grid grid-cols-2 gap-5">
                   <button 
                     onClick={() => setRole(UserRole.CLIENT)} 
@@ -202,7 +198,6 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                   </button>
                 </div>
 
-                {/* Fields */}
                 <div className="space-y-6">
                   <div>
                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Nome Completo</label>

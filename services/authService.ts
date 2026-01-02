@@ -4,23 +4,19 @@ import { User, UserRole } from '../types';
 
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
-    // 1. Preparazione Dati Puliti
-    // Generiamo uno username semplice alfanumerico per evitare errori
-    const namePart = (userData.name || 'user').replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 10);
-    const randomPart = Math.floor(1000 + Math.random() * 9000).toString();
-    const uniqueUsername = `${namePart}${randomPart}`; 
+    // 1. Preparazione Dati minimi
+    // Non passiamo troppi metadati complessi a Supabase Auth per evitare che il trigger SQL si rompa elaborandoli.
+    // Ci fidiamo del fatto che aggiorneremo tutto nello step 3.
     const userRole = (userData.role || 'CLIENT') as UserRole;
-
-    // Metadati minimi essenziali per il trigger SQL
+    
+    // Metadati essenziali per il trigger (fallback)
     const metaData = {
       name: userData.name || 'Utente',
-      full_name: userData.name || 'Utente',
       role: userRole,
-      username: uniqueUsername,
     };
 
     // 2. Chiamata a Supabase Auth
-    // Ora che abbiamo corretto l'SQL, questa chiamata non dovrebbe più fallire
+    // Ora il trigger SQL è "blindato" (ignora errori), quindi questo step dovrebbe sempre passare.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -30,41 +26,41 @@ export const authService = {
     });
 
     if (error) throw error;
-    if (!data.user) throw new Error('Registrazione completata ma utente nullo.');
+    if (!data.user) throw new Error('Registrazione completata ma utente nullo. Verifica la conferma email.');
 
-    // 3. Salvataggio Dettagli Aggiuntivi (Upsert)
-    // Anche se il trigger crea il profilo base, aggiorniamo subito con i dati opzionali (bio, telefono, ecc.)
-    // Usiamo 'upsert' così funziona sia se il trigger ha creato il profilo, sia se ha fallito silenziosamente.
+    // 3. Update Profilo (Strategia "Smart Frontend")
+    // Indipendentemente da cosa ha fatto il trigger SQL (ha messo default? ha fallito silenziosamente?),
+    // noi sovrascriviamo il profilo con i dati corretti e completi qui.
     try {
         const profileUpdates = {
             id: data.user.id,
             email: email,
             updated_at: new Date().toISOString(),
-            // Campi base (sovrascriviamo per sicurezza)
+            // Dati Anagrafici
             name: userData.name || 'Utente',
             role: userRole,
-            username: uniqueUsername,
-            // Campi opzionali
+            // Dati Opzionali
             ...(userData.brandName && { brand_name: userData.brandName }),
             ...(userData.location && { location: userData.location }),
             ...(userData.bio && { bio: userData.bio }),
             ...(userData.phoneNumber && { phone_number: userData.phoneNumber }),
             ...(userData.vatNumber && { vat_number: userData.vatNumber }),
             ...(userData.offeredServices && { offered_services: userData.offeredServices }),
-            // Crediti iniziali per i PRO
+            // Logica Crediti: Se è un PRO, diamogli i 30 crediti di benvenuto qui
             ...(userRole === 'PROFESSIONAL' ? { credits: 30 } : {})
         };
 
         const { error: profileError } = await supabase
             .from('profiles')
-            .upsert(profileUpdates)
+            .upsert(profileUpdates, { onConflict: 'id' }) 
             .select();
 
         if (profileError) {
-            console.warn("Avviso: Aggiornamento dettagli profilo:", profileError.message);
+            console.error("Errore salvataggio dettagli profilo:", profileError.message);
+            // Non lanciamo errore qui per non bloccare l'utente in un limbo (registrato ma errore frontend)
         }
     } catch (e) {
-        console.warn("Errore non critico nel salvataggio dettagli extra:", e);
+        console.warn("Errore non critico post-registrazione:", e);
     }
 
     return data.user;
@@ -95,7 +91,7 @@ export const authService = {
       .eq('id', session.user.id)
       .single();
 
-    // Fallback sui metadati se il profilo DB non è ancora pronto (es. ritardo trigger)
+    // Fallback sui metadati se il profilo DB non risponde
     const meta = session.user.user_metadata || {};
 
     return {
