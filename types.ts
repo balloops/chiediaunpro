@@ -50,11 +50,18 @@ export interface SiteContent {
       ctaSecondary: string;
       reviewScore: string;
       reviewCount: string;
+      reviewText: string;
+      verifiedBadgeTitle: string; // New field
+      verifiedBadgeText: string;  // New field
     };
     stats: {
       users: string;
       projects: string;
       rating: string;
+    };
+    categories: {
+      title: string;
+      description: string;
     };
     features: {
       title: string;

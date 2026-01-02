@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
@@ -19,12 +20,19 @@ const defaultContent: SiteContent = {
       ctaPrimary: 'Chiedi una proposta',
       ctaSecondary: 'Lavora come Pro',
       reviewScore: '4.9/5',
-      reviewCount: '5.000 progetti'
+      reviewCount: '5.000 progetti',
+      reviewText: 'media recensioni su oltre',
+      verifiedBadgeTitle: 'Professionisti Verificati', // Default
+      verifiedBadgeText: 'Solo esperti con partita IVA' // Default
     },
     stats: {
       users: '+1k',
       projects: '500+',
       rating: '4.9'
+    },
+    categories: { 
+      title: 'Di cosa hai bisogno?',
+      description: 'Esplora le categorie principali e trova il talento ideale per scalare il tuo business digitale.'
     },
     features: {
       title: 'Perché scegliere noi?',
@@ -102,213 +110,58 @@ const defaultContent: SiteContent = {
 const defaultPlans: PricingPlan[] = [
   {
     id: 'FREE',
-    name: 'Starter',
+    name: 'Free',
     price: 0,
-    credits: 3,
-    features: ['3 Proposte/mese', 'Profilo Base', 'Supporto Email'],
+    credits: 5,
+    features: ['5 crediti al mese', 'Profilo base', 'Supporto standard']
   },
   {
     id: 'PRO',
     name: 'Pro',
     price: 29,
-    credits: 20,
-    features: ['20 Proposte/mese', 'Profilo in Evidenza', 'Badge "Verificato"', 'Supporto Prioritario'],
-    isPopular: true,
+    credits: 50,
+    features: ['50 crediti al mese', 'Profilo verificato', 'Supporto prioritario', 'Badge Pro'],
+    isPopular: true
   },
   {
     id: 'AGENCY',
     name: 'Agency',
     price: 99,
     credits: 'UNLIMITED',
-    features: ['Proposte Illimitate', 'Multi-account', 'API Access', 'Account Manager Dedicato'],
+    features: ['Crediti illimitati', 'Multi-utente', 'Account manager dedicato', 'API access']
   }
 ];
 
-// --- FORM DEFINITIONS ---
 const defaultForms: FormDefinition[] = [
   {
-    categoryId: ServiceCategory.WEBSITE, // Sito Web
-    descriptionPlaceholder: "Es. Ho bisogno di un sito vetrina per il mio studio legale con 5 pagine e un form di contatto...",
-    askLocation: true,
+    categoryId: 'Sito Web',
+    fields: [
+      { id: 'pages', label: 'Numero di pagine', type: 'select', options: ['1 (Landing Page)', '2-5', '6-10', '10+'] },
+      { id: 'features', label: 'Funzionalità richieste', type: 'multiselect', options: ['Blog', 'Multilingua', 'Area riservata', 'Integrazioni API'] }
+    ],
     budgetOptions: ['< 500€', '500 - 1.500€', '1.500 - 3.000€', '3.000€+'],
-    fields: [
-      {
-        id: 'website_type',
-        label: 'Che tipo di sito hai in mente?',
-        type: 'select',
-        options: ['Sito Vetrina', 'Landing Page', 'Blog / Magazine', 'Portale Complesso', 'Altro'],
-        required: true
-      },
-      {
-        id: 'content_ready',
-        label: 'Hai già i contenuti (testi/foto)?',
-        type: 'radio_group',
-        options: ['Sì, pronti', 'No, da creare'],
-        required: true
-      },
-      {
-        id: 'features',
-        label: 'Funzionalità Extra',
-        type: 'checkbox_group',
-        options: ['Newsletter', 'Pagamenti', 'Prenotazioni', 'SEO Pro', 'Social Feed', 'Multilingua'],
-        required: false
-      }
-    ]
-  },
-  {
-    categoryId: ServiceCategory.ECOMMERCE, // E-commerce
-    descriptionPlaceholder: "Es. Voglio vendere prodotti artigianali in pelle, circa 50 referenze, spedizioni in tutta Italia...",
-    askLocation: false, // Spesso remoto
-    budgetOptions: ['< 1.000€', '1.000 - 3.000€', '3.000 - 10.000€', '10.000€+'],
-    fields: [
-      {
-        id: 'platform',
-        label: 'Piattaforma Preferita',
-        type: 'select',
-        options: ['Shopify', 'WooCommerce (WordPress)', 'Magento', 'PrestaShop', 'Custom', 'Consigliami tu'],
-        required: true
-      },
-      {
-        id: 'product_count',
-        label: 'Numero di prodotti stimato',
-        type: 'select',
-        options: ['1 - 10', '10 - 100', '100 - 1.000', '1.000+'],
-        required: true
-      }
-    ]
-  },
-  {
-    categoryId: ServiceCategory.MARKETING, // Social Media & Marketing
-    descriptionPlaceholder: "Es. Cerco un Social Media Manager per gestire Instagram e LinkedIn della mia azienda, 3 post a settimana...",
     askLocation: false,
-    budgetOptions: ['< 300€/mese', '300 - 800€/mese', '800 - 2.000€/mese', 'Budget a progetto'],
-    fields: [
-      {
-        id: 'platforms',
-        label: 'Quali piattaforme vuoi gestire?',
-        type: 'multiselect',
-        options: ['Instagram', 'Facebook', 'LinkedIn', 'TikTok', 'YouTube', 'Google Ads'],
-        required: true
-      },
-      {
-        id: 'goals',
-        label: 'Obiettivo Principale',
-        type: 'select',
-        options: ['Brand Awareness', 'Lead Generation (Contatti)', 'Vendite Dirette', 'Community Management'],
-        required: true
-      }
-    ]
+    descriptionPlaceholder: "Descrivi il tuo progetto web ideale..."
   },
   {
-    categoryId: ServiceCategory.DESIGN, // UX/UI Design
-    descriptionPlaceholder: "Es. Ho bisogno di ridisegnare l'interfaccia della mia app iOS per renderla più moderna...",
+    categoryId: 'E-commerce',
+    fields: [
+      { id: 'products', label: 'Numero prodotti', type: 'select', options: ['1-10', '11-50', '50-100', '100+'] },
+      { id: 'platform', label: 'Piattaforma preferita', type: 'select', options: ['Shopify', 'WooCommerce', 'PrestaShop', 'Custom', 'Non so'] }
+    ],
+    budgetOptions: ['< 1.000€', '1.000 - 3.000€', '3.000 - 5.000€', '5.000€+'],
     askLocation: false,
-    budgetOptions: ['< 500€', '500 - 2.000€', '2.000 - 5.000€', '5.000€+'],
-    fields: [
-      {
-        id: 'design_scope',
-        label: 'Cosa devi progettare?',
-        type: 'select',
-        options: ['App Mobile', 'Sito Web', 'Dashboard / SaaS', 'Logo & Brand', 'Altro'],
-        required: true
-      },
-      {
-        id: 'deliverables',
-        label: 'Cosa ti serve?',
-        type: 'checkbox_group',
-        options: ['Wireframes', 'Prototipo Interattivo', 'Design System', 'User Research'],
-        required: false
-      }
-    ]
+    descriptionPlaceholder: "Descrivi cosa vuoi vendere e a chi..."
   },
   {
-    categoryId: ServiceCategory.SOFTWARE, // Sviluppo Software & App
-    descriptionPlaceholder: "Es. Vorrei creare un'app gestionale per il mio magazzino che funzioni su iPad...",
+    categoryId: 'Social Media & Marketing',
+    fields: [
+      { id: 'channels', label: 'Canali social', type: 'multiselect', options: ['Instagram', 'Facebook', 'LinkedIn', 'TikTok', 'YouTube'] },
+      { id: 'goal', label: 'Obiettivo principale', type: 'radio_group', options: ['Brand Awareness', 'Lead Generation', 'Vendite dirette', 'Crescita Follower'] }
+    ],
+    budgetOptions: ['< 500€/mese', '500 - 1.000€/mese', '1.000 - 2.500€/mese', '2.500€+/mese'],
     askLocation: false,
-    budgetOptions: ['< 2.000€', '2.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
-    fields: [
-      {
-        id: 'app_type',
-        label: 'Tipologia Progetto',
-        type: 'select',
-        options: ['App Mobile (iOS/Android)', 'Web App / SaaS', 'Software Desktop', 'Script / Automazione'],
-        required: true
-      },
-      {
-        id: 'project_stage',
-        label: 'Stato del progetto',
-        type: 'radio_group',
-        options: ['Solo Idea', 'Specifica Pronta', 'Progetto da Aggiornare'],
-        required: true
-      }
-    ]
-  },
-  {
-    categoryId: ServiceCategory.AI, // Intelligenza Artificiale
-    descriptionPlaceholder: "Es. Vorrei integrare un assistente virtuale sul mio sito ecommerce per rispondere alle domande frequenti...",
-    askLocation: false,
-    budgetOptions: ['< 1.000€', '1.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
-    fields: [
-      {
-        id: 'ai_type',
-        label: 'Tipo di Soluzione',
-        type: 'select',
-        options: ['Chatbot & Assistenti Virtuali', 'Automazione Processi (RPA)', 'Machine Learning / Predizioni', 'Generazione Contenuti (Testo/Img)', 'Consulenza Strategica AI', 'Altro'],
-        required: true
-      },
-      {
-        id: 'integration',
-        label: 'Integrazione Richiesta',
-        type: 'checkbox_group',
-        options: ['Sito Web', 'WhatsApp / Telegram', 'Software Gestionale (ERP/CRM)', 'App Mobile', 'Nessuna / Standalone'],
-        required: false
-      }
-    ]
-  },
-  {
-    categoryId: ServiceCategory.BRANDING, // Branding & Grafica
-    descriptionPlaceholder: "Es. Sto aprendo un ristorante e mi serve logo, menu e biglietti da visita...",
-    askLocation: true,
-    budgetOptions: ['< 300€', '300 - 1.000€', '1.000 - 3.000€', '3.000€+'],
-    fields: [
-      {
-        id: 'branding_needs',
-        label: 'Di cosa hai bisogno?',
-        type: 'multiselect',
-        options: ['Logo Design', 'Immagine Coordinata', 'Rebranding', 'Materiale Stampa', 'Packaging'],
-        required: true
-      }
-    ]
-  },
-  {
-    categoryId: ServiceCategory.PHOTOGRAPHY, // Fotografia
-    descriptionPlaceholder: "Es. Servizio fotografico per i piatti del mio nuovo menu...",
-    askLocation: true,
-    budgetOptions: ['< 200€', '200 - 500€', '500 - 1.500€', '1.500€+'],
-    fields: [
-      {
-        id: 'photo_type',
-        label: 'Tipo di servizio',
-        type: 'select',
-        options: ['Eventi', 'Prodotti / E-commerce', 'Ritratti / Corporate', 'Immobiliare', 'Cibo / Ristorazione'],
-        required: true
-      }
-    ]
-  },
-  {
-    categoryId: ServiceCategory.VIDEO, // Video
-    descriptionPlaceholder: "Es. Video promozionale di 30 secondi per Instagram...",
-    askLocation: true,
-    budgetOptions: ['< 300€', '300 - 1.000€', '1.000 - 3.000€', '3.000€+'],
-    fields: [
-      {
-        id: 'video_type',
-        label: 'Tipo di Video',
-        type: 'select',
-        options: ['Spot Pubblicitario', 'Video Corporate', 'Riprese Evento', 'Animazione / Motion Graphics', 'Montaggio / Editing'],
-        required: true
-      }
-    ]
+    descriptionPlaceholder: "Descrivi la tua strategia attuale e gli obiettivi futuri..."
   }
 ];
 
@@ -328,25 +181,26 @@ export const contentService = {
       
       if (error) {
         if (error.code !== 'PGRST116') { // PGRST116 is "row not found"
-          // Avoid noise if table doesn't exist
           console.warn("Supabase: Could not fetch content (using local defaults).", error.message);
           return cachedContent;
         }
-        // If row not found (PGRST116), we try to seed, but handle error gracefully
       }
 
       if (data && data.content) {
-        // DB FIX: Se il database ha ancora il vecchio nome, forziamo l'aggiornamento
-        if (data.content.branding?.platformName === 'ChiediUnPro') {
-            console.log("DB Migration: Updating Platform Name to LavoraBene...");
-            const updatedContent = { ...defaultContent, ...data.content, branding: { ...data.content.branding, platformName: 'LavoraBene' } };
-            cachedContent = updatedContent;
-            await this.saveContent(updatedContent); // Salva la correzione
-        } else {
-            cachedContent = { ...defaultContent, ...data.content };
-        }
+        // Deep merge to ensure new fields (like 'categories') are present even if DB data is old
+        const mergedContent: SiteContent = {
+            ...defaultContent,
+            ...data.content,
+            home: {
+                ...defaultContent.home,
+                ...(data.content.home || {}),
+                hero: { ...defaultContent.home.hero, ...(data.content.home?.hero || {}) },
+                categories: { ...defaultContent.home.categories, ...(data.content.home?.categories || {}) },
+            }
+        };
+        
+        cachedContent = mergedContent;
       } else {
-        // DB is empty or row missing, seed it with defaults
         await this.saveContent(defaultContent);
       }
     } catch (e) {

@@ -101,7 +101,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white">{content.home.stats.users}</div>
                 </div>
                 <div className="text-sm">
-                  <span className="font-bold text-slate-900">{content.home.hero.reviewScore}</span> media recensioni su oltre <span className="font-bold text-indigo-600">{content.home.hero.reviewCount}</span>
+                  <span className="font-bold text-slate-900">{content.home.hero.reviewScore}</span> {content.home.hero.reviewText || 'media recensioni su oltre'} <span className="font-bold text-indigo-600">{content.home.hero.reviewCount}</span>
                 </div>
               </div>
             </div>
@@ -119,8 +119,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     <ShieldCheck size={24} />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-slate-900">Professionisti Verificati</div>
-                    <div className="text-xs text-slate-500">Solo esperti con partita IVA</div>
+                    <div className="text-sm font-bold text-slate-900">{content.home.hero.verifiedBadgeTitle || 'Professionisti Verificati'}</div>
+                    <div className="text-xs text-slate-500">{content.home.hero.verifiedBadgeText || 'Solo esperti con partita IVA'}</div>
                   </div>
                 </div>
               </div>
@@ -133,8 +133,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       <section id="services" className="py-24 bg-slate-50">
         <div className="max-w-[1250px] mx-auto px-6 text-center">
           <div className="max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl font-extrabold text-slate-900 mb-6">Di cosa hai bisogno?</h2>
-            <p className="text-lg text-slate-600">Esplora le categorie principali e trova il talento ideale per scalare il tuo business digitale.</p>
+            <h2 className="text-4xl font-extrabold text-slate-900 mb-6">{content.home.categories?.title || 'Di cosa hai bisogno?'}</h2>
+            <p className="text-lg text-slate-600">{content.home.categories?.description || 'Esplora le categorie principali e trova il talento ideale per scalare il tuo business digitale.'}</p>
           </div>
 
           {/* Mobile Optimization: tighter gap (gap-3), 2 cols, reduced padding (p-4) */}

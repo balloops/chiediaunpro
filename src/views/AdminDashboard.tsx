@@ -11,6 +11,55 @@ import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
 import { logService } from '../../services/logService';
 import { contentService } from '../../services/contentService';
+import { Link } from 'react-router-dom';
+
+// --- Reusable Components (Moved Outside to Fix Focus Issues) ---
+
+const CmsInput = ({ label, value, onChange, type = 'text', rows = 3 }: any) => (
+  <div className="space-y-2">
+    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
+    {type === 'textarea' ? (
+      <textarea 
+        rows={rows} 
+        value={value} 
+        onChange={onChange} 
+        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-indigo-600 transition-all resize-none"
+      />
+    ) : (
+      <input 
+        type={type} 
+        value={value} 
+        onChange={onChange} 
+        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-indigo-600 transition-all"
+      />
+    )}
+  </div>
+);
+
+const CmsSection = ({ id, title, icon, children, openSection, setOpenSection }: any) => (
+  <div className={`bg-white rounded-[24px] border transition-all duration-300 overflow-hidden ${openSection === id ? 'border-indigo-200 shadow-xl shadow-indigo-500/5' : 'border-slate-200 shadow-sm'}`}>
+    <button 
+      onClick={() => setOpenSection(openSection === id ? null : id)}
+      className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors"
+    >
+      <div className="flex items-center space-x-3">
+        <div className={`p-2 rounded-lg ${openSection === id ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
+          {icon}
+        </div>
+        <h3 className="font-black text-xl text-slate-900">{title}</h3>
+      </div>
+      {openSection === id ? <ChevronUp size={20} className="text-indigo-600" /> : <ChevronDown size={20} className="text-slate-400" />}
+    </button>
+    
+    {openSection === id && (
+      <div className="p-8 border-t border-slate-50 space-y-6 animate-in slide-in-from-top-2 duration-300">
+        {children}
+      </div>
+    )}
+  </div>
+);
+
+// --- Main Component ---
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'requests' | 'categories' | 'plans' | 'cms' | 'logs'>('overview');
@@ -195,12 +244,8 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSaveCMS = async () => {
-    try {
-        await contentService.saveContent(cmsContent);
-        alert('Contenuti salvati correttamente su Database! Le modifiche sono ora visibili a tutti.');
-    } catch (e: any) {
-        alert('Errore durante il salvataggio su Database: ' + e.message);
-    }
+    await contentService.saveContent(cmsContent);
+    alert('Contenuti del sito aggiornati su Database! Ricarica la pagina per vedere le modifiche nel menu/footer.');
   };
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -295,50 +340,6 @@ const AdminDashboard: React.FC = () => {
         ))}
       </div>
     </aside>
-  );
-
-  const CmsInput = ({ label, value, onChange, type = 'text', rows = 3 }: any) => (
-    <div className="space-y-2">
-      <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
-      {type === 'textarea' ? (
-        <textarea 
-          rows={rows} 
-          value={value} 
-          onChange={onChange} 
-          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-indigo-600 transition-all resize-none"
-        />
-      ) : (
-        <input 
-          type={type} 
-          value={value} 
-          onChange={onChange} 
-          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-indigo-600 transition-all"
-        />
-      )}
-    </div>
-  );
-
-  const CmsSection = ({ id, title, icon, children }: any) => (
-    <div className={`bg-white rounded-[24px] border transition-all duration-300 overflow-hidden ${openCmsSection === id ? 'border-indigo-200 shadow-xl shadow-indigo-500/5' : 'border-slate-200 shadow-sm'}`}>
-      <button 
-        onClick={() => setOpenCmsSection(openCmsSection === id ? null : id)}
-        className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors"
-      >
-        <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg ${openCmsSection === id ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
-            {icon}
-          </div>
-          <h3 className="font-black text-xl text-slate-900">{title}</h3>
-        </div>
-        {openCmsSection === id ? <ChevronUp size={20} className="text-indigo-600" /> : <ChevronDown size={20} className="text-slate-400" />}
-      </button>
-      
-      {openCmsSection === id && (
-        <div className="p-8 border-t border-slate-50 space-y-6 animate-in slide-in-from-top-2 duration-300">
-          {children}
-        </div>
-      )}
-    </div>
   );
 
   return (
@@ -784,7 +785,13 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Branding */}
-              <CmsSection id="branding" title="Branding & Identità" icon={<ImageIcon size={20} />}>
+              <CmsSection 
+                id="branding" 
+                title="Branding & Identità" 
+                icon={<ImageIcon size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <CmsInput 
                       label="Nome Piattaforma" 
@@ -819,7 +826,13 @@ const AdminDashboard: React.FC = () => {
               </CmsSection>
 
               {/* Home Hero */}
-              <CmsSection id="home-hero" title="Home: Hero Section" icon={<Layout size={20} />}>
+              <CmsSection 
+                id="home-hero" 
+                title="Home: Hero Section" 
+                icon={<Layout size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <CmsInput 
                     label="Titolo Hero" 
                     value={cmsContent.home.hero.title} 
@@ -852,11 +865,58 @@ const AdminDashboard: React.FC = () => {
                       value={cmsContent.home.hero.reviewScore} 
                       onChange={(e: any) => updateCmsHome('hero', 'reviewScore', e.target.value)} 
                     />
+                    <CmsInput 
+                      label="Testo Recensioni" 
+                      value={cmsContent.home.hero.reviewText} 
+                      onChange={(e: any) => updateCmsHome('hero', 'reviewText', e.target.value)} 
+                    />
+                    <CmsInput 
+                      label="Conteggio Recensioni" 
+                      value={cmsContent.home.hero.reviewCount} 
+                      onChange={(e: any) => updateCmsHome('hero', 'reviewCount', e.target.value)} 
+                    />
+                    <CmsInput 
+                      label="Titolo Card 'Verificati' (Hero Image)" 
+                      value={cmsContent.home.hero.verifiedBadgeTitle || 'Professionisti Verificati'} 
+                      onChange={(e: any) => updateCmsHome('hero', 'verifiedBadgeTitle', e.target.value)} 
+                    />
+                    <CmsInput 
+                      label="Sottotitolo Card 'Verificati'" 
+                      value={cmsContent.home.hero.verifiedBadgeText || 'Solo esperti con partita IVA'} 
+                      onChange={(e: any) => updateCmsHome('hero', 'verifiedBadgeText', e.target.value)} 
+                    />
                  </div>
               </CmsSection>
 
+              {/* Home Categories */}
+              <CmsSection 
+                id="home-categories" 
+                title="Home: Categorie" 
+                icon={<Layers size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
+                 <CmsInput 
+                    label="Titolo Sezione" 
+                    value={cmsContent.home.categories?.title || 'Di cosa hai bisogno?'} 
+                    onChange={(e: any) => updateCmsHome('categories', 'title', e.target.value)} 
+                 />
+                 <CmsInput 
+                    label="Sottotitolo Sezione" 
+                    type="textarea"
+                    value={cmsContent.home.categories?.description || 'Esplora le categorie principali...'} 
+                    onChange={(e: any) => updateCmsHome('categories', 'description', e.target.value)} 
+                 />
+              </CmsSection>
+
               {/* Home Stats */}
-              <CmsSection id="home-stats" title="Home: Statistiche" icon={<BarChart3 size={20} />}>
+              <CmsSection 
+                id="home-stats" 
+                title="Home: Statistiche" 
+                icon={<BarChart3 size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <div className="grid grid-cols-3 gap-6">
                     <CmsInput label="Utenti (es. +1k)" value={cmsContent.home.stats.users} onChange={(e: any) => updateCmsHome('stats', 'users', e.target.value)} />
                     <CmsInput label="Progetti (es. 500+)" value={cmsContent.home.stats.projects} onChange={(e: any) => updateCmsHome('stats', 'projects', e.target.value)} />
@@ -865,7 +925,13 @@ const AdminDashboard: React.FC = () => {
               </CmsSection>
 
               {/* Home Features */}
-              <CmsSection id="home-features" title="Home: Features & Vantaggi" icon={<ShieldCheck size={20} />}>
+              <CmsSection 
+                id="home-features" 
+                title="Home: Features & Vantaggi" 
+                icon={<ShieldCheck size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <CmsInput label="Titolo Sezione" value={cmsContent.home.features.title} onChange={(e: any) => updateCmsHome('features', 'title', e.target.value)} />
                  <CmsInput label="Descrizione Sezione" type="textarea" value={cmsContent.home.features.description} onChange={(e: any) => updateCmsHome('features', 'description', e.target.value)} />
                  
@@ -902,8 +968,14 @@ const AdminDashboard: React.FC = () => {
                  </div>
               </CmsSection>
 
-              {/* Help Center / FAQ Editor - NEW SECTION */}
-              <CmsSection id="help-center" title="Centro Assistenza (FAQ)" icon={<HelpCircle size={20} />}>
+              {/* Help Center / FAQ Editor */}
+              <CmsSection 
+                id="help-center" 
+                title="Centro Assistenza (FAQ)" 
+                icon={<HelpCircle size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <CmsInput 
                     label="Titolo Pagina" 
                     value={cmsContent.helpCenter?.title || 'Come possiamo aiutarti?'} 
@@ -984,7 +1056,13 @@ const AdminDashboard: React.FC = () => {
               </CmsSection>
 
               {/* Home CTA */}
-              <CmsSection id="home-cta" title="Home: CTA Finale" icon={<Zap size={20} />}>
+              <CmsSection 
+                id="home-cta" 
+                title="Home: CTA Finale" 
+                icon={<Zap size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <CmsInput label="Titolo" value={cmsContent.home.cta.title} onChange={(e: any) => updateCmsHome('cta', 'title', e.target.value)} />
                  <CmsInput label="Descrizione" type="textarea" value={cmsContent.home.cta.description} onChange={(e: any) => updateCmsHome('cta', 'description', e.target.value)} />
                  <div className="grid grid-cols-2 gap-6">
@@ -994,7 +1072,13 @@ const AdminDashboard: React.FC = () => {
               </CmsSection>
 
               {/* How It Works */}
-              <CmsSection id="how-it-works" title="Pagina: Come Funziona" icon={<BookOpen size={20} />}>
+              <CmsSection 
+                id="how-it-works" 
+                title="Pagina: Come Funziona" 
+                icon={<BookOpen size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <CmsInput label="Titolo Pagina" value={cmsContent.howItWorks.header.title} onChange={(e: any) => updateCmsHow('header', 'title', e.target.value)} />
                  <CmsInput label="Sottotitolo Pagina" type="textarea" value={cmsContent.howItWorks.header.subtitle} onChange={(e: any) => updateCmsHow('header', 'subtitle', e.target.value)} />
                  
@@ -1046,7 +1130,13 @@ const AdminDashboard: React.FC = () => {
               </CmsSection>
 
                {/* Footer Section */}
-               <CmsSection id="footer" title="Footer" icon={<Layout size={20} />}>
+               <CmsSection 
+                id="footer" 
+                title="Footer" 
+                icon={<Layout size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
                  <CmsInput 
                     label="Testo 'Chi siamo'" 
                     type="textarea"
