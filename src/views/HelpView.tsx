@@ -30,16 +30,7 @@ const HelpView: React.FC = () => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  // Filter items based on active tab concept (heuristic categorization for demo)
-  // or simply show all relevant to query.
-  // For the editability, we are now using a single list in CMS. 
-  // We can filter by category if strictly needed, or search.
-  // Let's assume all FAQs are shared or filter by logic if category implies role.
-  
   const allFaqs = content.helpCenter?.items || [];
-  
-  // Simple heuristic: 'payments' usually pro/client, 'account' both.
-  // Ideally, CMS should have a 'targetRole' field, but for now we show all filtered by search.
   
   const filteredFaqs = allFaqs.filter(f => 
     f.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -69,7 +60,7 @@ const HelpView: React.FC = () => {
       </div>
 
       <div className="max-w-[1000px] mx-auto px-6 -mt-8 relative z-20">
-        {/* Role Switcher - Visual only for filtering if we had role-specific tags */}
+        {/* Role Switcher */}
         <div className="bg-white p-2 rounded-[20px] shadow-lg shadow-indigo-500/10 border border-slate-100 flex mb-12 max-w-md mx-auto">
           <button 
             onClick={() => { setActiveTab('client'); setOpenFaq(null); }}
@@ -129,22 +120,11 @@ const HelpView: React.FC = () => {
               <h2 className="text-xl font-black text-slate-900 mb-6">Supporto Diretto</h2>
               
               <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm text-center">
-                 <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle size={24} />
-                 </div>
-                 <h3 className="font-bold text-slate-900 mb-2">Live Chat</h3>
-                 <p className="text-xs text-slate-500 mb-4">Parla con un operatore (Lun-Ven 9-18)</p>
-                 <button className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
-                    Avvia Chat
-                 </button>
-              </div>
-
-              <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm text-center">
                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Mail size={24} />
                  </div>
                  <h3 className="font-bold text-slate-900 mb-2">Email Support</h3>
-                 <p className="text-xs text-slate-500 mb-4">Risposta garantita in 24h</p>
+                 <p className="text-xs text-slate-500 mb-4">Ci impegniamo a rispondere in 24h</p>
                  <a href="mailto:support@chiediunpro.it" className="block w-full py-3 bg-slate-50 text-slate-600 border border-slate-200 font-bold rounded-xl text-sm hover:bg-slate-100 transition-all">
                     Scrivici
                  </a>

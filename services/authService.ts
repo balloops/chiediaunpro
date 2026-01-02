@@ -5,14 +5,18 @@ import { User, UserRole } from '../types';
 export const authService = {
   async signUp(email: string, password: string, userData: Partial<User>) {
     // 1. Preparazione Dati Puliti (Sanitization)
-    // Passiamo solo i dati ESSENZIALI al trigger di Supabase per evitare errori SQL
-    // (es. "Database error saving new user" causato da campi mancanti o tipi errati nel trigger)
+    // Inviamo un set completo di metadati per soddisfare vari tipi di trigger Supabase standard
+    // Alcuni trigger richiedono 'email' nei metadati, altri 'username', altri 'full_name'.
     const initialMetaData = {
       name: userData.name,
+      full_name: userData.name, 
+      email: email, // Fondamentale per trigger che copiano l'email in public.profiles
+      username: email.split('@')[0], // Fallback per trigger che richiedono username
       role: userData.role || 'CLIENT',
+      avatar_url: userData.avatar || '',
     };
 
-    // 2. Registrazione Auth con Metadati Minimi
+    // 2. Registrazione Auth con Metadati
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -25,8 +29,7 @@ export const authService = {
     if (!authData.user) throw new Error('Registrazione fallita: Utente non creato.');
 
     // 3. Salvataggio Completo Profilo (Backup Frontend)
-    // Ora che l'utente è creato (e il trigger base è passato), salviamo tutti i dettagli
-    // direttamente nella tabella profiles. Questo bypassa le limitazioni del trigger.
+    // Anche se il trigger dovesse funzionare parzialmente, assicuriamo che i dati completi siano nel DB
     try {
         const fullProfile = {
             id: authData.user.id,
@@ -104,9 +107,9 @@ export const authService = {
     return {
       id: session.user.id,
       email: session.user.email || '',
-      name: profile?.name || meta.name || 'Utente',
+      name: profile?.name || meta.name || meta.full_name || 'Utente',
       role: (profile?.role || meta.role || UserRole.CLIENT) as UserRole,
-      avatar: profile?.avatar || meta.avatar,
+      avatar: profile?.avatar || meta.avatar || meta.avatar_url,
       brandName: profile?.brand_name || meta.brand_name,
       location: profile?.location || meta.location,
       bio: profile?.bio || meta.bio,

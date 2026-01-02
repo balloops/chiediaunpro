@@ -229,7 +229,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
           <div className="p-6 md:p-8 lg:p-12">
             {step === 'category' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                 {categories.map((cat) => {
                   const info = getCategoryIcon(cat);
                   return (
