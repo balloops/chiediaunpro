@@ -3,9 +3,9 @@ import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
 // CAMBIO CHIAVI PER FORZARE IL RESET DELLA CACHE LOCALE
-const PLANS_KEY = 'lavorabene_plans_v1';
-const CATEGORIES_KEY = 'lavorabene_categories_v1';
-const FORMS_KEY = 'lavorabene_forms_v1';
+const PLANS_KEY = 'lavorabene_plans_v2';
+const CATEGORIES_KEY = 'lavorabene_categories_v2';
+const FORMS_KEY = 'lavorabene_forms_v2'; // Aggiornato per forzare nuovi form
 
 const defaultContent: SiteContent = {
   branding: {
@@ -86,7 +86,7 @@ const defaultContent: SiteContent = {
       proLabel: 'Per i Professionisti'
     },
     clientSteps: [
-      { title: "1. Descrivi il tuo progetto", description: "Compila un modulo semplice e intuitivo. L'AI ti aiuterà a definire i dettagli tecnici per ottenere proposte precise." },
+      { title: "1. Descrivi il tuo progetto", description: "Compila un modulo semplice e intuitivo. Definisci i dettagli tecnici per ottenere proposte precise." },
       { title: "2. Ricevi proposte mirate", description: "In poche ore ricevi fino a 5 proposte da professionisti qualificati e verificati, interessati al tuo lavoro." },
       { title: "3. Scegli il migliore", description: "Confronta profili, portfolio e prezzi. Scegli il Pro giusto e inizia a collaborare senza commissioni aggiuntive." }
     ],
@@ -162,32 +162,82 @@ const defaultForms: FormDefinition[] = [
   {
     categoryId: 'Sito Web',
     fields: [
-      { id: 'pages', label: 'Numero di pagine', type: 'select', options: ['1 (Landing Page)', '2-5', '6-10', '10+'] },
-      { id: 'features', label: 'Funzionalità richieste', type: 'multiselect', options: ['Blog', 'Multilingua', 'Area riservata', 'Integrazioni API'] }
+      { id: 'type', label: 'Tipologia sito', type: 'radio_group', options: ['Landing Page (1 Pagina)', 'Sito Aziendale (Vetrina)', 'Portale/Web App', 'Blog/Editoriale'] },
+      { id: 'status', label: 'Stato attuale', type: 'select', options: ['Parto da zero', 'Ho già il design', 'Ho già un sito vecchio da rifare', 'Ho solo il logo'] },
+      { id: 'cms', label: 'Preferenza Tecnologia', type: 'select', options: ['WordPress/Elementor', 'Webflow', 'Codice Custom (React/Next.js)', 'Nessuna preferenza (Consigliami tu)'] },
+      { id: 'features', label: 'Funzionalità necessarie', type: 'multiselect', options: ['Multilingua', 'Area Riservata', 'Prenotazioni Online', 'Integrazione Newsletter', 'Blog', 'Chatbot'] }
     ],
     budgetOptions: ['< 500€', '500 - 1.500€', '1.500 - 3.000€', '3.000€+'],
     askLocation: false,
-    descriptionPlaceholder: "Descrivi il tuo progetto web ideale..."
+    descriptionPlaceholder: "Esempio: Vorrei un sito moderno per il mio studio di architettura. Mi piacciono i siti minimalisti. Ho bisogno di una sezione portfolio e contatti. Ho già le foto dei progetti."
   },
   {
     categoryId: 'E-commerce',
     fields: [
-      { id: 'products', label: 'Numero prodotti', type: 'select', options: ['1-10', '11-50', '50-100', '100+'] },
-      { id: 'platform', label: 'Piattaforma preferita', type: 'select', options: ['Shopify', 'WooCommerce', 'PrestaShop', 'Custom', 'Non so'] }
+      { id: 'products_count', label: 'Quanti prodotti venderai?', type: 'select', options: ['1-10', '10-100', '100-1000', '1000+'] },
+      { id: 'platform', label: 'Piattaforma preferita', type: 'radio_group', options: ['Shopify', 'WooCommerce', 'PrestaShop', 'Custom / Altro'] },
+      { id: 'sector', label: 'Settore merceologico', type: 'select', options: ['Abbigliamento/Moda', 'Elettronica', 'Cibo & Bevande', 'Arredamento', 'Servizi Digitali', 'Altro'] },
+      { id: 'integrations', label: 'Integrazioni richieste', type: 'multiselect', options: ['Gestionale Magazzino', 'Fatturazione Automatica', 'Amazon/eBay Sync', 'Klarna/Scalapay', 'Spedizioni Automatizzate'] }
     ],
-    budgetOptions: ['< 1.000€', '1.000 - 3.000€', '3.000 - 5.000€', '5.000€+'],
+    budgetOptions: ['< 1.500€', '1.500 - 3.000€', '3.000 - 6.000€', '6.000€+'],
     askLocation: false,
-    descriptionPlaceholder: "Descrivi cosa vuoi vendere e a chi..."
+    descriptionPlaceholder: "Descrivi il tuo progetto: vendi in Italia o all'estero? Hai bisogno di migrare da un altro sito? Hai già il materiale fotografico?"
   },
   {
     categoryId: 'Social Media & Marketing',
     fields: [
-      { id: 'channels', label: 'Canali social', type: 'multiselect', options: ['Instagram', 'Facebook', 'LinkedIn', 'TikTok', 'YouTube'] },
-      { id: 'goal', label: 'Obiettivo principale', type: 'radio_group', options: ['Brand Awareness', 'Lead Generation', 'Vendite dirette', 'Crescita Follower'] }
+      { id: 'objective', label: 'Obiettivo principale', type: 'radio_group', options: ['Brand Awareness', 'Lead Generation (Contatti)', 'Vendite E-commerce', 'Crescita Follower'] },
+      { id: 'channels', label: 'Su quali canali?', type: 'multiselect', options: ['Instagram', 'Facebook', 'LinkedIn', 'TikTok', 'Google Ads', 'Email Marketing'] },
+      { id: 'content_creation', label: 'Chi crea i contenuti?', type: 'select', options: ['Li fornisco io (foto/video)', 'Mi serve anche la creazione contenuti', 'Misto (collaborazione)'] },
+      { id: 'frequency', label: 'Durata collaborazione', type: 'select', options: ['Progetto Una Tantum (Setup)', 'Gestione Mensile Continuativa', 'Consulenza Strategica'] }
     ],
     budgetOptions: ['< 500€/mese', '500 - 1.000€/mese', '1.000 - 2.500€/mese', '2.500€+/mese'],
     askLocation: false,
-    descriptionPlaceholder: "Descrivi la tua strategia attuale e gli obiettivi futuri..."
+    descriptionPlaceholder: "Descrivi il tuo target e cosa hai fatto finora. Esempio: Siamo una startup B2B, vogliamo trovare clienti su LinkedIn. Abbiamo un budget mensile per le ads escluso."
+  },
+  {
+    categoryId: 'Branding & Grafica',
+    fields: [
+      { id: 'deliverables', label: 'Cosa ti serve?', type: 'multiselect', options: ['Logo Design', 'Brand Identity Completa', 'Brochure/Flyer', 'Packaging', 'Presentazioni Slide', 'Social Media Kit'] },
+      { id: 'style', label: 'Stile preferito', type: 'select', options: ['Minimal & Moderno', 'Lussuoso & Elegante', 'Giocoso & Colorato', 'Corporate & Serio', 'Non lo so ancora'] },
+      { id: 'rebrand', label: 'È un rebranding?', type: 'radio_group', options: ['Sì, rifacimento totale', 'Sì, leggero restyling', 'No, nuovo brand da zero'] }
+    ],
+    budgetOptions: ['< 300€', '300 - 800€', '800 - 2.000€', '2.000€+'],
+    askLocation: false,
+    descriptionPlaceholder: "Racconta i valori del tuo brand. Chi sono i tuoi competitor? Hai colori che odi o che ami? A quale pubblico ti rivolgi?"
+  },
+  {
+    categoryId: 'Sviluppo Software & App',
+    fields: [
+      { id: 'platform', label: 'Piattaforma target', type: 'multiselect', options: ['iOS (iPhone)', 'Android', 'Web App (Browser)', 'Desktop (Windows/Mac)'] },
+      { id: 'state', label: 'Stato del progetto', type: 'select', options: ['Solo un\'idea', 'Ho le specifiche scritte', 'Ho già il design/prototipo', 'Progetto esistente da modificare'] },
+      { id: 'complexity', label: 'Funzioni chiave', type: 'multiselect', options: ['Login Utenti', 'Pagamenti in-app', 'Geolocalizzazione', 'Chat/Messaggistica', 'Integrazione AI'] }
+    ],
+    budgetOptions: ['< 2.000€', '2.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
+    askLocation: false,
+    descriptionPlaceholder: "Descrivi cosa deve fare il software. Qual è il problema che risolve? Chi lo userà (dipendenti, clienti finali)? Hai scadenze precise?"
+  },
+  {
+    categoryId: 'Video & Motion',
+    fields: [
+      { id: 'type', label: 'Tipo di video', type: 'radio_group', options: ['Video Corporate/Aziendale', 'Spot Pubblicitario', 'Reels/TikTok (Short)', 'Video Animato 2D/3D', 'Editing Evento'] },
+      { id: 'duration', label: 'Durata stimata', type: 'select', options: ['< 30 secondi', '1 minuto', '2-5 minuti', 'Lungo (> 10 min)'] },
+      { id: 'materials', label: 'Materiale di partenza', type: 'select', options: ['Ho già il girato, serve montaggio', 'Serve girare tutto (riprese)', 'Video di stock + grafica', 'Tutto animato (no riprese)'] }
+    ],
+    budgetOptions: ['< 400€', '400 - 1.000€', '1.000 - 3.000€', '3.000€+'],
+    askLocation: true,
+    descriptionPlaceholder: "Dove verrà pubblicato il video? Qual è il messaggio chiave? Hai bisogno anche di voce narrante o attori?"
+  },
+  {
+    categoryId: 'Fotografia',
+    fields: [
+      { id: 'subject', label: 'Soggetto', type: 'radio_group', options: ['Prodotti (E-commerce)', 'Evento Aziendale', 'Ritratti Business', 'Interni/Architettura', 'Food'] },
+      { id: 'quantity', label: 'Numero foto finali', type: 'select', options: ['1-10', '10-30', '30-100', 'Servizio completo evento'] },
+      { id: 'usage', label: 'Utilizzo principale', type: 'multiselect', options: ['Sito Web', 'Social Media', 'Stampa/Catalogo', 'Pubblicità'] }
+    ],
+    budgetOptions: ['< 300€', '300 - 600€', '600 - 1.200€', '1.200€+'],
+    askLocation: true,
+    descriptionPlaceholder: "Descrivi lo stile che cerchi (es. luce naturale, fondo bianco, ambientato). Quando serve realizzare il servizio?"
   }
 ];
 
@@ -333,12 +383,12 @@ export const contentService = {
     const foundDefault = defaultForms.find(f => f.categoryId === categoryId);
     if (foundDefault) return foundDefault;
 
-    // 3. Fallback generic
+    // 3. Fallback generic (se la categoria è custom e non ha form)
     return {
       categoryId,
-      budgetOptions: ['< 500€', '500 - 2k€', '2k - 5k€', '5k€+'],
-      askLocation: true,
-      descriptionPlaceholder: "Descrivi il tuo progetto qui...",
+      budgetOptions: ['< 200€', '200 - 500€', '500 - 1.000€', '1.000€+'],
+      askLocation: false,
+      descriptionPlaceholder: "Descrivi dettagliatamente cosa ti serve...",
       fields: []
     };
   },

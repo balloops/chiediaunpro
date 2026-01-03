@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { FormDefinition, FormField } from '../types';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import { ChevronDown, FileEdit } from 'lucide-react';
 
 interface ServiceFormProps {
   formDefinition: FormDefinition;
@@ -9,6 +9,7 @@ interface ServiceFormProps {
   setDescription: (val: string) => void;
   details: Record<string, any>;
   setDetails: (val: any) => void;
+  // Props AI rimosse
   onRefine?: () => void;
   isRefining?: boolean;
 }
@@ -18,9 +19,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   description, 
   setDescription, 
   details, 
-  setDetails,
-  onRefine,
-  isRefining
+  setDetails
 }) => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [descTouched, setDescTouched] = useState(false);
@@ -81,7 +80,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                   <button
                     key={opt}
                     onClick={() => updateDetail(field.id, opt)}
-                    className={`py-3 md:py-4 px-4 md:px-6 text-sm font-black rounded-xl md:rounded-2xl transition-all border-2 ${
+                    className={`py-3 md:py-4 px-4 md:px-6 text-sm font-black rounded-xl md:rounded-2xl transition-all border-2 text-left md:text-center ${
                       isSelected 
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-200' 
                         : isError 
@@ -212,7 +211,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       <section className="px-1 sm:px-4">
         <div className="flex items-start space-x-5 mb-6">
           <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
-             <Sparkles size={24} />
+             <FileEdit size={24} />
           </div>
           <div>
              <h4 className="text-xl font-black text-slate-900 leading-tight uppercase tracking-tight">Dettagli del Progetto</h4>
@@ -227,25 +226,22 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => setDescTouched(true)}
             className="w-full bg-transparent border-none p-4 md:p-8 text-slate-800 text-base md:text-lg focus:outline-none leading-relaxed placeholder:text-slate-300 placeholder:font-normal font-medium resize-none"
-            placeholder={formDefinition.descriptionPlaceholder || "Descrivi il tuo progetto qui..."}
+            placeholder={formDefinition.descriptionPlaceholder || "Cosa scrivere qui? Descrivi il tuo obiettivo, il pubblico a cui ti rivolgi, esempi che ti piacciono e eventuali scadenze."}
           />
           
-          <div className={`p-4 rounded-b-xl md:rounded-b-[24px] border-t flex items-center justify-end ${isDescError ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
-             {isDescError && <span className="text-xs font-bold text-red-500 mr-auto ml-2">Campo obbligatorio</span>}
+          <div className={`p-4 rounded-b-xl md:rounded-b-[24px] border-t flex items-center justify-between ${isDescError ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
              
-             {onRefine && (
-               <button 
-                 onClick={onRefine}
-                 disabled={isRefining || !description || description.length < 10}
-                 className="mr-3 flex items-center space-x-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 hover:border-indigo-200"
-                 type="button"
-               >
-                 <Sparkles size={14} className={isRefining ? "animate-spin" : ""} />
-                 <span>{isRefining ? 'Miglioramento...' : 'Migliora con AI'}</span>
-               </button>
-             )}
+             {/* Text Helper Left */}
+             <div className="text-xs text-slate-400 font-medium">
+                {isDescError ? (
+                    <span className="text-red-500 font-bold">Campo obbligatorio</span>
+                ) : (
+                    <span className="hidden sm:inline">Sii specifico per ricevere preventivi migliori.</span>
+                )}
+             </div>
 
-            <div className="text-[10px] text-slate-400 font-mono mr-4 font-bold bg-white px-2 py-1 rounded-md border border-slate-200">
+             {/* Character Count Right */}
+            <div className="text-[10px] text-slate-400 font-mono font-bold bg-white px-2 py-1 rounded-md border border-slate-200">
               {description.length} caratteri
             </div>
           </div>
