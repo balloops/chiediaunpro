@@ -42,6 +42,21 @@ export interface SiteContent {
     logoUrl?: string;
     faviconUrl?: string;
   };
+  auth: {
+    register: {
+      titleClient: string;
+      titlePro: string;
+      subtitle: string;
+      featuresClient: string[];
+      featuresPro: string[];
+      ratingLabel: string; // Campo aggiunto per il testo del rating
+      testimonial: {
+        text: string;
+        author: string;
+        role: string;
+      }
+    }
+  };
   home: {
     hero: {
       title: string;
@@ -52,8 +67,8 @@ export interface SiteContent {
       reviewScore: string;
       reviewCount: string;
       reviewText: string;
-      verifiedBadgeTitle: string; // New field
-      verifiedBadgeText: string;  // New field
+      verifiedBadgeTitle: string; 
+      verifiedBadgeText: string;  
     };
     stats: {
       users: string;

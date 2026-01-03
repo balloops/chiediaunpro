@@ -13,6 +13,31 @@ const defaultContent: SiteContent = {
     logoUrl: '',
     faviconUrl: ''
   },
+  auth: {
+    register: {
+      titleClient: 'Racconta cosa ti serve.',
+      titlePro: 'Fai crescere il tuo business.',
+      subtitle: "La community di esperti digitali più attiva d'Italia ti aspetta.",
+      featuresClient: [
+        'Verifica istantanea',
+        'Preventivi mirati AI',
+        'Pagamenti sicuri',
+        'Zero costi fissi'
+      ],
+      featuresPro: [
+        'Verifica istantanea',
+        'Clienti di alta qualità',
+        'Pagamenti sicuri',
+        'Zero costi fissi'
+      ],
+      ratingLabel: '4.9/5 da 10k+ utenti',
+      testimonial: {
+        text: '"Il miglior strumento per scalare la mia agenzia. Clienti seri e pagamenti sempre puntuali."',
+        author: 'Unisciti ai Pro',
+        role: 'Verifica immediata'
+      }
+    }
+  },
   home: {
     hero: {
       title: 'Trova il Pro giusto per il tuo progetto.',
@@ -188,11 +213,19 @@ export const contentService = {
       }
 
       if (data && data.content) {
-        // Deep merge to ensure new fields (like 'categories') are present even if DB data is old
+        // Deep merge to ensure new fields (like 'ratingLabel') are present even if DB data is old
         const mergedContent: SiteContent = {
             ...defaultContent,
             ...data.content,
-            branding: { ...defaultContent.branding, ...(data.content.branding || {}) }, // Merge branding to catch faviconUrl
+            branding: { ...defaultContent.branding, ...(data.content.branding || {}) }, // Merge branding
+            auth: { 
+                ...defaultContent.auth, 
+                ...(data.content.auth || {}),
+                register: {
+                    ...defaultContent.auth.register,
+                    ...(data.content.auth?.register || {})
+                }
+            }, // Merge auth deep
             home: {
                 ...defaultContent.home,
                 ...(data.content.home || {}),

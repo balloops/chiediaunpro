@@ -4,8 +4,8 @@ import { User, UserRole, JobRequest, PricingPlan, SiteContent, EventLog, FormDef
 import { 
   Users, Briefcase, BarChart3, Trash2, ShieldCheck, Search, AlertCircle, TrendingUp, 
   FileText, MessageSquare, CheckCircle, XCircle, Layers, Plus, Terminal, Clock, 
-  Layout, CreditCard, Edit3, Save, Globe, Settings, Euro, X, Check, 
-  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload
+  Layout, CreditCard, Edit3, Save, Globe, Settings, LogOut, Euro, X, Check, 
+  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, UserCheck
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
@@ -58,8 +58,6 @@ const CmsSection = ({ id, title, icon, children, openSection, setOpenSection }: 
     )}
   </div>
 );
-
-// --- Main Component ---
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'requests' | 'categories' | 'plans' | 'cms' | 'logs'>('overview');
@@ -311,6 +309,19 @@ const AdminDashboard: React.FC = () => {
     }));
   };
 
+  const updateCmsRegister = (field: string, value: any) => {
+    setCmsContent(prev => ({
+        ...prev,
+        auth: {
+            ...prev.auth,
+            register: {
+                ...prev.auth?.register,
+                [field]: value
+            }
+        }
+    }));
+  };
+
   // --- Filters ---
 
   const filteredUsers = users.filter(u => 
@@ -326,7 +337,7 @@ const AdminDashboard: React.FC = () => {
   // --- Render Components ---
 
   const renderSidebar = () => (
-    <aside className="hidden lg:flex w-20 lg:w-72 bg-white border-r border-slate-200 flex-col fixed h-full z-20">
+    <aside className="w-20 lg:w-72 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
       <div className="p-6 border-b border-slate-100 flex items-center space-x-3">
         <div className="bg-slate-900 text-white p-2 rounded-xl">
           <ShieldCheck size={24} />
@@ -357,6 +368,12 @@ const AdminDashboard: React.FC = () => {
           </button>
         ))}
       </div>
+      <div className="p-4 border-t border-slate-100">
+        <Link to="/" className="flex items-center space-x-3 p-3 text-slate-500 hover:text-indigo-600 transition-colors">
+          <LogOut size={20} />
+          <span className="font-bold text-sm hidden lg:block">Esci</span>
+        </Link>
+      </div>
     </aside>
   );
 
@@ -364,7 +381,7 @@ const AdminDashboard: React.FC = () => {
     <div className="bg-slate-50 min-h-screen flex">
       {renderSidebar()}
       
-      <main className="flex-grow ml-0 lg:ml-72 p-8 lg:p-12">
+      <main className="flex-grow ml-20 lg:ml-72 p-8 lg:p-12">
         <header className="mb-10">
           <h1 className="text-3xl font-black text-slate-900 mb-2">
             {activeTab === 'overview' && 'Panoramica'}
@@ -863,6 +880,87 @@ const AdminDashboard: React.FC = () => {
                                 <input type="file" className="hidden" accept="image/x-icon,image/png,image/svg+xml" onChange={handleFaviconUpload} />
                             </label>
                         </div>
+                    </div>
+                 </div>
+              </CmsSection>
+
+              {/* Pagina Registrazione */}
+              <CmsSection
+                id="auth-register"
+                title="Pagina: Registrazione"
+                icon={<UserCheck size={20} />}
+                openSection={openCmsSection}
+                setOpenSection={setOpenCmsSection}
+              >
+                 <div className="space-y-6">
+                    <h4 className="font-bold text-slate-900 border-b pb-2">Testi Colonna Sinistra</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <CmsInput 
+                            label="Titolo (Lato Cliente)" 
+                            value={cmsContent.auth?.register?.titleClient || ''} 
+                            onChange={(e: any) => updateCmsRegister('titleClient', e.target.value)} 
+                        />
+                        <CmsInput 
+                            label="Titolo (Lato Professionista)" 
+                            value={cmsContent.auth?.register?.titlePro || ''} 
+                            onChange={(e: any) => updateCmsRegister('titlePro', e.target.value)} 
+                        />
+                    </div>
+                    <CmsInput 
+                        label="Sottotitolo Comune" 
+                        type="textarea"
+                        rows={2}
+                        value={cmsContent.auth?.register?.subtitle || ''} 
+                        onChange={(e: any) => updateCmsRegister('subtitle', e.target.value)} 
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Lista Vantaggi Cliente (uno per riga)</label>
+                            <textarea 
+                                rows={4} 
+                                value={cmsContent.auth?.register?.featuresClient?.join('\n') || ''} 
+                                onChange={(e: any) => updateCmsRegister('featuresClient', e.target.value.split('\n'))} 
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-indigo-600 transition-all resize-none"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Lista Vantaggi Pro (uno per riga)</label>
+                            <textarea 
+                                rows={4} 
+                                value={cmsContent.auth?.register?.featuresPro?.join('\n') || ''} 
+                                onChange={(e: any) => updateCmsRegister('featuresPro', e.target.value.split('\n'))} 
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-indigo-600 transition-all resize-none"
+                            />
+                        </div>
+                    </div>
+
+                    <h4 className="font-bold text-slate-900 border-b pb-2 pt-4">Testimonial</h4>
+                    <CmsInput 
+                        label="Testo Citazione" 
+                        type="textarea"
+                        value={cmsContent.auth?.register?.testimonial?.text || ''} 
+                        onChange={(e: any) => setCmsContent(prev => ({...prev, auth: {...prev.auth, register: {...prev.auth.register, testimonial: {...prev.auth.register.testimonial, text: e.target.value}}}}))} 
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <CmsInput 
+                            label="Autore/Titolo" 
+                            value={cmsContent.auth?.register?.testimonial?.author || ''} 
+                            onChange={(e: any) => setCmsContent(prev => ({...prev, auth: {...prev.auth, register: {...prev.auth.register, testimonial: {...prev.auth.register.testimonial, author: e.target.value}}}}))} 
+                        />
+                        <CmsInput 
+                            label="Ruolo/Sottotitolo" 
+                            value={cmsContent.auth?.register?.testimonial?.role || ''} 
+                            onChange={(e: any) => setCmsContent(prev => ({...prev, auth: {...prev.auth, register: {...prev.auth.register, testimonial: {...prev.auth.register.testimonial, role: e.target.value}}}}))} 
+                        />
+                    </div>
+                    {/* Aggiunto campo Rating Label */}
+                    <div className="pt-4">
+                        <CmsInput 
+                            label="Etichetta Rating (es. 4.9/5 da 10k+ utenti)" 
+                            value={cmsContent.auth?.register?.ratingLabel || ''} 
+                            onChange={(e: any) => updateCmsRegister('ratingLabel', e.target.value)} 
+                        />
                     </div>
                  </div>
               </CmsSection>

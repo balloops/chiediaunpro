@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { User, UserRole, ServiceCategory } from '../../types';
+import { User, UserRole, ServiceCategory, SiteContent } from '../../types';
 import { User as UserIcon, Briefcase, Mail, Lock, UserCheck, ArrowRight, ShieldCheck, ArrowLeft, MapPin, Globe, FileText, CreditCard, Zap, AlertCircle, Check, Phone, Star } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { contentService } from '../../services/contentService';
@@ -14,7 +14,12 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialRole = searchParams.get('role') === 'pro' ? UserRole.PROFESSIONAL : UserRole.CLIENT;
-  const content = contentService.getContent();
+  const [content, setContent] = useState<SiteContent>(contentService.getContent());
+
+  useEffect(() => {
+    // Fetch fresh content
+    contentService.fetchContent().then(setContent);
+  }, []);
 
   const [role, setRole] = useState<UserRole>(initialRole);
   const [step, setStep] = useState(1);
@@ -100,6 +105,10 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
     }
   };
 
+  const features = role === UserRole.PROFESSIONAL 
+    ? (content.auth?.register?.featuresPro || ['Verifica istantanea', 'Clienti di alta qualità']) 
+    : (content.auth?.register?.featuresClient || ['Verifica istantanea', 'Preventivi mirati']);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 bg-white">
       <div className="w-full max-w-[1250px] min-h-[700px] bg-white rounded-[32px] overflow-hidden flex flex-col lg:flex-row shadow-sm border border-slate-100">
@@ -116,20 +125,17 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               </div>
               
               <h1 className="text-4xl lg:text-5xl font-black mb-6 leading-[1.1]">
-                {role === UserRole.PROFESSIONAL ? 'Fai crescere il tuo business.' : 'Racconta cosa ti serve.'}
+                {role === UserRole.PROFESSIONAL 
+                    ? (content.auth?.register?.titlePro || 'Fai crescere il tuo business.') 
+                    : (content.auth?.register?.titleClient || 'Racconta cosa ti serve.')}
               </h1>
               
               <p className="text-indigo-100 text-lg leading-relaxed max-w-md opacity-90">
-                La community di esperti digitali più attiva d'Italia ti aspetta.
+                {content.auth?.register?.subtitle || "La community di esperti digitali più attiva d'Italia ti aspetta."}
               </p>
 
               <div className="mt-12 space-y-5">
-                 {[
-                   'Verifica istantanea',
-                   role === UserRole.PROFESSIONAL ? 'Clienti di alta qualità' : 'Preventivi mirati AI',
-                   'Pagamenti sicuri',
-                   'Zero costi fissi'
-                 ].map((item, i) => (
+                 {features.map((item, i) => (
                     <div key={i} className="flex items-center space-x-3 group">
                        <div className="p-1.5 bg-white/20 rounded-full group-hover:bg-white group-hover:text-indigo-600 transition-colors"><Check size={14} /></div>
                        <span className="font-semibold">{item}</span>
@@ -142,10 +148,12 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-2xl">
                   <div className="flex items-center gap-1 mb-3">
                       {[1,2,3,4,5].map(i => <Star key={i} size={16} className="fill-amber-400 text-amber-400" />)}
-                      <span className="text-xs font-bold text-indigo-100 ml-2">4.9/5 da 10k+ utenti</span>
+                      <span className="text-xs font-bold text-indigo-100 ml-2">
+                        {content.auth?.register?.ratingLabel || '4.9/5 da 10k+ utenti'}
+                      </span>
                   </div>
                   <blockquote className="text-lg font-medium leading-relaxed mb-6 text-white">
-                      "Il miglior strumento per scalare la mia agenzia. Clienti seri e pagamenti sempre puntuali."
+                      {content.auth?.register?.testimonial?.text || '"Il miglior strumento per scalare la mia agenzia. Clienti seri e pagamenti sempre puntuali."'}
                   </blockquote>
                   <div className="flex items-center gap-4 border-t border-white/10 pt-4">
                       <div className="flex -space-x-3 shrink-0">
@@ -154,8 +162,8 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           <div className="w-10 h-10 rounded-full border-2 border-indigo-500 bg-white flex items-center justify-center text-indigo-600 text-[10px] font-black">+2k</div>
                       </div>
                       <div>
-                          <div className="text-xs font-bold text-white">Unisciti ai Pro</div>
-                          <div className="text-[10px] text-indigo-200 uppercase tracking-wider font-bold">Verifica immediata</div>
+                          <div className="text-xs font-bold text-white">{content.auth?.register?.testimonial?.author || 'Unisciti ai Pro'}</div>
+                          <div className="text-[10px] text-indigo-200 uppercase tracking-wider font-bold">{content.auth?.register?.testimonial?.role || 'Verifica immediata'}</div>
                       </div>
                   </div>
               </div>
