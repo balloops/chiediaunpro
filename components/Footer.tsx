@@ -9,9 +9,6 @@ const Footer: React.FC = () => {
   const isBackend = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
   const [content, setContent] = useState<SiteContent>(contentService.getContent());
 
-  // URL del documento legale (Accordo di utilizzo)
-  const LEGAL_DOC_URL = "https://github.com/balloops/chiediaunpro/blob/46028634bbaf948c278afa4580415c64e4f562ef/accordo-di-utilizzo.pdf";
-
   useEffect(() => {
     // Reload content when location changes to catch admin updates or initial load
     contentService.fetchContent().then(setContent);
@@ -20,14 +17,6 @@ const Footer: React.FC = () => {
   if (isBackend) {
     return null;
   }
-  
-  const handleLegalClick = (linkName: string) => {
-    const lowerName = linkName.toLowerCase();
-    // Verifica se il link si riferisce a Privacy o Cookie (o anche Termini, dato che il PDF è un accordo unico)
-    if (lowerName.includes('privacy') || lowerName.includes('cookie') || lowerName.includes('termini') || lowerName.includes('condizioni')) {
-      window.open(LEGAL_DOC_URL, '_blank');
-    }
-  };
   
   return (
     <footer className="bg-slate-900 text-slate-400 py-12 px-6">
@@ -56,13 +45,7 @@ const Footer: React.FC = () => {
           <h4 className="text-white font-semibold mb-4">Legale</h4>
           <ul className="space-y-2 text-sm">
             {content.footer.legalLinks.map((link, i) => (
-              <li 
-                key={i} 
-                onClick={() => handleLegalClick(link)}
-                className="hover:text-white transition-colors cursor-pointer"
-              >
-                {link}
-              </li>
+              <li key={i} className="hover:text-white transition-colors cursor-pointer">{link}</li>
             ))}
           </ul>
         </div>
