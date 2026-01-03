@@ -1,6 +1,7 @@
 
 import { supabase } from './supabaseClient';
 import { JobRequest, Quote, User, UserRole } from '../types';
+import { emailService } from './emailService';
 
 export const jobService = {
   async createJob(jobData: Partial<JobRequest>): Promise<JobRequest> {
@@ -14,7 +15,7 @@ export const jobService = {
       budget: jobData.budget,
       location: jobData.location,
       status: 'OPEN',
-      tags: [],
+      // tags removed to fix schema error
     };
 
     const { data, error } = await supabase
@@ -35,7 +36,7 @@ export const jobService = {
       details: data.details,
       budget: data.budget,
       timeline: data.timeline,
-      tags: data.tags,
+      tags: data.tags || [], // Handle potential missing tags in return
       location: data.location,
       status: data.status,
       createdAt: data.created_at
@@ -60,7 +61,7 @@ export const jobService = {
       details: j.details,
       budget: j.budget,
       timeline: j.timeline,
-      tags: j.tags,
+      tags: j.tags || [],
       location: j.location,
       status: j.status,
       createdAt: j.created_at
@@ -111,6 +112,7 @@ export const jobService = {
   },
 
   async sendQuote(quoteData: any): Promise<void> {
+    // 1. Inserimento nel DB
     const { error } = await supabase
       .from('quotes')
       .insert([{
@@ -124,15 +126,58 @@ export const jobService = {
       }]);
 
     if (error) throw error;
+
+    // 2. Logica Email al Cliente
+    try {
+      // Recuperiamo email cliente
+      const client = await this.getUserProfile(quoteData.clientOwnerId);
+      if (client && client.email) {
+        await emailService.notifyClientNewQuote(
+          client.email,
+          client.name,
+          quoteData.proName,
+          quoteData.category,
+          quoteData.jobId
+        );
+      }
+    } catch (emailError) {
+      console.error("Errore invio email notifica preventivo:", emailError);
+      // Non blocchiamo l'esecuzione se l'email fallisce
+    }
   },
 
   async updateQuoteStatus(quote: Quote, status: string): Promise<void> {
+    // 1. Aggiornamento DB
     const { error } = await supabase
       .from('quotes')
       .update({ status })
       .eq('id', quote.id);
 
     if (error) throw error;
+
+    // 2. Logica Email al Pro (Solo se ACCETTATO)
+    if (status === 'ACCEPTED') {
+      try {
+        // Recuperiamo info Pro e Job
+        const pro = await this.getUserProfile(quote.proId);
+        // Recuperiamo info del Job per avere il nome del cliente (owner del job)
+        // Nota: quote non ha il nome del cliente direttamente, dobbiamo prenderlo dal job o dalla sessione corrente
+        // Usiamo una query veloce per il job
+        const { data: jobData } = await supabase.from('jobs').select('title, client_name, category').eq('id', quote.jobId).single();
+        
+        if (pro && pro.email && jobData) {
+          await emailService.notifyProQuoteAccepted(
+            pro.email,
+            pro.name,
+            jobData.client_name, // Nome cliente che ha accettato
+            jobData.category, // Titolo/Categoria job
+            quote.id
+          );
+        }
+      } catch (emailError) {
+        console.error("Errore invio email notifica accettazione:", emailError);
+      }
+    }
   },
 
   async updateJobDetails(jobId: string, updates: any): Promise<void> {

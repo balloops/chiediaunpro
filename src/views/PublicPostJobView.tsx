@@ -22,7 +22,8 @@ import {
   Euro, 
   Box,
   AlertCircle,
-  LayoutDashboard
+  LayoutDashboard,
+  Bot
 } from 'lucide-react';
 import { geminiService } from '../../services/geminiService';
 import { jobService } from '../../services/jobService';
@@ -90,6 +91,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
       case ServiceCategory.MARKETING: return { icon: <BarChart3 />, color: 'text-indigo-500', desc: 'Social, Ads, SEO' };
       case ServiceCategory.SOFTWARE: return { icon: <AppWindow />, color: 'text-slate-700', desc: 'SaaS, Gestionali' };
       case ServiceCategory.THREE_D: return { icon: <Box />, color: 'text-cyan-500', desc: 'Rendering, 3D' };
+      case ServiceCategory.AI: return { icon: <Bot />, color: 'text-fuchsia-500', desc: 'Agenti AI, Automazioni' };
       default: return { icon: <Plus />, color: 'text-slate-400', desc: 'Servizi personalizzati' };
     }
   };
@@ -125,15 +127,19 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
         setError("Errore nel salvataggio della richiesta: " + err.message);
         setIsSubmitting(false);
       }
+    } else {
+        setIsSubmitting(false);
     }
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     if (!user) {
       setStep('auth');
       window.scrollTo(0, 0);
     } else {
-      saveAndRedirect(user);
+      setError('');
+      setIsSubmitting(true);
+      await saveAndRedirect(user);
     }
   };
 
@@ -258,6 +264,14 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
             {step === 'details' && formDefinition && (
               <div className="space-y-12 md:space-y-20 w-full">
+                {/* Error Display for Details Step */}
+                {error && (
+                    <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 animate-in fade-in">
+                        <AlertCircle size={20} className="shrink-0" />
+                        <span className="text-sm font-bold">{error}</span>
+                    </div>
+                )}
+
                 <ServiceForm 
                   formDefinition={formDefinition}
                   description={jobDescription}
@@ -319,12 +333,12 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
                 <div className="pt-4 px-1 sm:px-4">
                   <button 
-                    disabled={!jobDescription || !budget}
+                    disabled={!jobDescription || !budget || isSubmitting}
                     className="w-full py-5 md:py-7 bg-indigo-600 text-white font-black rounded-[20px] md:rounded-[24px] hover:bg-indigo-700 shadow-[0_20px_60px_-10px_rgba(0,96,227,0.3)] transition-all text-xl md:text-2xl flex items-center justify-center disabled:opacity-50 disabled:shadow-none group"
                     onClick={handleFinalSubmit}
                   >
-                    {user ? 'Invia Richiesta Pro' : 'Continua e Pubblica'}
-                    <ChevronRight className="ml-3 group-hover:translate-x-2 transition-transform" size={28} />
+                    {isSubmitting ? 'Invio in corso...' : (user ? 'Invia Richiesta' : 'Continua e Pubblica')}
+                    {!isSubmitting && <ChevronRight className="ml-3 group-hover:translate-x-2 transition-transform" size={28} />}
                   </button>
                   <p className="text-center text-slate-400 text-xs md:text-sm mt-6 font-medium">Riceverai i primi preventivi in meno di 24 ore.</p>
                 </div>
