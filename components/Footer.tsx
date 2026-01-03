@@ -29,14 +29,14 @@ const Footer: React.FC = () => {
           <h4 className="text-white font-semibold mb-4">Per i Clienti</h4>
           <ul className="space-y-2 text-sm">
             <li><Link to="/how-it-works" className="hover:text-white transition-colors">Come funziona</Link></li>
-            <li><Link to="/post-job" className="hover:text-white transition-colors">Pubblica richiesta</Link></li>
+            <li><Link to="/post-job" className="hover:text-white transition-colors">Chiedi un preventivo</Link></li>
             <li><Link to="/help" className="hover:text-white transition-colors">Centro Assistenza</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="text-white font-semibold mb-4">Per i Pro</h4>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/post-job" className="hover:text-white transition-colors">Trova lavori</Link></li>
+            <li><Link to="/register?role=pro" className="hover:text-white transition-colors">Trova lavori</Link></li>
             <li><Link to="/register?role=pro" className="hover:text-white transition-colors">Iscriviti come Pro</Link></li>
             <li><Link to="/help" className="hover:text-white transition-colors">Supporto Pro</Link></li>
           </ul>
