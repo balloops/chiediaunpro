@@ -10,7 +10,8 @@ const FORMS_KEY = 'lavorabene_forms_v1';
 const defaultContent: SiteContent = {
   branding: {
     platformName: 'LavoraBene',
-    logoUrl: ''
+    logoUrl: '',
+    faviconUrl: ''
   },
   home: {
     hero: {
@@ -191,6 +192,7 @@ export const contentService = {
         const mergedContent: SiteContent = {
             ...defaultContent,
             ...data.content,
+            branding: { ...defaultContent.branding, ...(data.content.branding || {}) }, // Merge branding to catch faviconUrl
             home: {
                 ...defaultContent.home,
                 ...(data.content.home || {}),

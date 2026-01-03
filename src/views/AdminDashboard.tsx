@@ -266,6 +266,24 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleFaviconUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setCmsContent({
+          ...cmsContent,
+          branding: {
+            ...cmsContent.branding,
+            faviconUrl: base64String
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Helper to safely update nested CMS state
   const updateCmsHome = (section: keyof SiteContent['home'], field: string, value: any) => {
     setCmsContent(prev => ({
@@ -819,6 +837,30 @@ const AdminDashboard: React.FC = () => {
                                     <span className="text-sm font-bold text-slate-500 group-hover:text-indigo-600">Carica Logo</span>
                                 </div>
                                 <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Favicon</label>
+                        <div className="flex items-center space-x-4">
+                            {cmsContent.branding.faviconUrl && (
+                                <div className="w-12 h-12 bg-white border border-slate-200 rounded-lg flex items-center justify-center p-1 relative group">
+                                    <img src={cmsContent.branding.faviconUrl} alt="Favicon" className="max-w-full max-h-full object-contain" />
+                                    <button 
+                                        onClick={() => setCmsContent({...cmsContent, branding: {...cmsContent.branding, faviconUrl: ''}})}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            )}
+                            <label className="flex-grow cursor-pointer group">
+                                <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center space-x-2 group-hover:border-indigo-400 transition-colors">
+                                    <Upload size={20} className="text-slate-400 group-hover:text-indigo-600" />
+                                    <span className="text-sm font-bold text-slate-500 group-hover:text-indigo-600">Carica Favicon</span>
+                                </div>
+                                <input type="file" className="hidden" accept="image/x-icon,image/png,image/svg+xml" onChange={handleFaviconUpload} />
                             </label>
                         </div>
                     </div>

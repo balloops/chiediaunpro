@@ -15,6 +15,7 @@ import HelpView from './src/views/HelpView';
 import GDPRBanner from './components/GDPRBanner';
 import { authService } from './services/authService';
 import { supabase } from './services/supabaseClient';
+import { contentService } from './services/contentService';
 import { RefreshCw } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -24,6 +25,30 @@ const App: React.FC = () => {
     isLoading: true,
   });
   const [showReload, setShowReload] = useState(false);
+
+  // Sync Branding Effect (Favicon & Title)
+  useEffect(() => {
+    const loadBranding = async () => {
+      const content = await contentService.fetchContent();
+      
+      // Update Title
+      if (content.branding.platformName) {
+        document.title = content.branding.platformName;
+      }
+      
+      // Update Favicon
+      if (content.branding.faviconUrl) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = content.branding.faviconUrl;
+      }
+    };
+    loadBranding();
+  }, []);
 
   useEffect(() => {
     let mounted = true;

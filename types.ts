@@ -40,6 +40,7 @@ export interface SiteContent {
   branding: {
     platformName: string;
     logoUrl?: string;
+    faviconUrl?: string;
   };
   home: {
     hero: {
