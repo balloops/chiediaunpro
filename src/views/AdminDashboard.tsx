@@ -1169,6 +1169,39 @@ const AdminDashboard: React.FC = () => {
                        ))}
                     </div>
                  </div>
+
+                 {/* Nuova Sezione CTA Finale (Modificabile) */}
+                 <div className="mt-8 border-t border-slate-100 pt-6">
+                    <h4 className="font-bold text-slate-900 mb-4">CTA Finale (Box in basso)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-4 p-4 bg-blue-50/30 rounded-xl border border-blue-100">
+                          <h5 className="text-xs font-black text-blue-600 uppercase tracking-widest">Lato Cliente</h5>
+                          <CmsInput 
+                             label="Titolo CTA Cliente" 
+                             value={cmsContent.howItWorks.cta.titleClient} 
+                             onChange={(e: any) => updateCmsHow('cta', 'titleClient', e.target.value)} 
+                          />
+                          <CmsInput 
+                             label="Testo Bottone Cliente" 
+                             value={cmsContent.howItWorks.cta.buttonClient} 
+                             onChange={(e: any) => updateCmsHow('cta', 'buttonClient', e.target.value)} 
+                          />
+                       </div>
+                       <div className="space-y-4 p-4 bg-indigo-50/30 rounded-xl border border-indigo-100">
+                          <h5 className="text-xs font-black text-indigo-600 uppercase tracking-widest">Lato Professionista</h5>
+                          <CmsInput 
+                             label="Titolo CTA Pro" 
+                             value={cmsContent.howItWorks.cta.titlePro} 
+                             onChange={(e: any) => updateCmsHow('cta', 'titlePro', e.target.value)} 
+                          />
+                          <CmsInput 
+                             label="Testo Bottone Pro" 
+                             value={cmsContent.howItWorks.cta.buttonPro} 
+                             onChange={(e: any) => updateCmsHow('cta', 'buttonPro', e.target.value)} 
+                          />
+                       </div>
+                    </div>
+                 </div>
               </CmsSection>
 
                {/* Footer Section */}
