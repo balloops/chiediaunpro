@@ -14,6 +14,7 @@ interface EmailRequest {
   to: string;
   subject: string;
   html: string;
+  reply_to?: string; // Nuovo campo opzionale
 }
 
 serve(async (req) => {
@@ -23,10 +24,23 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, html } = await req.json() as EmailRequest;
+    const { to, subject, html, reply_to } = await req.json() as EmailRequest;
 
     if (!RESEND_API_KEY) {
       throw new Error("Manca la variabile d'ambiente RESEND_API_KEY su Supabase");
+    }
+
+    // Costruiamo il body per Resend
+    const emailBody: any = {
+      from: "LavoraBene <info@lavorabene.it>", 
+      to: [to],
+      subject: subject,
+      html: html,
+    };
+
+    // Aggiungiamo Reply-To se presente
+    if (reply_to) {
+      emailBody.reply_to = reply_to;
     }
 
     // Chiamata a Resend API
@@ -36,13 +50,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
-      body: JSON.stringify({
-        // ORA USIAMO IL DOMINIO VERIFICATO
-        from: "LavoraBene <info@lavorabene.it>", 
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
+      body: JSON.stringify(emailBody),
     });
 
     const data = await res.json();

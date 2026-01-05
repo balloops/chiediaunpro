@@ -7,13 +7,14 @@ const getBaseUrl = () => {
 };
 
 // Email dell'Admin per le notifiche di sistema
+// NOTA: Assicurati che questa email esista e possa ricevere posta, altrimenti le notifiche admin andranno perse.
 const ADMIN_EMAIL = 'admin@lavorabene.it'; 
 
 export const emailService = {
   /**
    * Invia una mail tramite Supabase Edge Function ('send-email')
    */
-  async sendEmail(to: string, subject: string, htmlBody: string, context?: string) {
+  async sendEmail(to: string, subject: string, htmlBody: string, context?: string, replyTo?: string) {
     console.log(`[EMAIL SERVICE] 🚀 Tentativo invio a: ${to} | Oggetto: ${subject}`);
     
     try {
@@ -22,7 +23,8 @@ export const emailService = {
           to, 
           subject, 
           html: htmlBody,
-          context 
+          context,
+          reply_to: replyTo // Passiamo il reply_to alla funzione
         },
       });
 
@@ -90,8 +92,8 @@ export const emailService = {
       </div>
     `;
 
-    // Ora inviamo direttamente al cliente
-    return await this.sendEmail(clientEmail, subject, html, 'client_job_posted');
+    // Reply-To: Admin per supporto
+    return await this.sendEmail(clientEmail, subject, html, 'client_job_posted', ADMIN_EMAIL);
   },
 
   /**
@@ -115,7 +117,7 @@ export const emailService = {
       </div>
     `;
 
-    return await this.sendEmail(clientEmail, subject, html, 'new_quote');
+    return await this.sendEmail(clientEmail, subject, html, 'new_quote', ADMIN_EMAIL);
   },
 
   /**
@@ -141,6 +143,6 @@ export const emailService = {
       </div>
     `;
 
-    return await this.sendEmail(proEmail, subject, html, 'quote_accepted');
+    return await this.sendEmail(proEmail, subject, html, 'quote_accepted', ADMIN_EMAIL);
   }
 };
