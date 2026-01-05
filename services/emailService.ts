@@ -7,7 +7,6 @@ const getBaseUrl = () => {
 };
 
 // Email dell'Admin per le notifiche di sistema
-// NOTA: Assicurati che questa email esista e possa ricevere posta, altrimenti le notifiche admin andranno perse.
 const ADMIN_EMAIL = 'admin@lavorabene.it'; 
 
 export const emailService = {
@@ -24,12 +23,18 @@ export const emailService = {
           subject, 
           html: htmlBody,
           context,
-          reply_to: replyTo // Passiamo il reply_to alla funzione
+          reply_to: replyTo 
         },
       });
 
       if (error) {
         console.error(`[EMAIL SERVICE] ❌ Errore Invio Edge Function:`, error);
+        
+        // TENTATIVO DIAGNOSTICO: Verifichiamo se la funzione esiste
+        if (error.message.includes("Failed to send a request")) {
+            return await this.runDiagnostics();
+        }
+
         if (error instanceof Error) return { success: false, error: error.message };
         return { success: false, error: JSON.stringify(error) };
       }
@@ -37,7 +42,7 @@ export const emailService = {
       // Se la funzione risponde ma Resend restituisce errore
       if (data?.error) {
          console.error(`[EMAIL SERVICE] ⚠️ Errore Resend API:`, data.error);
-         return { success: false, error: JSON.stringify(data.error) };
+         return { success: false, error: `Resend Error: ${JSON.stringify(data.error)}` };
       }
 
       console.log(`[EMAIL SERVICE] ✅ Email inviata con successo!`, data);
@@ -50,11 +55,38 @@ export const emailService = {
   },
 
   /**
+   * Esegue una chiamata fetch diretta per capire se la funzione è deployata
+   */
+  async runDiagnostics() {
+      try {
+          // Ricostruiamo l'URL della funzione basandoci sulla config di Supabase
+          // @ts-ignore - Accediamo a proprietà private per debug
+          const projectUrl = supabase.supabaseUrl; 
+          const functionUrl = `${projectUrl}/functions/v1/send-email`;
+          
+          console.log(`[DIAGNOSTICS] Pingo direttamente: ${functionUrl}`);
+          
+          const response = await fetch(functionUrl, {
+              method: 'OPTIONS', // Una richiesta OPTIONS dovrebbe sempre rispondere 200 OK se la funzione esiste e ha CORS
+          });
+
+          if (response.status === 404) {
+              return { success: false, error: "ERRORE 404: La funzione 'send-email' NON esiste su Supabase. Devi fare il deploy." };
+          } else if (!response.ok) {
+              return { success: false, error: `ERRORE HTTP ${response.status}: La funzione esiste ma risponde con errore.` };
+          } else {
+              return { success: false, error: "ERRORE MISTERO: La funzione è raggiungibile ma la chiamata SDK fallisce. Verifica AdBlocker o VPN." };
+          }
+      } catch (err: any) {
+          return { success: false, error: `ERRORE DI RETE: Impossibile raggiungere Supabase. ${err.message}` };
+      }
+  },
+
+  /**
    * 1. Notifica Admin: Nuovo Utente Registrato
    */
   async notifyAdminNewUser(userEmail: string, userName: string, userRole: string) {
     const subject = `[Admin] Nuovo utente registrato: ${userName}`;
-    
     const html = `
       <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
         <h2 style="color: #4f46e5;">Nuova Registrazione</h2>
@@ -64,10 +96,8 @@ export const emailService = {
           <li><strong>Email:</strong> ${userEmail}</li>
           <li><strong>Ruolo:</strong> ${userRole === 'PROFESSIONAL' ? 'Professionista' : 'Cliente'}</li>
         </ul>
-        <p>Accedi al pannello admin per verificare l'utente se necessario.</p>
       </div>
     `;
-
     return await this.sendEmail(ADMIN_EMAIL, subject, html, 'admin_new_user');
   },
 
@@ -77,22 +107,17 @@ export const emailService = {
   async notifyClientJobPosted(clientEmail: string, clientName: string, jobTitle: string, jobId: string) {
     const baseUrl = getBaseUrl();
     const link = `${baseUrl}#/dashboard/job/${jobId}?tab=my-requests`;
-    
     const subject = `Richiesta pubblicata: "${jobTitle}"`;
-    
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
         <h2 style="color: #111827;">Richiesta pubblicata con successo!</h2>
         <p>Ciao <strong>${clientName}</strong>,</p>
         <p>La tua richiesta per <strong>"${jobTitle}"</strong> è ora visibile ai professionisti.</p>
-        <p>Riceverai una notifica via email non appena arriverà il primo preventivo.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Vedi la tua richiesta</a>
         </div>
       </div>
     `;
-
-    // Reply-To: Admin per supporto
     return await this.sendEmail(clientEmail, subject, html, 'client_job_posted', ADMIN_EMAIL);
   },
 
@@ -102,9 +127,7 @@ export const emailService = {
   async notifyClientNewQuote(clientEmail: string, clientName: string, proName: string, jobTitle: string, jobId: string) {
     const baseUrl = getBaseUrl();
     const link = `${baseUrl}#/dashboard/job/${jobId}?tab=my-requests`;
-    
     const subject = `Nuovo preventivo per "${jobTitle}"`;
-    
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
         <h2 style="color: #111827;">Nuova proposta ricevuta</h2>
@@ -113,10 +136,8 @@ export const emailService = {
         <div style="text-align: center; margin: 30px 0;">
           <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Leggi il Preventivo</a>
         </div>
-        <p style="font-size: 12px; color: #6b7280;">Clicca sul bottone per vedere prezzo, tempistiche e messaggio.</p>
       </div>
     `;
-
     return await this.sendEmail(clientEmail, subject, html, 'new_quote', ADMIN_EMAIL);
   },
 
@@ -126,9 +147,7 @@ export const emailService = {
   async notifyProQuoteAccepted(proEmail: string, proName: string, clientName: string, jobTitle: string, quoteId: string) {
     const baseUrl = getBaseUrl();
     const link = `${baseUrl}#/dashboard/quote/${quoteId}?tab=won`;
-
     const subject = `🎉 Preventivo accettato: "${jobTitle}"`;
-    
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
         <h2 style="color: #059669;">Congratulazioni ${proName}!</h2>
@@ -139,10 +158,8 @@ export const emailService = {
         <div style="text-align: center; margin: 30px 0;">
           <a href="${link}" style="background-color: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Vedi Contatti Cliente</a>
         </div>
-        <p style="font-size: 12px; color: #6b7280;">Accedi alla dashboard per chiamare o scrivere al cliente e iniziare il lavoro.</p>
       </div>
     `;
-
     return await this.sendEmail(proEmail, subject, html, 'quote_accepted', ADMIN_EMAIL);
   }
 };
