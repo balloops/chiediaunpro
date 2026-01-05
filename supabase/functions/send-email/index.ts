@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 declare const Deno: any;
@@ -36,10 +37,8 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        // IMPORTANTE: Sostituisci con il dominio che hai verificato su Resend
-        // Es: "LavoraBene <notifiche@iltuodominio.it>"
-        // Se non hai ancora verificato il dominio, usa: "onboarding@resend.dev" (ma invia solo alla tua email)
-        from: "LavoraBene <onboarding@resend.dev>", 
+        // ORA USIAMO IL DOMINIO VERIFICATO
+        from: "LavoraBene <info@lavorabene.it>", 
         to: [to],
         subject: subject,
         html: html,

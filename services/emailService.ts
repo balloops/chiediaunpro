@@ -6,7 +6,7 @@ const getBaseUrl = () => {
   return window.location.origin + window.location.pathname;
 };
 
-// Email dell'Admin (Sostituisci con la tua email reale dove vuoi ricevere le notifiche)
+// Email dell'Admin per le notifiche di sistema
 const ADMIN_EMAIL = 'admin@lavorabene.it'; 
 
 export const emailService = {
@@ -14,7 +14,7 @@ export const emailService = {
    * Invia una mail tramite Supabase Edge Function ('send-email')
    */
   async sendEmail(to: string, subject: string, htmlBody: string, context?: string) {
-    console.log(`[EMAIL SERVICE] Preparazione invio a: ${to} | Oggetto: ${subject}`);
+    console.log(`[EMAIL SERVICE] 🚀 Tentativo invio a: ${to} | Oggetto: ${subject}`);
     
     try {
       const { data, error } = await supabase.functions.invoke('send-email', {
@@ -27,16 +27,23 @@ export const emailService = {
       });
 
       if (error) {
-        console.warn(`[EMAIL SERVICE] La funzione Supabase 'send-email' non ha risposto correttamente.`, error.message);
-        return false;
+        console.error(`[EMAIL SERVICE] ❌ Errore Invio Edge Function:`, error);
+        if (error instanceof Error) return { success: false, error: error.message };
+        return { success: false, error: JSON.stringify(error) };
       }
 
-      console.log(`[EMAIL SERVICE] Email inviata con successo!`, data);
-      return true;
+      // Se la funzione risponde ma Resend restituisce errore
+      if (data?.error) {
+         console.error(`[EMAIL SERVICE] ⚠️ Errore Resend API:`, data.error);
+         return { success: false, error: JSON.stringify(data.error) };
+      }
 
-    } catch (e) {
-      console.warn(`[EMAIL SERVICE] Errore di connessione o configurazione:`, e);
-      return false;
+      console.log(`[EMAIL SERVICE] ✅ Email inviata con successo!`, data);
+      return { success: true, data };
+
+    } catch (e: any) {
+      console.error(`[EMAIL SERVICE] 💥 Eccezione critica:`, e);
+      return { success: false, error: e.message };
     }
   },
 
@@ -59,8 +66,7 @@ export const emailService = {
       </div>
     `;
 
-    // Inviamo sempre all'admin configurato
-    await this.sendEmail(ADMIN_EMAIL, subject, html, 'admin_new_user');
+    return await this.sendEmail(ADMIN_EMAIL, subject, html, 'admin_new_user');
   },
 
   /**
@@ -84,7 +90,8 @@ export const emailService = {
       </div>
     `;
 
-    await this.sendEmail(clientEmail, subject, html, 'client_job_posted');
+    // Ora inviamo direttamente al cliente
+    return await this.sendEmail(clientEmail, subject, html, 'client_job_posted');
   },
 
   /**
@@ -92,7 +99,6 @@ export const emailService = {
    */
   async notifyClientNewQuote(clientEmail: string, clientName: string, proName: string, jobTitle: string, jobId: string) {
     const baseUrl = getBaseUrl();
-    // Link diretto alla richiesta specifica per vedere i preventivi
     const link = `${baseUrl}#/dashboard/job/${jobId}?tab=my-requests`;
     
     const subject = `Nuovo preventivo per "${jobTitle}"`;
@@ -109,7 +115,7 @@ export const emailService = {
       </div>
     `;
 
-    await this.sendEmail(clientEmail, subject, html, 'new_quote');
+    return await this.sendEmail(clientEmail, subject, html, 'new_quote');
   },
 
   /**
@@ -117,7 +123,6 @@ export const emailService = {
    */
   async notifyProQuoteAccepted(proEmail: string, proName: string, clientName: string, jobTitle: string, quoteId: string) {
     const baseUrl = getBaseUrl();
-    // Link diretto al preventivo accettato per vedere i contatti
     const link = `${baseUrl}#/dashboard/quote/${quoteId}?tab=won`;
 
     const subject = `🎉 Preventivo accettato: "${jobTitle}"`;
@@ -136,6 +141,6 @@ export const emailService = {
       </div>
     `;
 
-    await this.sendEmail(proEmail, subject, html, 'quote_accepted');
+    return await this.sendEmail(proEmail, subject, html, 'quote_accepted');
   }
 };
