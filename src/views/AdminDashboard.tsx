@@ -5,12 +5,14 @@ import {
   Users, Briefcase, BarChart3, Trash2, ShieldCheck, Search, AlertCircle, TrendingUp, 
   FileText, MessageSquare, CheckCircle, XCircle, Layers, Plus, Terminal, Clock, 
   Layout, CreditCard, Edit3, Save, Globe, Settings, LogOut, Euro, X, Check, 
-  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, UserCheck
+  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, UserCheck, Send
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
 import { logService } from '../../services/logService';
 import { contentService } from '../../services/contentService';
+import { emailService } from '../../services/emailService'; // Import aggiunto
+import { authService } from '../../services/authService';   // Import aggiunto
 import { Link } from 'react-router-dom';
 
 // --- Reusable Components (Moved Outside to Fix Focus Issues) ---
@@ -60,7 +62,8 @@ const CmsSection = ({ id, title, icon, children, openSection, setOpenSection }: 
 );
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'requests' | 'categories' | 'plans' | 'cms' | 'logs'>('overview');
+  // Aggiunto 'email-test' ai tab
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'requests' | 'categories' | 'plans' | 'cms' | 'logs' | 'email-test'>('overview');
   
   // Data State
   const [stats, setStats] = useState({
@@ -94,6 +97,11 @@ const AdminDashboard: React.FC = () => {
   const [newField, setNewField] = useState<Partial<FormField>>({ type: 'text', label: '', options: [] });
   const [newOption, setNewOption] = useState('');
 
+  // Email Test State (Nuovo)
+  const [testEmail, setTestEmail] = useState('');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<{success: boolean; message: string} | null>(null);
+
   useEffect(() => {
     refreshData();
   }, [activeTab]);
@@ -118,12 +126,49 @@ const AdminDashboard: React.FC = () => {
 
       const fetchedJobs = await jobService.getJobs();
       setJobs(fetchedJobs);
+
+      // Auto-fill test email if needed
+      if (activeTab === 'email-test' && !testEmail) {
+          const currentUser = await authService.getCurrentUser();
+          if (currentUser) setTestEmail(currentUser.email);
+      }
     } catch (e) {
       console.error("Error fetching admin data", e);
     }
   };
 
   // --- Handlers ---
+
+  const handleTestEmail = async () => {
+      if (!testEmail) return;
+      setIsSendingTest(true);
+      setTestResult(null);
+      
+      try {
+          const result = await emailService.sendEmail(
+              testEmail, 
+              "Test invio da LavoraBene", 
+              "<h1>Funziona!</h1><p>Se leggi questa mail, la configurazione Resend è corretta.</p>"
+          );
+          
+          if (result && result.success) {
+              setTestResult({ success: true, message: "Email inviata con successo! ID: " + (result.data?.id || 'OK') });
+          } else {
+              // Gestione errori comuni per dare feedback utile
+              let errorMessage = JSON.stringify(result?.error || 'Errore sconosciuto');
+              if (errorMessage.includes("FunctionsFetchError")) {
+                  errorMessage = "ERRORE: La funzione 'send-email' non è deployata su Supabase o non è raggiungibile. Hai fatto il deploy?";
+              } else if (errorMessage.includes("Manca la variabile")) {
+                  errorMessage = "ERRORE CONFIGURAZIONE: Manca 'RESEND_API_KEY' nei Secret di Supabase.";
+              }
+              setTestResult({ success: false, message: errorMessage });
+          }
+      } catch (e: any) {
+          setTestResult({ success: false, message: "Eccezione: " + e.message });
+      } finally {
+          setIsSendingTest(false);
+      }
+  };
 
   const handleDeleteUser = async (id: string) => {
     if (window.confirm('Sei sicuro di voler eliminare questo utente?')) {
@@ -352,6 +397,7 @@ const AdminDashboard: React.FC = () => {
           { id: 'categories', label: 'Categorie & Form', icon: <Layers size={20} /> },
           { id: 'plans', label: 'Piani & Prezzi', icon: <CreditCard size={20} /> },
           { id: 'cms', label: 'Contenuti Sito', icon: <Globe size={20} /> },
+          { id: 'email-test', label: 'Test Email', icon: <Send size={20} /> }, // NUOVO TAB
           { id: 'logs', label: 'System Logs', icon: <Terminal size={20} /> }
         ].map(item => (
           <button
@@ -390,6 +436,7 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'categories' && 'Categorie Servizi'}
             {activeTab === 'plans' && 'Gestione Piani'}
             {activeTab === 'cms' && 'Gestione Contenuti (CMS)'}
+            {activeTab === 'email-test' && 'Strumenti Debug Email'}
             {activeTab === 'logs' && 'Log di Sistema'}
           </h1>
           <p className="text-slate-500 font-medium">Benvenuto nel pannello di controllo amministrativo.</p>
@@ -954,7 +1001,6 @@ const AdminDashboard: React.FC = () => {
                             onChange={(e: any) => setCmsContent(prev => ({...prev, auth: {...prev.auth, register: {...prev.auth.register, testimonial: {...prev.auth.register.testimonial, role: e.target.value}}}}))} 
                         />
                     </div>
-                    {/* Aggiunto campo Rating Label */}
                     <div className="pt-4">
                         <CmsInput 
                             label="Etichetta Rating (es. 4.9/5 da 10k+ utenti)" 
@@ -1323,6 +1369,50 @@ const AdminDashboard: React.FC = () => {
                  />
               </CmsSection>
            </div>
+        )}
+
+        {/* NUOVO TAB: EMAIL DEBUG */}
+        {activeTab === 'email-test' && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+             
+             {/* Email Tester Panel */}
+             <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm">
+                <div className="flex items-center space-x-3 mb-4">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Send size={20} /></div>
+                    <h3 className="text-lg font-black text-slate-900">Test Configurazione Email</h3>
+                </div>
+                <p className="text-slate-500 text-sm mb-6 max-w-2xl">
+                    Verifica lo stato della connessione con Supabase Edge Functions e Resend. Questo strumento bypassa la logica dell'app e chiama direttamente la funzione di invio.
+                </p>
+                <div className="flex gap-4 items-start">
+                    <input 
+                        type="email" 
+                        value={testEmail}
+                        onChange={(e) => setTestEmail(e.target.value)}
+                        placeholder="tua@email.com"
+                        className="flex-grow bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-indigo-600 transition-colors"
+                    />
+                    <button 
+                        onClick={handleTestEmail}
+                        disabled={isSendingTest || !testEmail}
+                        className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2 shrink-0"
+                    >
+                        {isSendingTest ? 'Invio...' : 'Invia Test'}
+                    </button>
+                </div>
+                
+                {/* Result Message Box */}
+                {testResult && (
+                    <div className={`mt-6 p-4 rounded-xl border flex items-start gap-3 ${testResult.success ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                        {testResult.success ? <CheckCircle size={20} className="shrink-0 mt-0.5" /> : <AlertCircle size={20} className="shrink-0 mt-0.5" />}
+                        <div>
+                            <strong className="block text-sm font-black mb-1">{testResult.success ? 'Successo' : 'Errore Rilevato'}</strong>
+                            <p className="text-xs font-mono whitespace-pre-wrap">{testResult.message}</p>
+                        </div>
+                    </div>
+                )}
+             </div>
+          </div>
         )}
 
         {activeTab === 'logs' && (
