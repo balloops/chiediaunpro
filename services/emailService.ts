@@ -30,16 +30,18 @@ export const emailService = {
       if (error) {
         console.error(`[EMAIL SERVICE] ❌ Errore Invio Edge Function:`, error);
         
-        // TENTATIVO DIAGNOSTICO: Verifichiamo se la funzione esiste
-        if (error.message.includes("Failed to send a request")) {
-            return await this.runDiagnostics();
+        // TENTATIVO DIAGNOSTICO
+        if (error.message.includes("Failed to send a request") || error.message.includes("Failed to fetch")) {
+            return { 
+                success: false, 
+                error: "ERRORE DEPLOY: La funzione non risponde. Vai sul tuo repository GitHub, clicca su 'Actions' e controlla se il workflow 'Deploy Supabase Functions' è fallito o se mancano i Secrets (SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID)." 
+            };
         }
 
         if (error instanceof Error) return { success: false, error: error.message };
         return { success: false, error: JSON.stringify(error) };
       }
 
-      // Se la funzione risponde ma Resend restituisce errore
       if (data?.error) {
          console.error(`[EMAIL SERVICE] ⚠️ Errore Resend API:`, data.error);
          return { success: false, error: `Resend Error: ${JSON.stringify(data.error)}` };
@@ -52,34 +54,6 @@ export const emailService = {
       console.error(`[EMAIL SERVICE] 💥 Eccezione critica:`, e);
       return { success: false, error: e.message };
     }
-  },
-
-  /**
-   * Esegue una chiamata fetch diretta per capire se la funzione è deployata
-   */
-  async runDiagnostics() {
-      try {
-          // Ricostruiamo l'URL della funzione basandoci sulla config di Supabase
-          // @ts-ignore - Accediamo a proprietà private per debug
-          const projectUrl = supabase.supabaseUrl; 
-          const functionUrl = `${projectUrl}/functions/v1/send-email`;
-          
-          console.log(`[DIAGNOSTICS] Pingo direttamente: ${functionUrl}`);
-          
-          const response = await fetch(functionUrl, {
-              method: 'OPTIONS', // Una richiesta OPTIONS dovrebbe sempre rispondere 200 OK se la funzione esiste e ha CORS
-          });
-
-          if (response.status === 404) {
-              return { success: false, error: "ERRORE 404: La funzione 'send-email' NON esiste su Supabase. Devi fare il deploy." };
-          } else if (!response.ok) {
-              return { success: false, error: `ERRORE HTTP ${response.status}: La funzione esiste ma risponde con errore.` };
-          } else {
-              return { success: false, error: "ERRORE MISTERO: La funzione è raggiungibile ma la chiamata SDK fallisce. Verifica AdBlocker o VPN." };
-          }
-      } catch (err: any) {
-          return { success: false, error: `ERRORE DI RETE: Impossibile raggiungere Supabase. ${err.message}` };
-      }
   },
 
   /**

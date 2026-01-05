@@ -1,68 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, UserRole, JobRequest, PricingPlan, SiteContent, EventLog, FormDefinition, FormField } from '../../types';
 import { 
   Users, Briefcase, BarChart3, Trash2, ShieldCheck, Search, AlertCircle, TrendingUp, 
   FileText, MessageSquare, CheckCircle, XCircle, Layers, Plus, Terminal, Clock, 
   Layout, CreditCard, Edit3, Save, Globe, Settings, LogOut, Euro, X, Check, 
-  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, UserCheck, Send
+  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, Send, UserCheck
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
 import { logService } from '../../services/logService';
 import { contentService } from '../../services/contentService';
-import { emailService } from '../../services/emailService'; // Import aggiunto
-import { authService } from '../../services/authService';   // Import aggiunto
 import { Link } from 'react-router-dom';
-
-// --- Reusable Components (Moved Outside to Fix Focus Issues) ---
-
-const CmsInput = ({ label, value, onChange, type = 'text', rows = 3 }: any) => (
-  <div className="space-y-2">
-    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
-    {type === 'textarea' ? (
-      <textarea 
-        rows={rows} 
-        value={value} 
-        onChange={onChange} 
-        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-indigo-600 transition-all resize-none"
-      />
-    ) : (
-      <input 
-        type={type} 
-        value={value} 
-        onChange={onChange} 
-        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-indigo-600 transition-all"
-      />
-    )}
-  </div>
-);
-
-const CmsSection = ({ id, title, icon, children, openSection, setOpenSection }: any) => (
-  <div className={`bg-white rounded-[24px] border transition-all duration-300 overflow-hidden ${openSection === id ? 'border-indigo-200 shadow-xl shadow-indigo-500/5' : 'border-slate-200 shadow-sm'}`}>
-    <button 
-      onClick={() => setOpenSection(openSection === id ? null : id)}
-      className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors"
-    >
-      <div className="flex items-center space-x-3">
-        <div className={`p-2 rounded-lg ${openSection === id ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
-          {icon}
-        </div>
-        <h3 className="font-black text-xl text-slate-900">{title}</h3>
-      </div>
-      {openSection === id ? <ChevronUp size={20} className="text-indigo-600" /> : <ChevronDown size={20} className="text-slate-400" />}
-    </button>
-    
-    {openSection === id && (
-      <div className="p-8 border-t border-slate-50 space-y-6 animate-in slide-in-from-top-2 duration-300">
-        {children}
-      </div>
-    )}
-  </div>
-);
+import { emailService } from '../../services/emailService';
+import { authService } from '../../services/authService';
 
 const AdminDashboard: React.FC = () => {
-  // Aggiunto 'email-test' ai tab
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'requests' | 'categories' | 'plans' | 'cms' | 'logs' | 'email-test'>('overview');
   
   // Data State
@@ -97,7 +49,7 @@ const AdminDashboard: React.FC = () => {
   const [newField, setNewField] = useState<Partial<FormField>>({ type: 'text', label: '', options: [] });
   const [newOption, setNewOption] = useState('');
 
-  // Email Test State (Nuovo)
+  // Email Test State
   const [testEmail, setTestEmail] = useState('');
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{success: boolean; message: string} | null>(null);
@@ -154,14 +106,7 @@ const AdminDashboard: React.FC = () => {
           if (result && result.success) {
               setTestResult({ success: true, message: "Email inviata con successo! ID: " + (result.data?.id || 'OK') });
           } else {
-              // Gestione errori comuni per dare feedback utile
-              let errorMessage = JSON.stringify(result?.error || 'Errore sconosciuto');
-              if (errorMessage.includes("FunctionsFetchError")) {
-                  errorMessage = "ERRORE: La funzione 'send-email' non è deployata su Supabase o non è raggiungibile. Hai fatto il deploy?";
-              } else if (errorMessage.includes("Manca la variabile")) {
-                  errorMessage = "ERRORE CONFIGURAZIONE: Manca 'RESEND_API_KEY' nei Secret di Supabase.";
-              }
-              setTestResult({ success: false, message: errorMessage });
+              setTestResult({ success: false, message: result.error || 'Errore sconosciuto' });
           }
       } catch (e: any) {
           setTestResult({ success: false, message: "Eccezione: " + e.message });
@@ -397,7 +342,7 @@ const AdminDashboard: React.FC = () => {
           { id: 'categories', label: 'Categorie & Form', icon: <Layers size={20} /> },
           { id: 'plans', label: 'Piani & Prezzi', icon: <CreditCard size={20} /> },
           { id: 'cms', label: 'Contenuti Sito', icon: <Globe size={20} /> },
-          { id: 'email-test', label: 'Test Email', icon: <Send size={20} /> }, // NUOVO TAB
+          { id: 'email-test', label: 'Test Email', icon: <Send size={20} /> },
           { id: 'logs', label: 'System Logs', icon: <Terminal size={20} /> }
         ].map(item => (
           <button
@@ -421,6 +366,50 @@ const AdminDashboard: React.FC = () => {
         </Link>
       </div>
     </aside>
+  );
+
+  const CmsInput = ({ label, value, onChange, type = 'text', rows = 3 }: any) => (
+    <div className="space-y-2">
+      <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
+      {type === 'textarea' ? (
+        <textarea 
+          rows={rows} 
+          value={value} 
+          onChange={onChange} 
+          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-indigo-600 transition-all resize-none"
+        />
+      ) : (
+        <input 
+          type={type} 
+          value={value} 
+          onChange={onChange} 
+          className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-indigo-600 transition-all"
+        />
+      )}
+    </div>
+  );
+
+  const CmsSection = ({ id, title, icon, children, openSection, setOpenSection }: any) => (
+    <div className={`bg-white rounded-[24px] border transition-all duration-300 overflow-hidden ${openSection === id ? 'border-indigo-200 shadow-xl shadow-indigo-500/5' : 'border-slate-200 shadow-sm'}`}>
+      <button 
+        onClick={() => setOpenSection(openSection === id ? null : id)}
+        className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center space-x-3">
+          <div className={`p-2 rounded-lg ${openSection === id ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
+            {icon}
+          </div>
+          <h3 className="font-black text-xl text-slate-900">{title}</h3>
+        </div>
+        {openSection === id ? <ChevronUp size={20} className="text-indigo-600" /> : <ChevronDown size={20} className="text-slate-400" />}
+      </button>
+      
+      {openSection === id && (
+        <div className="p-8 border-t border-slate-50 space-y-6 animate-in slide-in-from-top-2 duration-300">
+          {children}
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -1379,10 +1368,10 @@ const AdminDashboard: React.FC = () => {
              <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm">
                 <div className="flex items-center space-x-3 mb-4">
                     <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Send size={20} /></div>
-                    <h3 className="text-lg font-black text-slate-900">Test Configurazione Email</h3>
+                    <h3 className="text-lg font-black text-slate-900">Test Configurazione Email (GitHub Actions)</h3>
                 </div>
                 <p className="text-slate-500 text-sm mb-6 max-w-2xl">
-                    Verifica lo stato della connessione con Supabase Edge Functions e Resend. Questo strumento bypassa la logica dell'app e chiama direttamente la funzione di invio.
+                    Verifica lo stato della connessione con Supabase Edge Functions. Poiché il deploy avviene tramite GitHub, assicurati che il workflow 'Deploy Supabase Functions' sia attivo nel tuo repository.
                 </p>
                 <div className="flex gap-4 items-start">
                     <input 
