@@ -8,14 +8,13 @@ export const jobService = {
     const newJob = {
       client_id: jobData.clientId,
       client_name: jobData.clientName,
-      title: jobData.category, // Using category as title for now as per UI
+      title: jobData.category, 
       description: jobData.description,
       category: jobData.category,
       details: jobData.details,
       budget: jobData.budget,
       location: jobData.location,
       status: 'OPEN',
-      // tags removed to fix schema error
     };
 
     const { data, error } = await supabase
@@ -25,6 +24,21 @@ export const jobService = {
       .single();
 
     if (error) throw error;
+    
+    // NOTIFICA VIA EMAIL AL CLIENTE (Conferma Creazione)
+    if (jobData.clientId) {
+       // Recuperiamo la mail del cliente dal profilo attuale (o potremmo passarla come argomento)
+       this.getUserProfile(jobData.clientId).then(user => {
+          if (user && user.email) {
+             emailService.notifyClientJobPosted(
+                user.email,
+                user.name,
+                jobData.category || 'Tua Richiesta',
+                data.id
+             ).catch(err => console.warn("Email conferma job fallita:", err));
+          }
+       });
+    }
     
     return {
       id: data.id,
@@ -36,7 +50,7 @@ export const jobService = {
       details: data.details,
       budget: data.budget,
       timeline: data.timeline,
-      tags: data.tags || [], // Handle potential missing tags in return
+      tags: data.tags || [],
       location: data.location,
       status: data.status,
       createdAt: data.created_at
@@ -129,7 +143,6 @@ export const jobService = {
 
     // 2. Logica Email al Cliente
     try {
-      // Recuperiamo email cliente
       const client = await this.getUserProfile(quoteData.clientOwnerId);
       if (client && client.email) {
         await emailService.notifyClientNewQuote(
@@ -142,7 +155,6 @@ export const jobService = {
       }
     } catch (emailError) {
       console.error("Errore invio email notifica preventivo:", emailError);
-      // Non blocchiamo l'esecuzione se l'email fallisce
     }
   },
 
@@ -158,19 +170,15 @@ export const jobService = {
     // 2. Logica Email al Pro (Solo se ACCETTATO)
     if (status === 'ACCEPTED') {
       try {
-        // Recuperiamo info Pro e Job
         const pro = await this.getUserProfile(quote.proId);
-        // Recuperiamo info del Job per avere il nome del cliente (owner del job)
-        // Nota: quote non ha il nome del cliente direttamente, dobbiamo prenderlo dal job o dalla sessione corrente
-        // Usiamo una query veloce per il job
         const { data: jobData } = await supabase.from('jobs').select('title, client_name, category').eq('id', quote.jobId).single();
         
         if (pro && pro.email && jobData) {
           await emailService.notifyProQuoteAccepted(
             pro.email,
             pro.name,
-            jobData.client_name, // Nome cliente che ha accettato
-            jobData.category, // Titolo/Categoria job
+            jobData.client_name, 
+            jobData.category, 
             quote.id
           );
         }
@@ -203,19 +211,16 @@ export const jobService = {
   async getMatchesForPro(user: User): Promise<{ job: JobRequest; matchScore: number }[]> {
     const allJobs = await this.getJobs();
     
-    // Filter active jobs
     const activeJobs = allJobs.filter(j => j.status === 'OPEN' || j.status === 'IN_PROGRESS');
 
     const matches = activeJobs.map(job => {
         let score = 0;
-        // Category match
         if (user.offeredServices?.includes(job.category)) {
             score += 60;
         } else {
             return { job, matchScore: 0 };
         }
 
-        // Location match (simple string check)
         if (user.location && job.location?.city) {
              if (job.location.city.toLowerCase().includes(user.location.toLowerCase()) || 
                  user.location.toLowerCase().includes(job.location.city.toLowerCase()) ||
@@ -224,7 +229,6 @@ export const jobService = {
              }
         }
 
-        // Basic score just for existing
         score += 10;
 
         return { job, matchScore: score };
@@ -267,7 +271,6 @@ export const jobService = {
     const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', userId);
     if (error) throw error;
 
-    // Sync Auth Metadata
     const metaUpdates: any = {};
     if (updates.name) metaUpdates.name = updates.name;
     if (updates.brandName) metaUpdates.brand_name = updates.brandName;
@@ -295,7 +298,6 @@ export const jobService = {
     if (error) throw error;
   },
 
-  // NEW METHOD: Refill credits up to 30 for free (Launch Version)
   async refillCredits(userId: string): Promise<void> {
     const { error } = await supabase
       .from('profiles')

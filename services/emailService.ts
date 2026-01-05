@@ -1,10 +1,13 @@
 
 import { supabase } from './supabaseClient';
 
-// Ottiene l'URL base pulito (es. https://lavorabene.app o http://localhost:5173)
+// Ottiene l'URL base pulito gestendo Hash Router
 const getBaseUrl = () => {
   return window.location.origin + window.location.pathname;
 };
+
+// Email dell'Admin (Sostituisci con la tua email reale dove vuoi ricevere le notifiche)
+const ADMIN_EMAIL = 'admin@lavorabene.it'; 
 
 export const emailService = {
   /**
@@ -19,13 +22,12 @@ export const emailService = {
           to, 
           subject, 
           html: htmlBody,
-          context // Passiamo il contesto (es. 'new_quote') per logiche future
+          context 
         },
       });
 
       if (error) {
-        // Se la funzione non è ancora deployata, mostriamo un avviso gentile in console
-        console.warn(`[EMAIL SERVICE] La funzione Supabase 'send-email' non ha risposto correttamente. Verifica di averla deployata. Errore:`, error.message);
+        console.warn(`[EMAIL SERVICE] La funzione Supabase 'send-email' non ha risposto correttamente.`, error.message);
         return false;
       }
 
@@ -39,34 +41,71 @@ export const emailService = {
   },
 
   /**
-   * Notifica il Cliente che ha ricevuto un nuovo preventivo
+   * 1. Notifica Admin: Nuovo Utente Registrato
+   */
+  async notifyAdminNewUser(userEmail: string, userName: string, userRole: string) {
+    const subject = `[Admin] Nuovo utente registrato: ${userName}`;
+    
+    const html = `
+      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+        <h2 style="color: #4f46e5;">Nuova Registrazione</h2>
+        <p>Un nuovo utente si è appena iscritto alla piattaforma.</p>
+        <ul>
+          <li><strong>Nome:</strong> ${userName}</li>
+          <li><strong>Email:</strong> ${userEmail}</li>
+          <li><strong>Ruolo:</strong> ${userRole === 'PROFESSIONAL' ? 'Professionista' : 'Cliente'}</li>
+        </ul>
+        <p>Accedi al pannello admin per verificare l'utente se necessario.</p>
+      </div>
+    `;
+
+    // Inviamo sempre all'admin configurato
+    await this.sendEmail(ADMIN_EMAIL, subject, html, 'admin_new_user');
+  },
+
+  /**
+   * 2. Notifica Cliente: Job Pubblicato con successo
+   */
+  async notifyClientJobPosted(clientEmail: string, clientName: string, jobTitle: string, jobId: string) {
+    const baseUrl = getBaseUrl();
+    const link = `${baseUrl}#/dashboard/job/${jobId}?tab=my-requests`;
+    
+    const subject = `Richiesta pubblicata: "${jobTitle}"`;
+    
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #111827;">Richiesta pubblicata con successo!</h2>
+        <p>Ciao <strong>${clientName}</strong>,</p>
+        <p>La tua richiesta per <strong>"${jobTitle}"</strong> è ora visibile ai professionisti.</p>
+        <p>Riceverai una notifica via email non appena arriverà il primo preventivo.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Vedi la tua richiesta</a>
+        </div>
+      </div>
+    `;
+
+    await this.sendEmail(clientEmail, subject, html, 'client_job_posted');
+  },
+
+  /**
+   * 3. Notifica Cliente: Nuovo Preventivo Ricevuto
    */
   async notifyClientNewQuote(clientEmail: string, clientName: string, proName: string, jobTitle: string, jobId: string) {
     const baseUrl = getBaseUrl();
-    // Costruiamo il link diretto alla tab corretta
+    // Link diretto alla richiesta specifica per vedere i preventivi
     const link = `${baseUrl}#/dashboard/job/${jobId}?tab=my-requests`;
     
     const subject = `Nuovo preventivo per "${jobTitle}"`;
     
-    // Template HTML responsivo e pulito
     const html = `
-      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #111827; margin: 0;">LavoraBene</h2>
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #111827;">Nuova proposta ricevuta</h2>
+        <p>Ciao <strong>${clientName}</strong>,</p>
+        <p>Ottime notizie! <strong>${proName}</strong> ha inviato una proposta per il tuo progetto <strong>"${jobTitle}"</strong>.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Leggi il Preventivo</a>
         </div>
-        <div style="margin-bottom: 24px;">
-          <p style="font-size: 16px; color: #374151;">Ciao <strong>${clientName}</strong>,</p>
-          <p style="font-size: 16px; color: #374151;">Ottime notizie! <strong>${proName}</strong> ha appena inviato una proposta per la tua richiesta <strong>"${jobTitle}"</strong>.</p>
-          <p style="font-size: 16px; color: #374151;">Accedi subito per vedere il prezzo, le tempistiche e il messaggio del professionista.</p>
-        </div>
-        <div style="text-align: center; margin-bottom: 30px;">
-          <a href="${link}" style="background-color: #4f46e5; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">Visualizza Preventivo</a>
-        </div>
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #9ca3af; text-align: center;">
-          Hai ricevuto questa email perché hai pubblicato una richiesta su LavoraBene.<br/>
-          Se il bottone non funziona, copia questo link: ${link}
-        </p>
+        <p style="font-size: 12px; color: #6b7280;">Clicca sul bottone per vedere prezzo, tempistiche e messaggio.</p>
       </div>
     `;
 
@@ -74,33 +113,26 @@ export const emailService = {
   },
 
   /**
-   * Notifica il Professionista che il suo preventivo è stato accettato
+   * 4. Notifica Pro: Preventivo Accettato
    */
   async notifyProQuoteAccepted(proEmail: string, proName: string, clientName: string, jobTitle: string, quoteId: string) {
     const baseUrl = getBaseUrl();
+    // Link diretto al preventivo accettato per vedere i contatti
     const link = `${baseUrl}#/dashboard/quote/${quoteId}?tab=won`;
 
     const subject = `🎉 Preventivo accettato: "${jobTitle}"`;
     
     const html = `
-      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #111827; margin: 0;">LavoraBene</h2>
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #059669;">Congratulazioni ${proName}!</h2>
+        <p>Il cliente <strong>${clientName}</strong> ha accettato la tua proposta per il progetto <strong>"${jobTitle}"</strong>.</p>
+        <div style="background-color: #ecfdf5; padding: 15px; border-radius: 8px; border: 1px solid #a7f3d0; margin: 20px 0;">
+          <p style="margin: 0; color: #065f46; font-weight: bold;">I contatti del cliente sono stati sbloccati.</p>
         </div>
-        <div style="margin-bottom: 24px;">
-          <h3 style="color: #059669; margin-top: 0;">Congratulazioni ${proName}!</h3>
-          <p style="font-size: 16px; color: #374151;">Il cliente <strong>${clientName}</strong> ha accettato la tua proposta per il progetto <strong>"${jobTitle}"</strong>.</p>
-          <p style="font-size: 16px; color: #374151; background-color: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-            I contatti del cliente sono stati sbloccati. Puoi ora contattarlo direttamente per iniziare il lavoro.
-          </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${link}" style="background-color: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Vedi Contatti Cliente</a>
         </div>
-        <div style="text-align: center; margin-bottom: 30px;">
-          <a href="${link}" style="background-color: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">Vedi Contatti Cliente</a>
-        </div>
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #9ca3af; text-align: center;">
-          Buon lavoro dal team di LavoraBene.
-        </p>
+        <p style="font-size: 12px; color: #6b7280;">Accedi alla dashboard per chiamare o scrivere al cliente e iniziare il lavoro.</p>
       </div>
     `;
 
