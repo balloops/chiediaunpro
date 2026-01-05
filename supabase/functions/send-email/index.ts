@@ -26,6 +26,8 @@ serve(async (req) => {
   try {
     const { to, subject, html, reply_to } = await req.json() as EmailRequest;
 
+    console.log(`[Send-Email v2] Request received for: ${to}`);
+
     if (!RESEND_API_KEY) {
       throw new Error("Manca la variabile d'ambiente RESEND_API_KEY su Supabase");
     }
