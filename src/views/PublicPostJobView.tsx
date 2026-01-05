@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { ServiceCategory, User, UserRole, JobLocation, FormDefinition } from '../../types';
+import { ServiceCategory, User, UserRole, FormDefinition } from '../../types';
 import { 
   ArrowLeft, 
   ChevronRight, 
-  Send, 
   Code, 
   ShoppingCart, 
   Palette, 
@@ -15,10 +14,7 @@ import {
   AppWindow, 
   Plus, 
   UserCheck, 
-  ShieldCheck, 
-  CheckCircle2, 
   MapPin, 
-  Clock, 
   Euro, 
   Box,
   AlertCircle,
@@ -27,7 +23,7 @@ import {
 } from 'lucide-react';
 import { jobService } from '../../services/jobService';
 import { contentService } from '../../services/contentService';
-import { authService } from '../../services/authService'; // Import authService
+import { authService } from '../../services/authService'; 
 import ServiceForm from '../../components/ServiceForm';
 
 interface PublicPostJobViewProps {
@@ -78,7 +74,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   };
 
   const getCategoryIcon = (name: string) => {
-    // Map standard categories to icons, fallback for custom/new ones
     switch(name) {
       case ServiceCategory.WEBSITE: return { icon: <Code />, color: 'text-blue-500', desc: 'Siti aziendali, Landing' };
       case ServiceCategory.ECOMMERCE: return { icon: <ShoppingCart />, color: 'text-emerald-500', desc: 'Vendi prodotti online' };
@@ -137,22 +132,18 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
       let loggedUser: User | null = null;
 
       if (authMode === 'register') {
-         // Perform REAL registration
          await authService.signUp(authData.email, authData.password, {
             name: authData.name,
             role: UserRole.CLIENT
          });
-         // After sign up, fetch the user
          loggedUser = await authService.getCurrentUser();
       } else {
-         // Perform REAL login
          await authService.signIn(authData.email, authData.password);
          loggedUser = await authService.getCurrentUser();
       }
 
       if (loggedUser) {
          onLogin(loggedUser);
-         // Now create the job with the REAL user ID
          await saveAndRedirect(loggedUser);
       } else {
          throw new Error("Impossibile recuperare l'utente dopo l'autenticazione.");
@@ -171,7 +162,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
     <div className="min-h-screen bg-white md:bg-slate-50 pt-0 md:pt-12 pb-32 px-0 md:px-6">
       <div className="max-w-[1250px] mx-auto">
         
-        {/* Back to Dashboard Link (Only if Logged In) - Hidden on mobile during flow */}
         {user && (
            <div className="hidden md:block mb-6 animate-in fade-in slide-in-from-left-4">
               <Link to="/dashboard" className="inline-flex items-center space-x-2 text-slate-500 hover:text-indigo-600 font-bold text-sm transition-colors">
@@ -183,7 +173,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
         
         <div className="bg-white md:rounded-[24px] md:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] md:border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-screen md:min-h-0">
           
-          {/* Header */}
           <div className="px-6 py-6 md:px-10 md:py-8 border-b border-slate-200 bg-white sticky top-0 z-10 backdrop-blur-md bg-white/95">
             <div className="flex items-center space-x-4 md:space-x-6 w-full">
               {(step === 'details' || (step === 'auth' && authMode !== 'choice')) && (
@@ -230,7 +219,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                       className="group p-6 md:p-10 rounded-[24px] border-2 border-slate-100 bg-white hover:border-indigo-600 hover:shadow-[0_20px_50px_rgba(0,96,227,0.1)] transition-all text-left flex flex-row md:flex-col items-center md:items-start justify-between md:justify-between h-auto md:h-72 gap-4 md:gap-0"
                     >
                       <div className={`w-12 h-12 md:w-16 md:h-16 rounded-[18px] md:rounded-[22px] bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all ${info.color} shadow-sm group-hover:scale-110 shrink-0`}>
-                        {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
                         {React.cloneElement(info.icon as React.ReactElement<any>, { size: window.innerWidth < 768 ? 24 : 32 })}
                       </div>
                       <div className="flex-1 md:mt-8">
@@ -249,7 +237,6 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
             {step === 'details' && formDefinition && (
               <div className="space-y-12 md:space-y-20 w-full">
-                {/* Error Display for Details Step */}
                 {error && (
                     <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 animate-in fade-in">
                         <AlertCircle size={20} className="shrink-0" />
