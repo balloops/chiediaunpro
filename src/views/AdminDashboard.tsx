@@ -5,7 +5,7 @@ import {
   Users, Briefcase, BarChart3, Trash2, ShieldCheck, Search, AlertCircle, TrendingUp, 
   FileText, MessageSquare, CheckCircle, XCircle, Layers, Plus, Terminal, Clock, 
   Layout, CreditCard, Edit3, Save, Globe, Settings, LogOut, Euro, X, Check, 
-  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, Send, UserCheck, FolderTree, Command, PenTool, FilePlus
+  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, Send, UserCheck, FolderTree, Command, PenTool, FilePlus, Key
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
@@ -1375,18 +1375,18 @@ const AdminDashboard: React.FC = () => {
                 {/* ISTRUZIONI DI DEBUG VISIVE */}
                 <div className="mb-8 p-6 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-900 text-sm">
                     <div className="flex items-start gap-3">
-                        <div className="bg-emerald-100 p-2 rounded-lg"><FilePlus size={18} className="text-emerald-700" /></div>
+                        <div className="bg-emerald-100 p-2 rounded-lg"><Key size={18} className="text-emerald-700" /></div>
                         <div>
-                            <strong className="block mb-2 font-black uppercase text-xs tracking-wider">Soluzione Problema Cartella Nascosta</strong>
-                            <p className="mb-2">Poiché il Mac nasconde la cartella <code>.github</code>, la cosa più semplice è creare il file direttamente su GitHub:</p>
+                            <strong className="block mb-2 font-black uppercase text-xs tracking-wider">CONFIGURAZIONE FINALE (GitHub Actions)</strong>
+                            <p className="mb-2">Il tab "Actions" su GitHub è vuoto perché il workflow non è mai partito. Segui questi passi:</p>
                             <ol className="list-decimal ml-4 space-y-1 mt-2 text-xs font-medium opacity-90">
-                                <li>Vai sul tuo repository su <strong>GitHub.com</strong> (pagina principale)</li>
-                                <li>Clicca <strong>"Add file"</strong> &gt; <strong>"Create new file"</strong></li>
-                                <li>Nel nome file scrivi esattamente: <code>.github/workflows/deploy-supabase.yml</code></li>
-                                <li>Incolla il codice del workflow (quello che inizia con 'name: Deploy Supabase Functions...')</li>
-                                <li>Clicca <strong>Commit changes</strong>.</li>
+                                <li>Vai su <strong>GitHub &gt; Settings &gt; Secrets and variables &gt; Actions</strong></li>
+                                <li>Aggiungi <code>SUPABASE_ACCESS_TOKEN</code> (Crealo da Supabase Dashboard &gt; Account &gt; Access Tokens)</li>
+                                <li>Aggiungi <code>SUPABASE_PROJECT_ID</code> (Valore: <strong>yodhavnbqenbdcirnlbq</strong>)</li>
+                                <li>Vai nel tab <strong>Actions</strong> del repo, seleziona "Deploy Supabase Functions" a sinistra.</li>
+                                <li>Clicca <strong>Run workflow</strong> (pulsante a destra).</li>
                             </ol>
-                            <p className="mt-3 text-xs opacity-70">Questo creerà automaticamente la struttura corretta.</p>
+                            <p className="mt-3 text-xs font-bold text-emerald-700">Appena vedi la spunta verde ✅ su GitHub, le email funzioneranno qui!</p>
                         </div>
                     </div>
                 </div>

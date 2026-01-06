@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, UserRole, JobRequest, Quote, ServiceCategory } from '../../types';
 import { 
@@ -90,14 +89,24 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     };
 
     const handleAcceptQuote = async (quote: Quote) => {
+        if (!job) return;
         if (window.confirm("Confermi di voler accettare questo preventivo?")) {
             try {
+                // 1. Aggiorna lo stato del preventivo
                 await jobService.updateQuoteStatus(quote, 'ACCEPTED');
+                
+                // 2. Aggiorna lo stato del job (Chiude il ciclo)
+                await jobService.updateJobStatus(job.id, 'IN_PROGRESS');
+
+                // 3. Notifica il professionista
                 await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
-                // Navigate to the quote detail to see contact info immediately
+                
+                // 4. Naviga al dettaglio preventivo (dove ora si vedranno i contatti)
                 navigate(`/dashboard/quote/${quote.id}?tab=${activeTab}`);
-            } catch (e) {
-                console.error(e);
+            } catch (e: any) {
+                console.error("Accept Error:", e);
+                // Feedback visivo per capire se fallisce RLS o altro
+                alert("Errore: " + (e.message || "Si è verificato un problema tecnico durante l'accettazione. Verifica le policy su Supabase."));
             }
         }
     };
@@ -356,7 +365,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                             >
                                                 Dettagli
                                             </button>
-                                            {q.status === 'PENDING' && job.status === 'OPEN' && (
+                                            {q.status === 'PENDING' && (job.status === 'OPEN' || job.status === 'IN_PROGRESS') && (
                                                 <button 
                                                     onClick={() => handleAcceptQuote(q)}
                                                     className="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 text-sm shadow-lg shadow-indigo-100"
@@ -465,10 +474,19 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     const handleAccept = async () => {
         if (!quote || !job) return;
         if(window.confirm("Sei sicuro di voler accettare questo preventivo e sbloccare i contatti?")) {
-            await jobService.updateQuoteStatus(quote, 'ACCEPTED');
-            await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
-            // Reload to fetch contact info
-            window.location.reload();
+            try {
+                // 1. Accept Quote
+                await jobService.updateQuoteStatus(quote, 'ACCEPTED');
+                // 2. Update Job status (QUESTO MANCAVA!)
+                await jobService.updateJobStatus(job.id, 'IN_PROGRESS');
+                // 3. Notify
+                await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
+                // 4. Refresh to show contacts
+                window.location.reload();
+            } catch (e: any) {
+                console.error("Accept Error:", e);
+                alert("Impossibile accettare: " + (e.message || "Verifica permessi Supabase."));
+            }
         }
     };
 
