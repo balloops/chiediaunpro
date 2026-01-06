@@ -5,7 +5,7 @@ import {
   Users, Briefcase, BarChart3, Trash2, ShieldCheck, Search, AlertCircle, TrendingUp, 
   FileText, MessageSquare, CheckCircle, XCircle, Layers, Plus, Terminal, Clock, 
   Layout, CreditCard, Edit3, Save, Globe, Settings, LogOut, Euro, X, Check, 
-  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, Send, UserCheck, FolderTree
+  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, Send, UserCheck, FolderTree, Command
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
@@ -1380,7 +1380,7 @@ const AdminDashboard: React.FC = () => {
                             <strong className="block mb-2 font-black uppercase text-xs tracking-wider">Verifica Struttura Cartelle</strong>
                             <p className="mb-2">Se la scheda "Actions" su GitHub è vuota, significa che GitHub non trova il file di configurazione. Assicurati che nel tuo codice esista esattamente questo percorso:</p>
                             <code className="block bg-white/50 p-2 rounded border border-amber-200 font-mono text-xs mb-2">.github/workflows/deploy-supabase.yml</code>
-                            <p className="text-xs opacity-80">Nota: La cartella <strong>.github</strong> deve avere il punto davanti.</p>
+                            <p className="text-xs opacity-80">Nota: La cartella <strong>.github</strong> deve avere il punto davanti. Su Mac, premi <strong className="font-mono bg-white/50 px-1 rounded">Cmd + Shift + .</strong> per vedere le cartelle nascoste.</p>
                         </div>
                     </div>
                 </div>
