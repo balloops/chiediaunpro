@@ -5,7 +5,7 @@ import {
   Users, Briefcase, BarChart3, Trash2, ShieldCheck, Search, AlertCircle, TrendingUp, 
   FileText, MessageSquare, CheckCircle, XCircle, Layers, Plus, Terminal, Clock, 
   Layout, CreditCard, Edit3, Save, Globe, Settings, LogOut, Euro, X, Check, 
-  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, Send, UserCheck, FolderTree, Command
+  ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Image as ImageIcon, BookOpen, Zap, UserCog, HelpCircle, Upload, Send, UserCheck, FolderTree, Command, PenTool, FilePlus
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { jobService } from '../../services/jobService';
@@ -1373,20 +1373,26 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 
                 {/* ISTRUZIONI DI DEBUG VISIVE */}
-                <div className="mb-8 p-6 bg-amber-50 rounded-2xl border border-amber-100 text-amber-900 text-sm">
+                <div className="mb-8 p-6 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-900 text-sm">
                     <div className="flex items-start gap-3">
-                        <div className="bg-amber-100 p-2 rounded-lg"><FolderTree size={18} className="text-amber-700" /></div>
+                        <div className="bg-emerald-100 p-2 rounded-lg"><FilePlus size={18} className="text-emerald-700" /></div>
                         <div>
-                            <strong className="block mb-2 font-black uppercase text-xs tracking-wider">Verifica Struttura Cartelle</strong>
-                            <p className="mb-2">Se la scheda "Actions" su GitHub è vuota, significa che GitHub non trova il file di configurazione. Assicurati che nel tuo codice esista esattamente questo percorso:</p>
-                            <code className="block bg-white/50 p-2 rounded border border-amber-200 font-mono text-xs mb-2">.github/workflows/deploy-supabase.yml</code>
-                            <p className="text-xs opacity-80">Nota: La cartella <strong>.github</strong> deve avere il punto davanti. Su Mac, premi <strong className="font-mono bg-white/50 px-1 rounded">Cmd + Shift + .</strong> per vedere le cartelle nascoste.</p>
+                            <strong className="block mb-2 font-black uppercase text-xs tracking-wider">Soluzione Problema Cartella Nascosta</strong>
+                            <p className="mb-2">Poiché il Mac nasconde la cartella <code>.github</code>, la cosa più semplice è creare il file direttamente su GitHub:</p>
+                            <ol className="list-decimal ml-4 space-y-1 mt-2 text-xs font-medium opacity-90">
+                                <li>Vai sul tuo repository su <strong>GitHub.com</strong> (pagina principale)</li>
+                                <li>Clicca <strong>"Add file"</strong> > <strong>"Create new file"</strong></li>
+                                <li>Nel nome file scrivi esattamente: <code>.github/workflows/deploy-supabase.yml</code></li>
+                                <li>Incolla il codice del workflow (quello che inizia con 'name: Deploy Supabase Functions...')</li>
+                                <li>Clicca <strong>Commit changes</strong>.</li>
+                            </ol>
+                            <p className="mt-3 text-xs opacity-70">Questo creerà automaticamente la struttura corretta.</p>
                         </div>
                     </div>
                 </div>
 
                 <p className="text-slate-500 text-sm mb-6 max-w-2xl">
-                    Verifica lo stato della connessione con Supabase Edge Functions. Poiché il deploy avviene tramite GitHub, assicurati che il workflow 'Deploy Supabase Functions' sia attivo nel tuo repository.
+                    Verifica lo stato della connessione con Supabase Edge Functions. 
                 </p>
                 <div className="flex gap-4 items-start">
                     <input 
