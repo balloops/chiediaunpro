@@ -92,21 +92,18 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         if (!job) return;
         if (window.confirm("Confermi di voler accettare questo preventivo?")) {
             try {
-                // 1. Aggiorna lo stato del preventivo
+                // 1. Aggiorna stato preventivo
                 await jobService.updateQuoteStatus(quote, 'ACCEPTED');
-                
-                // 2. Aggiorna lo stato del job (Chiude il ciclo)
+                // 2. Aggiorna stato lavoro (IMPORTANTE: richiede policy su jobs)
                 await jobService.updateJobStatus(job.id, 'IN_PROGRESS');
-
-                // 3. Notifica il professionista
+                
                 await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
                 
-                // 4. Naviga al dettaglio preventivo (dove ora si vedranno i contatti)
+                // Vai ai dettagli per vedere i contatti
                 navigate(`/dashboard/quote/${quote.id}?tab=${activeTab}`);
             } catch (e: any) {
-                console.error("Accept Error:", e);
-                // Feedback visivo per capire se fallisce RLS o altro
-                alert("Errore: " + (e.message || "Si è verificato un problema tecnico durante l'accettazione. Verifica le policy su Supabase."));
+                console.error(e);
+                alert("Errore accettazione: " + (e.message || "Verifica le policy RLS su Supabase per 'quotes' e 'jobs'."));
             }
         }
     };
@@ -137,7 +134,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 await refreshParent();
                 navigate('/dashboard?tab=my-requests');
             } catch (e: any) {
-                alert("Errore eliminazione: " + e.message);
+                alert("Errore eliminazione (Verifica RLS Policy DELETE su 'jobs'): " + e.message);
             }
         }
     };
@@ -150,7 +147,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 await refreshParent();
                 navigate('/dashboard?tab=archived');
             } catch (e: any) {
-                alert("Errore archiviazione: " + e.message);
+                alert("Errore archiviazione (Verifica RLS Policy UPDATE su 'jobs'): " + e.message);
             }
         }
     };
@@ -477,9 +474,9 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
             try {
                 // 1. Accept Quote
                 await jobService.updateQuoteStatus(quote, 'ACCEPTED');
-                // 2. Update Job status (QUESTO MANCAVA!)
+                // 2. Update Job status (Fondamentale!)
                 await jobService.updateJobStatus(job.id, 'IN_PROGRESS');
-                // 3. Notify
+                
                 await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
                 // 4. Refresh to show contacts
                 window.location.reload();
