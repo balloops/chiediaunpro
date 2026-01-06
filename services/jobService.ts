@@ -38,8 +38,6 @@ export const jobService = {
             
             if (profileError) {
                 console.error("Fallito ripristino profilo:", profileError);
-                // Se fallisce l'upsert (es. RLS), non possiamo fare molto, ma riproviamo comunque il job insert
-                // sperando in un trigger lato server o race condition risolta.
             } else {
                 console.log("Profilo ripristinato. Riprovo inserimento job...");
             }
@@ -47,12 +45,10 @@ export const jobService = {
             // 2. Riprova inserimento job (Secondo tentativo)
             const retry = await supabase.from('jobs').insert([newJob]).select().single();
             
-            // Se il secondo tentativo ha successo, usiamo quei dati e puliamo l'errore
             if (!retry.error) {
                 data = retry.data;
                 error = null;
             } else {
-                // Se fallisce ancora, teniamo l'errore originale o il nuovo
                 console.error("Fallito anche il secondo tentativo:", retry.error);
                 error = retry.error; 
             }
@@ -60,7 +56,6 @@ export const jobService = {
     }
 
     if (error) {
-        // Messaggio user-friendly se persiste il problema FK
         if (error.code === '23503') {
             throw new Error("Impossibile salvare la richiesta: il tuo profilo utente non risulta attivo. Assicurati di aver completato la registrazione o prova a fare Logout/Login.");
         }
@@ -69,7 +64,6 @@ export const jobService = {
     
     // NOTIFICA VIA EMAIL AL CLIENTE (Conferma Creazione)
     if (jobData.clientId && data) {
-       // Non blocchiamo il ritorno della funzione per l'invio mail
        this.getUserProfile(jobData.clientId).then(user => {
           if (user && user.email) {
              emailService.notifyClientJobPosted(
@@ -302,6 +296,7 @@ export const jobService = {
         updated_at: new Date().toISOString()
     };
     
+    // Aggiorniamo solo i campi definiti (non undefined)
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
     if (updates.location !== undefined) dbUpdates.location = updates.location;
@@ -309,19 +304,20 @@ export const jobService = {
     if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
     if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
 
-    // Usiamo UPSERT per garantire che il profilo esista
-    const { error } = await supabase.from('profiles').upsert({
-        id: userId,
-        email: updates.email, 
-        ...dbUpdates
-    });
+    // USIAMO UPDATE, NON UPSERT. 
+    // Il profilo esiste già. Se usiamo Upsert con politiche RLS restrittive potrebbe fallire.
+    // L'Update è permesso dalla policy "Users can update own profile".
+    const { error } = await supabase
+        .from('profiles')
+        .update(dbUpdates)
+        .eq('id', userId);
 
     if (error) {
         console.error("Errore aggiornamento profilo:", error);
         throw error;
     }
 
-    // Sync auth metadata
+    // Sync auth metadata (opzionale ma utile per performance sessione)
     const metaUpdates: any = {};
     if (updates.name) metaUpdates.name = updates.name;
     if (updates.brandName) metaUpdates.brand_name = updates.brandName;

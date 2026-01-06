@@ -25,13 +25,16 @@ export const authService = {
     if (!data.user) throw new Error('Registrazione completata ma utente nullo.');
 
     // 3. Update Profilo e Logica Post-Registrazione
+    // NOTA: Il trigger 'handle_new_user' ha già creato la riga con ID ed Email.
+    // Noi facciamo solo un UPDATE dei campi aggiuntivi.
     try {
-        const profileUpdates = {
-            id: data.user.id,
-            email: email,
+        // Attendiamo un istante per essere sicuri che il trigger abbia finito
+        await new Promise(r => setTimeout(r, 500));
+
+        const profileUpdates: any = {
             updated_at: new Date().toISOString(),
-            name: userData.name || 'Utente',
-            role: userRole,
+            // Aggiorniamo solo se i dati sono presenti
+            ...(userData.name && { name: userData.name }),
             ...(userData.brandName && { brand_name: userData.brandName }),
             ...(userData.location && { location: userData.location }),
             ...(userData.bio && { bio: userData.bio }),
@@ -43,15 +46,12 @@ export const authService = {
 
         const { error: profileError } = await supabase
             .from('profiles')
-            .upsert(profileUpdates, { onConflict: 'id' }) 
-            .select();
+            .update(profileUpdates)
+            .eq('id', data.user.id);
 
         if (profileError) {
             console.error("Errore salvataggio dettagli profilo:", profileError.message);
-            // Non ingoiamo l'errore se è un problema di permessi, altrimenti l'utente rimane "zombie"
-            if (profileError.code === "42501") { // RLS violation
-                throw new Error("Permesso negato creazione profilo. Esegui le SQL Policies su Supabase.");
-            }
+            // Non blocchiamo il flusso, l'utente è registrato, potrà completare il profilo dopo.
         } else {
             // 4. NOTIFICA ADMIN (Nuovo Utente)
             emailService.notifyAdminNewUser(
@@ -62,9 +62,7 @@ export const authService = {
         }
 
     } catch (e: any) {
-        console.warn("Errore durante creazione profilo:", e);
-        // Rilanciamo l'errore per informare l'UI che qualcosa non va
-        throw e;
+        console.warn("Eccezione durante update profilo:", e);
     }
 
     return data.user;
@@ -96,7 +94,6 @@ export const authService = {
 
     // --- AUTO-RIPARAZIONE ---
     // Se l'utente è loggato (Auth) ma non ha un profilo (DB), proviamo a crearlo ora.
-    // Questo risolve l'errore "violates foreign key constraint" se il profilo non era stato creato prima.
     if (!profile && session.user) {
         console.warn("Profilo DB mancante. Tentativo di ripristino automatico...");
         const meta = session.user.user_metadata || {};

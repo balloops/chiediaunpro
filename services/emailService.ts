@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseClient';
 
 // Ottiene l'URL base pulito gestendo Hash Router
@@ -6,8 +5,8 @@ const getBaseUrl = () => {
   return window.location.origin + window.location.pathname;
 };
 
-// Email dell'Admin per le notifiche di sistema
-const ADMIN_EMAIL = 'admin@lavorabene.it'; 
+// 1. CONFIGURA QUI LA TUA EMAIL REALE (dove vuoi ricevere le notifiche e le risposte)
+const REAL_ADMIN_EMAIL = 'tuamail@gmail.com'; // <--- CAMBIA QUESTA CON LA TUA EMAIL VERA
 
 export const emailService = {
   /**
@@ -16,6 +15,9 @@ export const emailService = {
   async sendEmail(to: string, subject: string, htmlBody: string, context?: string, replyTo?: string) {
     console.log(`[EMAIL SERVICE] 🚀 Tentativo invio a: ${to} | Oggetto: ${subject}`);
     
+    // Se non specificato diversamente, le risposte vanno all'admin reale
+    const finalReplyTo = replyTo || REAL_ADMIN_EMAIL;
+
     try {
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: { 
@@ -23,7 +25,7 @@ export const emailService = {
           subject, 
           html: htmlBody,
           context,
-          reply_to: replyTo 
+          reply_to: finalReplyTo 
         },
       });
 
@@ -72,7 +74,8 @@ export const emailService = {
         </ul>
       </div>
     `;
-    return await this.sendEmail(ADMIN_EMAIL, subject, html, 'admin_new_user');
+    // Invia all'admin reale
+    return await this.sendEmail(REAL_ADMIN_EMAIL, subject, html, 'admin_new_user');
   },
 
   /**
@@ -90,9 +93,11 @@ export const emailService = {
         <div style="text-align: center; margin: 30px 0;">
           <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Vedi la tua richiesta</a>
         </div>
+        <p style="font-size: 12px; color: #666; margin-top: 20px;">Hai domande? Rispondi direttamente a questa email.</p>
       </div>
     `;
-    return await this.sendEmail(clientEmail, subject, html, 'client_job_posted', ADMIN_EMAIL);
+    // Se il cliente risponde, la mail va a REAL_ADMIN_EMAIL
+    return await this.sendEmail(clientEmail, subject, html, 'client_job_posted', REAL_ADMIN_EMAIL);
   },
 
   /**
@@ -112,7 +117,7 @@ export const emailService = {
         </div>
       </div>
     `;
-    return await this.sendEmail(clientEmail, subject, html, 'new_quote', ADMIN_EMAIL);
+    return await this.sendEmail(clientEmail, subject, html, 'new_quote', REAL_ADMIN_EMAIL);
   },
 
   /**
@@ -134,6 +139,6 @@ export const emailService = {
         </div>
       </div>
     `;
-    return await this.sendEmail(proEmail, subject, html, 'quote_accepted', ADMIN_EMAIL);
+    return await this.sendEmail(proEmail, subject, html, 'quote_accepted', REAL_ADMIN_EMAIL);
   }
 };
