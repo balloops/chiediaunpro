@@ -16,44 +16,60 @@ export const jobService = {
       status: 'OPEN',
     };
 
-    // Primo tentativo
+    // Primo tentativo di inserimento
     let { data, error } = await supabase
       .from('jobs')
       .insert([newJob])
       .select()
       .single();
 
-    // Gestione Errore FK (Profilo Mancante) - AUTO-FIX
+    // AUTO-FIX: Gestione Errore FK (Profilo Mancante - Code 23503)
     if (error && error.code === '23503') { 
-        console.warn("Profilo mancante rilevato durante createJob. Tentativo di ripristino...");
+        console.warn("Profilo mancante rilevato (FK Error). Tentativo di ripristino profilo e retry...");
         
-        // Tentiamo di creare il profilo al volo usando i dati che abbiamo
         if (jobData.clientId) {
+            // 1. Tentiamo di creare/aggiornare il profilo al volo
             const { error: profileError } = await supabase.from('profiles').upsert({
                 id: jobData.clientId,
                 name: jobData.clientName || 'Utente',
-                role: 'CLIENT', // Assumiamo CLIENT se sta postando un job
+                role: 'CLIENT', 
                 updated_at: new Date().toISOString()
             });
             
-            if (!profileError) {
-                // Riprova inserimento job
-                const retry = await supabase.from('jobs').insert([newJob]).select().single();
+            if (profileError) {
+                console.error("Fallito ripristino profilo:", profileError);
+                // Se fallisce l'upsert (es. RLS), non possiamo fare molto, ma riproviamo comunque il job insert
+                // sperando in un trigger lato server o race condition risolta.
+            } else {
+                console.log("Profilo ripristinato. Riprovo inserimento job...");
+            }
+
+            // 2. Riprova inserimento job (Secondo tentativo)
+            const retry = await supabase.from('jobs').insert([newJob]).select().single();
+            
+            // Se il secondo tentativo ha successo, usiamo quei dati e puliamo l'errore
+            if (!retry.error) {
                 data = retry.data;
-                error = retry.error;
+                error = null;
+            } else {
+                // Se fallisce ancora, teniamo l'errore originale o il nuovo
+                console.error("Fallito anche il secondo tentativo:", retry.error);
+                error = retry.error; 
             }
         }
     }
 
     if (error) {
+        // Messaggio user-friendly se persiste il problema FK
         if (error.code === '23503') {
-            throw new Error("Impossibile creare la richiesta: profilo utente non trovato. Prova a fare logout e login.");
+            throw new Error("Impossibile salvare la richiesta: il tuo profilo utente non risulta attivo. Assicurati di aver completato la registrazione o prova a fare Logout/Login.");
         }
         throw error;
     }
     
     // NOTIFICA VIA EMAIL AL CLIENTE (Conferma Creazione)
-    if (jobData.clientId) {
+    if (jobData.clientId && data) {
+       // Non blocchiamo il ritorno della funzione per l'invio mail
        this.getUserProfile(jobData.clientId).then(user => {
           if (user && user.email) {
              emailService.notifyClientJobPosted(
@@ -286,7 +302,6 @@ export const jobService = {
         updated_at: new Date().toISOString()
     };
     
-    // Controlliamo specificamente undefined per permettere stringhe vuote (cancellazione)
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
     if (updates.location !== undefined) dbUpdates.location = updates.location;
@@ -294,11 +309,9 @@ export const jobService = {
     if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
     if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
 
-    // Usiamo UPSERT invece di UPDATE.
-    // Se il profilo manca (causa del problema), lo crea. Se c'è, lo aggiorna.
+    // Usiamo UPSERT per garantire che il profilo esista
     const { error } = await supabase.from('profiles').upsert({
         id: userId,
-        // Se stiamo creando, ci serve l'email. Se aggiorniamo, è opzionale ma male non fa.
         email: updates.email, 
         ...dbUpdates
     });
@@ -308,14 +321,10 @@ export const jobService = {
         throw error;
     }
 
-    // Aggiorna anche i metadati Auth per coerenza
+    // Sync auth metadata
     const metaUpdates: any = {};
     if (updates.name) metaUpdates.name = updates.name;
     if (updates.brandName) metaUpdates.brand_name = updates.brandName;
-    if (updates.location) metaUpdates.location = updates.location;
-    if (updates.bio) metaUpdates.bio = updates.bio;
-    if (updates.phoneNumber) metaUpdates.phone_number = updates.phoneNumber;
-    if (updates.offeredServices !== undefined) metaUpdates.offered_services = updates.offeredServices;
     
     if (Object.keys(metaUpdates).length > 0) {
         const { error: authError } = await supabase.auth.updateUser({ data: metaUpdates });

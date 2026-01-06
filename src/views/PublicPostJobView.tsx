@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ServiceCategory, User, UserRole, FormDefinition } from '../../types';
@@ -104,8 +103,30 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
         navigate('/dashboard');
       } catch (err: any) {
         console.error("Failed to create job", err);
-        setError("Errore nel salvataggio della richiesta: " + err.message);
-        setIsSubmitting(false);
+        // Retry logic: if it's the FK error, wait 1s and try once more
+        if (err.message && err.message.includes('profilo utente non trovato')) {
+            console.log("Retrying job creation after delay...");
+            setTimeout(async () => {
+                try {
+                    await jobService.createJob({
+                        clientId: currentUser.id,
+                        clientName: currentUser.name,
+                        category: selectedCategory,
+                        description: jobDescription,
+                        details: jobDetails,
+                        budget: budget,
+                        location: locationCity ? { city: locationCity } : undefined
+                    });
+                    navigate('/dashboard');
+                } catch (retryErr: any) {
+                    setError("Errore finale: " + retryErr.message);
+                    setIsSubmitting(false);
+                }
+            }, 1500);
+        } else {
+            setError("Errore nel salvataggio della richiesta: " + err.message);
+            setIsSubmitting(false);
+        }
       }
     } else {
         setIsSubmitting(false);
@@ -136,6 +157,8 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
             name: authData.name,
             role: UserRole.CLIENT
          });
+         // Small delay to ensure DB triggers fire
+         await new Promise(resolve => setTimeout(resolve, 500));
          loggedUser = await authService.getCurrentUser();
       } else {
          await authService.signIn(authData.email, authData.password);
