@@ -32,8 +32,7 @@ export const jobService = {
             const { error: profileError } = await supabase.from('profiles').upsert({
                 id: jobData.clientId,
                 name: jobData.clientName || 'Utente',
-                role: 'CLIENT', 
-                updated_at: new Date().toISOString()
+                role: 'CLIENT'
             });
             
             if (profileError) {
@@ -292,9 +291,8 @@ export const jobService = {
   },
 
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
-    const dbUpdates: any = {
-        updated_at: new Date().toISOString()
-    };
+    // NOTA: Abbiamo rimosso updated_at dal payload per evitare errori di "schema cache"
+    const dbUpdates: any = {};
     
     // Aggiorniamo solo i campi definiti (non undefined)
     if (updates.name !== undefined) dbUpdates.name = updates.name;

@@ -32,7 +32,7 @@ export const authService = {
         await new Promise(r => setTimeout(r, 500));
 
         const profileUpdates: any = {
-            updated_at: new Date().toISOString(),
+            // Rimosso updated_at per evitare errori di cache schema
             // Aggiorniamo solo se i dati sono presenti
             ...(userData.name && { name: userData.name }),
             ...(userData.brandName && { brand_name: userData.brandName }),
@@ -103,7 +103,7 @@ export const authService = {
             email: session.user.email,
             name: meta.name || 'Utente Recuperato',
             role: meta.role || 'CLIENT',
-            updated_at: new Date().toISOString(),
+            // updated_at rimosso per sicurezza
             credits: meta.role === 'PROFESSIONAL' ? 30 : 0
         };
         
