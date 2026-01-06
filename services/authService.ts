@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseClient';
 import { User, UserRole } from '../types';
 import { emailService } from './emailService';
@@ -49,9 +48,12 @@ export const authService = {
 
         if (profileError) {
             console.error("Errore salvataggio dettagli profilo:", profileError.message);
+            // Non ingoiamo l'errore se è un problema di permessi, altrimenti l'utente rimane "zombie"
+            if (profileError.code === "42501") { // RLS violation
+                throw new Error("Permesso negato creazione profilo. Esegui le SQL Policies su Supabase.");
+            }
         } else {
             // 4. NOTIFICA ADMIN (Nuovo Utente)
-            // Non blocchiamo il flusso se l'email fallisce (fire and forget)
             emailService.notifyAdminNewUser(
                 email, 
                 userData.name || 'Nuovo Utente', 
@@ -59,8 +61,10 @@ export const authService = {
             ).catch(err => console.warn("Fallito invio mail admin:", err));
         }
 
-    } catch (e) {
-        console.warn("Errore non critico post-registrazione:", e);
+    } catch (e: any) {
+        console.warn("Errore durante creazione profilo:", e);
+        // Rilanciamo l'errore per informare l'UI che qualcosa non va
+        throw e;
     }
 
     return data.user;
@@ -84,11 +88,42 @@ export const authService = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
 
-    const { data: profile, error } = await supabase
+    let { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
+
+    // --- AUTO-RIPARAZIONE ---
+    // Se l'utente è loggato (Auth) ma non ha un profilo (DB), proviamo a crearlo ora.
+    // Questo risolve l'errore "violates foreign key constraint" se il profilo non era stato creato prima.
+    if (!profile && session.user) {
+        console.warn("Profilo DB mancante. Tentativo di ripristino automatico...");
+        const meta = session.user.user_metadata || {};
+        
+        const recoveryProfile = {
+            id: session.user.id,
+            email: session.user.email,
+            name: meta.name || 'Utente Recuperato',
+            role: meta.role || 'CLIENT',
+            updated_at: new Date().toISOString(),
+            credits: meta.role === 'PROFESSIONAL' ? 30 : 0
+        };
+        
+        const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .upsert(recoveryProfile)
+            .select()
+            .single();
+            
+        if (!createError && newProfile) {
+            console.log("Profilo ripristinato con successo.");
+            profile = newProfile;
+        } else {
+            console.error("Impossibile ripristinare profilo:", createError?.message);
+        }
+    }
+    // ------------------------
 
     const meta = session.user.user_metadata || {};
 

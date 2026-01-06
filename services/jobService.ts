@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseClient';
 import { JobRequest, Quote, User, UserRole } from '../types';
 import { emailService } from './emailService';
@@ -17,17 +16,44 @@ export const jobService = {
       status: 'OPEN',
     };
 
-    const { data, error } = await supabase
+    // Primo tentativo
+    let { data, error } = await supabase
       .from('jobs')
       .insert([newJob])
       .select()
       .single();
 
-    if (error) throw error;
+    // Gestione Errore FK (Profilo Mancante) - AUTO-FIX
+    if (error && error.code === '23503') { 
+        console.warn("Profilo mancante rilevato durante createJob. Tentativo di ripristino...");
+        
+        // Tentiamo di creare il profilo al volo usando i dati che abbiamo
+        if (jobData.clientId) {
+            const { error: profileError } = await supabase.from('profiles').upsert({
+                id: jobData.clientId,
+                name: jobData.clientName || 'Utente',
+                role: 'CLIENT', // Assumiamo CLIENT se sta postando un job
+                updated_at: new Date().toISOString()
+            });
+            
+            if (!profileError) {
+                // Riprova inserimento job
+                const retry = await supabase.from('jobs').insert([newJob]).select().single();
+                data = retry.data;
+                error = retry.error;
+            }
+        }
+    }
+
+    if (error) {
+        if (error.code === '23503') {
+            throw new Error("Impossibile creare la richiesta: profilo utente non trovato. Prova a fare logout e login.");
+        }
+        throw error;
+    }
     
     // NOTIFICA VIA EMAIL AL CLIENTE (Conferma Creazione)
     if (jobData.clientId) {
-       // Recuperiamo la mail del cliente dal profilo attuale (o potremmo passarla come argomento)
        this.getUserProfile(jobData.clientId).then(user => {
           if (user && user.email) {
              emailService.notifyClientJobPosted(
@@ -126,7 +152,6 @@ export const jobService = {
   },
 
   async sendQuote(quoteData: any): Promise<void> {
-    // 1. Inserimento nel DB
     const { error } = await supabase
       .from('quotes')
       .insert([{
@@ -141,7 +166,6 @@ export const jobService = {
 
     if (error) throw error;
 
-    // 2. Logica Email al Cliente
     try {
       const client = await this.getUserProfile(quoteData.clientOwnerId);
       if (client && client.email) {
@@ -159,7 +183,6 @@ export const jobService = {
   },
 
   async updateQuoteStatus(quote: Quote, status: string): Promise<void> {
-    // 1. Aggiornamento DB
     const { error } = await supabase
       .from('quotes')
       .update({ status })
@@ -167,7 +190,6 @@ export const jobService = {
 
     if (error) throw error;
 
-    // 2. Logica Email al Pro (Solo se ACCETTATO)
     if (status === 'ACCEPTED') {
       try {
         const pro = await this.getUserProfile(quote.proId);
@@ -260,17 +282,33 @@ export const jobService = {
   },
 
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<void> {
-    const dbUpdates: any = {};
-    if (updates.name) dbUpdates.name = updates.name;
-    if (updates.brandName) dbUpdates.brand_name = updates.brandName;
-    if (updates.location) dbUpdates.location = updates.location;
-    if (updates.bio) dbUpdates.bio = updates.bio;
-    if (updates.phoneNumber) dbUpdates.phone_number = updates.phoneNumber;
-    if (updates.offeredServices) dbUpdates.offered_services = updates.offeredServices;
+    const dbUpdates: any = {
+        updated_at: new Date().toISOString()
+    };
+    
+    // Controlliamo specificamente undefined per permettere stringhe vuote (cancellazione)
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.brandName !== undefined) dbUpdates.brand_name = updates.brandName;
+    if (updates.location !== undefined) dbUpdates.location = updates.location;
+    if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
+    if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
+    if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
 
-    const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', userId);
-    if (error) throw error;
+    // Usiamo UPSERT invece di UPDATE.
+    // Se il profilo manca (causa del problema), lo crea. Se c'è, lo aggiorna.
+    const { error } = await supabase.from('profiles').upsert({
+        id: userId,
+        // Se stiamo creando, ci serve l'email. Se aggiorniamo, è opzionale ma male non fa.
+        email: updates.email, 
+        ...dbUpdates
+    });
 
+    if (error) {
+        console.error("Errore aggiornamento profilo:", error);
+        throw error;
+    }
+
+    // Aggiorna anche i metadati Auth per coerenza
     const metaUpdates: any = {};
     if (updates.name) metaUpdates.name = updates.name;
     if (updates.brandName) metaUpdates.brand_name = updates.brandName;

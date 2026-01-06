@@ -815,6 +815,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
      try {
         await jobService.updateUserProfile(user.id, {
            name: profileForm.name,
+           email: profileForm.email, // Passiamo l'email per supportare upsert (creazione)
            brandName: profileForm.brandName,
            location: profileForm.location,
            phoneNumber: profileForm.phoneNumber,
