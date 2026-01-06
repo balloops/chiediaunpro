@@ -1381,7 +1381,7 @@ const AdminDashboard: React.FC = () => {
                             <p className="mb-2">Poiché il Mac nasconde la cartella <code>.github</code>, la cosa più semplice è creare il file direttamente su GitHub:</p>
                             <ol className="list-decimal ml-4 space-y-1 mt-2 text-xs font-medium opacity-90">
                                 <li>Vai sul tuo repository su <strong>GitHub.com</strong> (pagina principale)</li>
-                                <li>Clicca <strong>"Add file"</strong> > <strong>"Create new file"</strong></li>
+                                <li>Clicca <strong>"Add file"</strong> &gt; <strong>"Create new file"</strong></li>
                                 <li>Nel nome file scrivi esattamente: <code>.github/workflows/deploy-supabase.yml</code></li>
                                 <li>Incolla il codice del workflow (quello che inizia con 'name: Deploy Supabase Functions...')</li>
                                 <li>Clicca <strong>Commit changes</strong>.</li>
