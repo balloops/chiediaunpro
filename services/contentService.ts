@@ -5,7 +5,7 @@ import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } f
 // CAMBIO CHIAVI PER FORZARE IL RESET DELLA CACHE LOCALE
 const PLANS_KEY = 'lavorabene_plans_v2';
 const CATEGORIES_KEY = 'lavorabene_categories_v2';
-const FORMS_KEY = 'lavorabene_forms_v2'; // Aggiornato per forzare nuovi form
+const FORMS_KEY = 'lavorabene_forms_v3'; // Aggiornato a v3 per attivare la location ovunque
 
 const defaultContent: SiteContent = {
   branding: {
@@ -168,7 +168,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'features', label: 'Funzionalità necessarie', type: 'multiselect', options: ['Multilingua', 'Area Riservata', 'Prenotazioni Online', 'Integrazione Newsletter', 'Blog', 'Chatbot'] }
     ],
     budgetOptions: ['< 500€', '500 - 1.500€', '1.500 - 3.000€', '3.000€+'],
-    askLocation: false,
+    askLocation: true,
     descriptionPlaceholder: "Esempio: Vorrei un sito moderno per il mio studio di architettura. Mi piacciono i siti minimalisti. Ho bisogno di una sezione portfolio e contatti. Ho già le foto dei progetti."
   },
   {
@@ -180,7 +180,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'integrations', label: 'Integrazioni richieste', type: 'multiselect', options: ['Gestionale Magazzino', 'Fatturazione Automatica', 'Amazon/eBay Sync', 'Klarna/Scalapay', 'Spedizioni Automatizzate'] }
     ],
     budgetOptions: ['< 1.500€', '1.500 - 3.000€', '3.000 - 6.000€', '6.000€+'],
-    askLocation: false,
+    askLocation: true,
     descriptionPlaceholder: "Descrivi il tuo progetto: vendi in Italia o all'estero? Hai bisogno di migrare da un altro sito? Hai già il materiale fotografico?"
   },
   {
@@ -192,7 +192,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'frequency', label: 'Durata collaborazione', type: 'select', options: ['Progetto Una Tantum (Setup)', 'Gestione Mensile Continuativa', 'Consulenza Strategica'] }
     ],
     budgetOptions: ['< 500€/mese', '500 - 1.000€/mese', '1.000 - 2.500€/mese', '2.500€+/mese'],
-    askLocation: false,
+    askLocation: true,
     descriptionPlaceholder: "Descrivi il tuo target e cosa hai fatto finora. Esempio: Siamo una startup B2B, vogliamo trovare clienti su LinkedIn. Abbiamo un budget mensile per le ads escluso."
   },
   {
@@ -203,7 +203,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'rebrand', label: 'È un rebranding?', type: 'radio_group', options: ['Sì, rifacimento totale', 'Sì, leggero restyling', 'No, nuovo brand da zero'] }
     ],
     budgetOptions: ['< 300€', '300 - 800€', '800 - 2.000€', '2.000€+'],
-    askLocation: false,
+    askLocation: true,
     descriptionPlaceholder: "Racconta i valori del tuo brand. Chi sono i tuoi competitor? Hai colori che odi o che ami? A quale pubblico ti rivolgi?"
   },
   {
@@ -214,7 +214,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'complexity', label: 'Funzioni chiave', type: 'multiselect', options: ['Login Utenti', 'Pagamenti in-app', 'Geolocalizzazione', 'Chat/Messaggistica', 'Integrazione AI'] }
     ],
     budgetOptions: ['< 2.000€', '2.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
-    askLocation: false,
+    askLocation: true,
     descriptionPlaceholder: "Descrivi cosa deve fare il software. Qual è il problema che risolve? Chi lo userà (dipendenti, clienti finali)? Hai scadenze precise?"
   },
   {
@@ -387,7 +387,7 @@ export const contentService = {
     return {
       categoryId,
       budgetOptions: ['< 200€', '200 - 500€', '500 - 1.000€', '1.000€+'],
-      askLocation: false,
+      askLocation: true, // Default a true per tutte le categorie custom
       descriptionPlaceholder: "Descrivi dettagliatamente cosa ti serve...",
       fields: []
     };
