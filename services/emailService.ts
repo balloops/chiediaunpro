@@ -61,19 +61,28 @@ export const emailService = {
   },
 
   /**
-   * 1. Notifica Admin: Nuovo Utente Registrato
+   * 1. Notifica Admin: Nuovo Utente Registrato (Logica differenziata Pro/Cliente)
    */
   async notifyAdminNewUser(userEmail: string, userName: string, userRole: string) {
-    const subject = `[Admin] Nuovo utente registrato: ${userName}`;
+    const isPro = userRole === 'PROFESSIONAL';
+    const roleLabel = isPro ? 'Professionista' : 'Cliente';
+    const color = isPro ? '#4f46e5' : '#059669'; // Blu per Pro, Verde per Clienti
+
+    const subject = `[Admin] Nuovo ${roleLabel} registrato: ${userName}`;
+    
     const html = `
       <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <h2 style="color: #4f46e5;">Nuova Registrazione</h2>
-        <p>Un nuovo utente si è appena iscritto alla piattaforma.</p>
-        <ul>
-          <li><strong>Nome:</strong> ${userName}</li>
-          <li><strong>Email:</strong> ${userEmail}</li>
-          <li><strong>Ruolo:</strong> ${userRole === 'PROFESSIONAL' ? 'Professionista' : 'Cliente'}</li>
-        </ul>
+        <h2 style="color: ${color};">Nuova Registrazione: ${roleLabel}</h2>
+        <p>Un nuovo <strong>${roleLabel}</strong> si è appena iscritto alla piattaforma.</p>
+        <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-top: 10px;">
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="margin-bottom: 8px;"><strong>Nome:</strong> ${userName}</li>
+            <li style="margin-bottom: 8px;"><strong>Email:</strong> ${userEmail}</li>
+            <li style="margin-bottom: 8px;"><strong>Ruolo:</strong> ${userRole}</li>
+            <li><strong>Data:</strong> ${new Date().toLocaleString('it-IT')}</li>
+          </ul>
+        </div>
+        <p style="font-size: 12px; color: #666; margin-top: 20px;">Accedi alla Dashboard Admin per verificare i dettagli.</p>
       </div>
     `;
     // Invia all'admin reale, reply-to default (info@lavorabene.it)
