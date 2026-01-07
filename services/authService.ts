@@ -82,6 +82,18 @@ export const authService = {
     if (error) throw error;
   },
 
+  async resetPasswordForEmail(email: string) {
+    // Il link nella mail riporterà l'utente alla dashboard (sezione impostazioni)
+    // dove potrà inserire la nuova password.
+    // Costruiamo l'URL completo gestendo l'HashRouter.
+    const redirectTo = window.location.origin + window.location.pathname + '#/dashboard?tab=settings';
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo
+    });
+    if (error) throw error;
+  },
+
   async getCurrentUser(): Promise<User | null> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
