@@ -7,7 +7,6 @@ const getBaseUrl = () => {
 
 // 1. CONFIGURAZIONE EMAIL
 const OFFICIAL_INFO_EMAIL = 'info@lavorabene.it'; // Indirizzo pubblico per le risposte (Reply-To)
-const ADMIN_ALERT_EMAIL = 'tuamail@gmail.com';    // Indirizzo dove l'admin riceve gli avvisi (es. nuove iscrizioni)
 
 export const emailService = {
   /**
@@ -62,6 +61,7 @@ export const emailService = {
 
   /**
    * 1. Notifica Admin: Nuovo Utente Registrato (Logica differenziata Pro/Cliente)
+   *    Ora recupera dinamicamente gli admin dal DB.
    */
   async notifyAdminNewUser(userEmail: string, userName: string, userRole: string) {
     const isPro = userRole === 'PROFESSIONAL';
@@ -85,8 +85,41 @@ export const emailService = {
         <p style="font-size: 12px; color: #666; margin-top: 20px;">Accedi alla Dashboard Admin per verificare i dettagli.</p>
       </div>
     `;
-    // Invia all'admin reale, reply-to default (info@lavorabene.it)
-    return await this.sendEmail(ADMIN_ALERT_EMAIL, subject, html, 'admin_new_user');
+
+    try {
+        // Recupera tutti gli utenti con ruolo ADMIN dal database
+        const { data: admins, error } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('role', 'ADMIN');
+
+        if (error) {
+            console.error("Errore recupero lista admin:", error);
+            return { success: false, error: error.message };
+        }
+
+        if (!admins || admins.length === 0) {
+            console.warn("Nessun amministratore trovato nel database a cui inviare la notifica.");
+            return { success: false, error: "No admins found" };
+        }
+
+        console.log(`Trovati ${admins.length} admin. Invio notifiche...`);
+
+        // Invia l'email a tutti gli admin trovati
+        const emailPromises = admins.map(admin => {
+            if (admin.email) {
+                return this.sendEmail(admin.email, subject, html, 'admin_new_user');
+            }
+            return Promise.resolve();
+        });
+
+        await Promise.all(emailPromises);
+        return { success: true };
+
+    } catch (e: any) {
+        console.error("Errore durante l'invio notifiche agli admin:", e);
+        return { success: false, error: e.message };
+    }
   },
 
   /**
