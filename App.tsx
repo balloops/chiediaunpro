@@ -53,13 +53,6 @@ const App: React.FC = () => {
     let mounted = true;
     let authListener: any = null;
 
-    // Check preliminare per capire se siamo in un flusso di recovery password
-    // Se c'è un hash con type=recovery o access_token, potremmo essere in fase di login da link email
-    const isRecoveryFlow = window.location.hash && (
-        window.location.hash.includes('type=recovery') || 
-        window.location.hash.includes('access_token')
-    );
-
     // Safety timeout to prevent infinite loading screen visualization
     const loadingTimeout = setTimeout(() => {
       if (mounted && auth.isLoading) {
@@ -68,53 +61,16 @@ const App: React.FC = () => {
     }, 5000); // Show reload option after 5 seconds
 
     const initializeAuth = async () => {
-      // 1. Setup Listener FIRST to catch events immediately
-      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (!mounted) return;
-
-        console.log("Auth Event:", event);
-
-        if (event === 'PASSWORD_RECOVERY') {
-            // Evento specifico: Utente ha cliccato sul link di reset
-            const user = await authService.getCurrentUser();
-            setAuth({ user, isAuthenticated: true, isLoading: false });
-            
-            // Forziamo il redirect alla dashboard settings con mode recovery
-            // Usiamo window.location.hash perché siamo fuori dal Router context in questo punto
-            window.location.hash = '/dashboard?tab=settings&mode=recovery';
-        }
-        else if (event === 'SIGNED_IN' && session) {
-           // Se siamo in recovery flow, potremmo voler aspettare l'evento PASSWORD_RECOVERY
-           // Ma se siamo già loggati, procediamo.
-           const user = await authService.getCurrentUser();
-           
-           // Se l'hash contiene ancora token sporchi di supabase, puliamoli verso dashboard recovery se necessario
-           if (window.location.hash.includes('type=recovery')) {
-               window.location.hash = '/dashboard?tab=settings&mode=recovery';
-           }
-           
-           setAuth({ user, isAuthenticated: true, isLoading: false });
-        } else if (event === 'SIGNED_OUT') {
-           setAuth({ user: null, isAuthenticated: false, isLoading: false });
-        }
-      });
-      authListener = data.subscription;
-
-      // 2. Initial Session Check
       try {
+        // 1. Check current session
         const user = await authService.getCurrentUser();
         
-        // Se NON siamo in un flusso di recovery (o se abbiamo già l'utente), aggiorniamo lo stato.
-        // Se siamo in recovery e user è null, aspettiamo l'evento onAuthStateChange.
         if (mounted) {
-            if (!isRecoveryFlow || user) {
-                setAuth({
-                    user,
-                    isAuthenticated: !!user,
-                    isLoading: false
-                });
-            }
-            // Se isRecoveryFlow è true e user è null, lasciamo isLoading a true finché Supabase non processa l'hash
+           setAuth({
+             user,
+             isAuthenticated: !!user,
+             isLoading: false
+           });
         }
       } catch (error) {
         console.error("Session check failed", error);
@@ -124,6 +80,31 @@ const App: React.FC = () => {
       } finally {
         clearTimeout(loadingTimeout);
       }
+
+      // 2. Setup listener
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return;
+
+        console.log("Auth Event:", event);
+
+        if (event === 'PASSWORD_RECOVERY') {
+            // GESTIONE RECUPERO PASSWORD
+            // Supabase ha verificato il token nell'hash e ha loggato l'utente.
+            // Ora dobbiamo portarlo alla schermata di cambio password.
+            const user = await authService.getCurrentUser();
+            setAuth({ user, isAuthenticated: true, isLoading: false });
+            
+            // Forziamo il redirect pulendo l'hash sporco di Supabase
+            window.location.hash = '/dashboard?tab=settings&mode=recovery';
+        }
+        else if (event === 'SIGNED_IN' && session) {
+           const user = await authService.getCurrentUser();
+           setAuth({ user, isAuthenticated: true, isLoading: false });
+        } else if (event === 'SIGNED_OUT') {
+           setAuth({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      });
+      authListener = data.subscription;
     };
 
     initializeAuth();
