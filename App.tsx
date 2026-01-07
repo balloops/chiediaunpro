@@ -88,16 +88,16 @@ const App: React.FC = () => {
         console.log("Auth Event:", event);
 
         if (event === 'PASSWORD_RECOVERY') {
-            // CRITICO: Gestione specifica per il Reset Password con HashRouter.
-            // Supabase ha consumato il token nell'URL, ora l'utente è loggato in sessione "recovery".
-            // Forziamo il redirect alla pagina di cambio password pulendo l'hash.
+            // GESTIONE RECUPERO PASSWORD
+            // Supabase ha verificato il token nell'hash e ha loggato l'utente.
+            // Ora dobbiamo portarlo alla schermata di cambio password.
             const user = await authService.getCurrentUser();
             setAuth({ user, isAuthenticated: true, isLoading: false });
-            // Forziamo la navigazione manuale all'hash corretto
+            
+            // Forziamo il redirect pulendo l'hash sporco di Supabase
             window.location.hash = '/dashboard?tab=settings&mode=recovery';
-        } 
+        }
         else if (event === 'SIGNED_IN' && session) {
-           // We need to fetch the full profile again to get role/name etc.
            const user = await authService.getCurrentUser();
            setAuth({ user, isAuthenticated: true, isLoading: false });
         } else if (event === 'SIGNED_OUT') {

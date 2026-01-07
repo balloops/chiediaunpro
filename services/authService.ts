@@ -25,15 +25,10 @@ export const authService = {
     if (!data.user) throw new Error('Registrazione completata ma utente nullo.');
 
     // 3. Update Profilo e Logica Post-Registrazione
-    // NOTA: Il trigger 'handle_new_user' ha già creato la riga con ID ed Email.
-    // Noi facciamo solo un UPDATE dei campi aggiuntivi.
     try {
-        // Attendiamo un istante per essere sicuri che il trigger abbia finito
         await new Promise(r => setTimeout(r, 500));
 
         const profileUpdates: any = {
-            // Rimosso updated_at per evitare errori di cache schema
-            // Aggiorniamo solo se i dati sono presenti
             ...(userData.name && { name: userData.name }),
             ...(userData.brandName && { brand_name: userData.brandName }),
             ...(userData.location && { location: userData.location }),
@@ -51,9 +46,7 @@ export const authService = {
 
         if (profileError) {
             console.error("Errore salvataggio dettagli profilo:", profileError.message);
-            // Non blocchiamo il flusso, l'utente è registrato, potrà completare il profilo dopo.
         } else {
-            // 4. NOTIFICA ADMIN (Nuovo Utente)
             emailService.notifyAdminNewUser(
                 email, 
                 userData.name || 'Nuovo Utente', 
@@ -83,10 +76,11 @@ export const authService = {
   },
 
   async resetPasswordForEmail(email: string) {
-    // Il link nella mail riporterà l'utente alla dashboard (sezione impostazioni)
-    // dove potrà inserire la nuova password.
-    // Costruiamo l'URL completo gestendo l'HashRouter.
-    const redirectTo = window.location.origin + window.location.pathname + '#/dashboard?tab=settings';
+    // MODIFICA: Usiamo window.location.origin (senza hash) come redirect_to.
+    // Supabase aggiungerà il token nell'hash (#access_token=...).
+    // La logica di navigazione specifica (es. andare alla dashboard) sarà gestita
+    // in App.tsx intercettando l'evento 'PASSWORD_RECOVERY'.
+    const redirectTo = window.location.origin;
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo
@@ -104,8 +98,6 @@ export const authService = {
       .eq('id', session.user.id)
       .single();
 
-    // --- AUTO-RIPARAZIONE ---
-    // Se l'utente è loggato (Auth) ma non ha un profilo (DB), proviamo a crearlo ora.
     if (!profile && session.user) {
         console.warn("Profilo DB mancante. Tentativo di ripristino automatico...");
         const meta = session.user.user_metadata || {};
@@ -115,7 +107,6 @@ export const authService = {
             email: session.user.email,
             name: meta.name || 'Utente Recuperato',
             role: meta.role || 'CLIENT',
-            // updated_at rimosso per sicurezza
             credits: meta.role === 'PROFESSIONAL' ? 30 : 0
         };
         
@@ -126,13 +117,9 @@ export const authService = {
             .single();
             
         if (!createError && newProfile) {
-            console.log("Profilo ripristinato con successo.");
             profile = newProfile;
-        } else {
-            console.error("Impossibile ripristinare profilo:", createError?.message);
         }
     }
-    // ------------------------
 
     const meta = session.user.user_metadata || {};
 
