@@ -76,10 +76,9 @@ export const authService = {
   },
 
   async resetPasswordForEmail(email: string) {
-    // FIX CRITICO: Il redirect DEVE essere solo l'origin (es. https://lavorabene.it) senza path o hash.
-    // Supabase aggiungerà automaticamente #access_token=... all'URL.
-    // Se aggiungiamo noi un hash (es. /#/dashboard), si crea un doppio hash che rompe il router.
-    // La navigazione verso /dashboard?tab=settings sarà gestita da App.tsx intercettando l'evento PASSWORD_RECOVERY.
+    // MODIFICA: Usiamo solo l'origin (es. https://lavorabene.it).
+    // Supabase accoderà il token (#access_token=...).
+    // App.tsx intercetterà l'evento PASSWORD_RECOVERY e farà il routing corretto.
     const redirectTo = window.location.origin;
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
