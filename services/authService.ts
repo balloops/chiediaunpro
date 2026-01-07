@@ -76,8 +76,8 @@ export const authService = {
   },
 
   async resetPasswordForEmail(email: string) {
-    // Usiamo l'origin pulito. Supabase aggiungerà il token all'hash.
-    // App.tsx gestirà il routing intercettando l'hash.
+    // FIX: Usiamo solo l'origin (es. https://tuosito.com).
+    // Supabase aggiungerà il fragment #access_token=... che verrà gestito da App.tsx
     const redirectTo = window.location.origin;
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {

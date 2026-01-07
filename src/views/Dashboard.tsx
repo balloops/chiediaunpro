@@ -20,10 +20,6 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-// ... [Keep other Sub Components JobDetailView and QuoteDetailView unchanged, they are not affected] ...
-// Rendo il codice più compatto riutilizzando le parti non modificate per non superare i limiti di output, 
-// ma fornisco la Dashboard completa modificata.
-
 // --- SUB COMPONENTS (PAGES) ---
 
 // 1. Job Detail Page (Full Screen)

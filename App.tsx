@@ -29,7 +29,13 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadBranding = async () => {
       const content = await contentService.fetchContent();
-      if (content.branding.platformName) document.title = content.branding.platformName;
+      
+      // Update Title
+      if (content.branding.platformName) {
+        document.title = content.branding.platformName;
+      }
+      
+      // Update Favicon
       if (content.branding.faviconUrl) {
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
         if (!link) {
@@ -47,73 +53,74 @@ const App: React.FC = () => {
     let mounted = true;
     let authListener: any = null;
 
-    // Rileva se stiamo atterrando da un link di recupero password
-    // Se sì, forziamo l'attesa dell'evento PASSWORD_RECOVERY
+    // Check preliminare per capire se siamo in un flusso di recovery password
+    // Se c'è un hash con type=recovery o access_token, potremmo essere in fase di login da link email
     const isRecoveryFlow = window.location.hash && (
         window.location.hash.includes('type=recovery') || 
         window.location.hash.includes('access_token')
     );
 
+    // Safety timeout to prevent infinite loading screen visualization
     const loadingTimeout = setTimeout(() => {
-      if (mounted && auth.isLoading) setShowReload(true);
-    }, 5000);
+      if (mounted && auth.isLoading) {
+        setShowReload(true);
+      }
+    }, 5000); // Show reload option after 5 seconds
 
     const initializeAuth = async () => {
-      // 1. SETUP LISTENER PRIMA DI TUTTO
+      // 1. Setup Listener FIRST to catch events immediately
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (!mounted) return;
+
         console.log("Auth Event:", event);
 
         if (event === 'PASSWORD_RECOVERY') {
-            // Caso: Link recupero password cliccato
+            // Evento specifico: Utente ha cliccato sul link di reset
             const user = await authService.getCurrentUser();
-            
-            // IMPORTANTE: Impostiamo l'hash PRIMA di togliere il loading.
-            // Così quando il Router viene renderizzato, vede già il path corretto.
-            window.location.hash = '/dashboard?tab=settings&mode=recovery';
-            
             setAuth({ user, isAuthenticated: true, isLoading: false });
+            
+            // Forziamo il redirect alla dashboard settings con mode recovery
+            // Usiamo window.location.hash perché siamo fuori dal Router context in questo punto
+            window.location.hash = '/dashboard?tab=settings&mode=recovery';
         }
         else if (event === 'SIGNED_IN' && session) {
-           // Se siamo nel flusso recovery, ignoriamo il SIGNED_IN standard e aspettiamo il PASSWORD_RECOVERY
-           // oppure se è già gestito, va bene.
-           if (!isRecoveryFlow) {
-               const user = await authService.getCurrentUser();
-               setAuth({ user, isAuthenticated: true, isLoading: false });
-           } else {
-               // Se è recovery flow, SIGNED_IN scatta comunque. 
-               // Possiamo fare un check di sicurezza o attendere l'evento specifico.
-               // Per sicurezza, se dopo 1 secondo non abbiamo gestito recovery, sblocchiamo.
-               const user = await authService.getCurrentUser();
-               // Se l'hash contiene ancora token sporchi di supabase, puliamoli verso dashboard
-               if (window.location.hash.includes('access_token')) {
-                   window.location.hash = '/dashboard?tab=settings&mode=recovery';
-               }
-               setAuth({ user, isAuthenticated: true, isLoading: false });
+           // Se siamo in recovery flow, potremmo voler aspettare l'evento PASSWORD_RECOVERY
+           // Ma se siamo già loggati, procediamo.
+           const user = await authService.getCurrentUser();
+           
+           // Se l'hash contiene ancora token sporchi di supabase, puliamoli verso dashboard recovery se necessario
+           if (window.location.hash.includes('type=recovery')) {
+               window.location.hash = '/dashboard?tab=settings&mode=recovery';
            }
+           
+           setAuth({ user, isAuthenticated: true, isLoading: false });
         } else if (event === 'SIGNED_OUT') {
            setAuth({ user: null, isAuthenticated: false, isLoading: false });
         }
       });
       authListener = data.subscription;
 
-      // 2. TRIGGER SESSION CHECK
-      // Questo parserà l'URL hash se presente
+      // 2. Initial Session Check
       try {
         const user = await authService.getCurrentUser();
         
-        // Se NON siamo in un flusso di recovery, o se l'utente non è loggato, aggiorniamo lo stato.
-        // Se siamo in recovery, lasciamo che sia il listener (sopra) a gestire lo stato e il redirect.
-        if (mounted && (!isRecoveryFlow || !user)) {
-           setAuth({
-             user,
-             isAuthenticated: !!user,
-             isLoading: false
-           });
+        // Se NON siamo in un flusso di recovery (o se abbiamo già l'utente), aggiorniamo lo stato.
+        // Se siamo in recovery e user è null, aspettiamo l'evento onAuthStateChange.
+        if (mounted) {
+            if (!isRecoveryFlow || user) {
+                setAuth({
+                    user,
+                    isAuthenticated: !!user,
+                    isLoading: false
+                });
+            }
+            // Se isRecoveryFlow è true e user è null, lasciamo isLoading a true finché Supabase non processa l'hash
         }
       } catch (error) {
         console.error("Session check failed", error);
-        if (mounted) setAuth({ user: null, isAuthenticated: false, isLoading: false });
+        if (mounted) {
+          setAuth({ user: null, isAuthenticated: false, isLoading: false });
+        }
       } finally {
         clearTimeout(loadingTimeout);
       }
@@ -126,12 +133,14 @@ const App: React.FC = () => {
       clearTimeout(loadingTimeout);
       if (authListener) authListener.unsubscribe();
     };
-  }, []);
+  }, []); // Run once
 
   const handleLogout = async () => {
     await authService.signOut();
+    // State update handled by onAuthStateChange
   };
 
+  // Callback to force update state manually if needed (mostly for registration flow redirection)
   const handleLoginSuccess = (user: User) => {
     setAuth({ user, isAuthenticated: true, isLoading: false });
   };
@@ -145,6 +154,7 @@ const App: React.FC = () => {
       <div className="flex h-screen items-center justify-center bg-slate-50 flex-col space-y-6">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         <p className="text-slate-400 text-sm font-medium animate-pulse">Caricamento LavoraBene...</p>
+        
         {showReload && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center">
             <p className="text-xs text-red-400 mb-3 font-medium">Ci sta mettendo più del previsto...</p>
@@ -164,7 +174,10 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
-        <Navbar user={auth.user} onLogout={handleLogout} />
+        <Navbar 
+          user={auth.user} 
+          onLogout={handleLogout} 
+        />
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<LandingPage user={auth.user} />} />
