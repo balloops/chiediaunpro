@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { User, UserRole, AuthState } from './types';
@@ -86,8 +85,18 @@ const App: React.FC = () => {
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (!mounted) return;
 
-        // Only react to explicit SIGN_IN or SIGN_OUT to avoid race conditions with initial load
-        if (event === 'SIGNED_IN' && session) {
+        console.log("Auth Event:", event);
+
+        if (event === 'PASSWORD_RECOVERY') {
+            // CRITICO: Gestione specifica per il Reset Password con HashRouter.
+            // Supabase ha consumato il token nell'URL, ora l'utente è loggato in sessione "recovery".
+            // Forziamo il redirect alla pagina di cambio password pulendo l'hash.
+            const user = await authService.getCurrentUser();
+            setAuth({ user, isAuthenticated: true, isLoading: false });
+            // Forziamo la navigazione manuale all'hash corretto
+            window.location.hash = '/dashboard?tab=settings&mode=recovery';
+        } 
+        else if (event === 'SIGNED_IN' && session) {
            // We need to fetch the full profile again to get role/name etc.
            const user = await authService.getCurrentUser();
            setAuth({ user, isAuthenticated: true, isLoading: false });
