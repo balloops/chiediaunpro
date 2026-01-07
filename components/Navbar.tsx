@@ -342,7 +342,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                       </Link>
                       
                       <Link 
-                        to="/dashboard?tab=profile" 
+                        to="/dashboard?tab=settings" 
                         onClick={() => setShowProfileDropdown(false)}
                         className="flex items-center px-4 py-3 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
                       >

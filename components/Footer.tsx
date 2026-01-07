@@ -44,8 +44,10 @@ const Footer: React.FC = () => {
         <div>
           <h4 className="text-white font-semibold mb-4">Legale</h4>
           <ul className="space-y-2 text-sm">
-            {content.footer.legalLinks.map((link, i) => (
-              <li key={i} className="hover:text-white transition-colors cursor-pointer">{link}</li>
+            {content.footer.legalLinks.map((linkText, i) => (
+              <li key={i}>
+                <a href="#" className="hover:text-white transition-colors">{linkText}</a>
+              </li>
             ))}
           </ul>
         </div>
