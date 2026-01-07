@@ -95,6 +95,8 @@ const App: React.FC = () => {
             setAuth({ user, isAuthenticated: true, isLoading: false });
             
             // Forziamo il redirect pulendo l'hash sporco di Supabase
+            // Importante: Usiamo window.location.hash perché non possiamo usare useNavigate qui
+            // HashRouter rileverà il cambiamento.
             window.location.hash = '/dashboard?tab=settings&mode=recovery';
         }
         else if (event === 'SIGNED_IN' && session) {
