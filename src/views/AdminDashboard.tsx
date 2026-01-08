@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, UserRole, JobRequest, PricingPlan, SiteContent, EventLog, FormDefinition, FormField } from '../../types';
 import { 
@@ -328,7 +327,7 @@ const AdminDashboard: React.FC = () => {
   // --- Render Components ---
 
   const renderSidebar = () => (
-    <aside className="w-20 lg:w-72 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
+    <aside className="hidden lg:flex lg:w-72 bg-white border-r border-slate-200 flex-col fixed h-full z-20">
       <div className="p-6 border-b border-slate-100 flex items-center space-x-3">
         <div className="bg-slate-900 text-white p-2 rounded-xl">
           <ShieldCheck size={24} />
@@ -417,7 +416,7 @@ const AdminDashboard: React.FC = () => {
     <div className="bg-slate-50 min-h-screen flex">
       {renderSidebar()}
       
-      <main className="flex-grow ml-20 lg:ml-72 p-8 lg:p-12">
+      <main className="flex-grow lg:ml-72 p-8 lg:p-12">
         <header className="mb-10">
           <h1 className="text-3xl font-black text-slate-900 mb-2">
             {activeTab === 'overview' && 'Panoramica'}

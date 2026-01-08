@@ -6,7 +6,7 @@ import {
   Code, ShoppingCart, Palette, Camera, Video, BarChart3, AppWindow, Box, 
   Briefcase, HelpCircle, LogOut, Coins, RefreshCw, WifiOff,
   User as UserIcon, TrendingUp, Euro, Filter, ChevronDown, ArrowUp, ArrowDown,
-  Trash2, Edit3, XCircle, Save, X, Ban, Archive, Zap, MessageSquare, Key
+  Trash2, Edit3, XCircle, Save, X, Ban, Archive, Zap, MessageSquare
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { jobService } from '../../services/jobService';
@@ -27,16 +27,18 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const activeTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests'); 
+    const activeTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests'); // Get current tab context
 
     const [job, setJob] = useState<JobRequest | null>(null);
     const [quotes, setQuotes] = useState<Quote[]>([]);
     const [loading, setLoading] = useState(true);
     
+    // Pro Quote Form State
     const [quotePrice, setQuotePrice] = useState('');
     const [quoteMessage, setQuoteMessage] = useState('');
     const [quoteTimeline, setQuoteTimeline] = useState('');
 
+    // Client Edit State
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({
         description: '',
@@ -79,6 +81,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
             });
             await notificationService.notifyNewQuote(job.clientId, user.brandName || user.name, job.category, job.id);
             alert("Preventivo inviato!");
+            // Redirect to Quotes tab explicitly
             navigate('/dashboard?tab=quotes');
         } catch (e: any) {
             alert(e.message);
@@ -86,20 +89,19 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     };
 
     const handleAcceptQuote = async (quote: Quote) => {
-        if (!job) return;
         if (window.confirm("Confermi di voler accettare questo preventivo?")) {
             try {
                 await jobService.updateQuoteStatus(quote, 'ACCEPTED');
-                await jobService.updateJobStatus(job.id, 'IN_PROGRESS');
                 await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
+                // Navigate to the quote detail to see contact info immediately
                 navigate(`/dashboard/quote/${quote.id}?tab=${activeTab}`);
-            } catch (e: any) {
+            } catch (e) {
                 console.error(e);
-                alert("Errore accettazione: " + (e.message || "Verifica le policy RLS su Supabase."));
             }
         }
     };
 
+    // Client Actions: Update, Delete, Close, Archive
     const handleUpdateJob = async () => {
         if (!job) return;
         try {
@@ -109,6 +111,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 location: { city: editData.city }
             });
             setIsEditing(false);
+            // Refresh local data
             setJob(prev => prev ? ({ ...prev, description: editData.description, budget: editData.budget, location: { city: editData.city } }) : null);
             alert("Richiesta aggiornata!");
         } catch (e: any) {
@@ -165,17 +168,20 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     const canArchive = !isPro && hasQuotes && job.status !== 'ARCHIVED';
 
     return (
-        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-10 md:pb-20">
+        <div className="animate-fade-simple max-w-[1250px] mx-auto w-full pb-20">
             <button 
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors px-6 md:px-0 mt-6 md:mt-0"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna alla lista
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left: Job Details */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white p-6 md:p-8 rounded-none md:rounded-[32px] border-x-0 border-y md:border border-slate-100 shadow-none md:shadow-sm relative overflow-hidden">
+                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
+                        
+                        {/* Header & Status */}
                         <div className="flex justify-between items-start mb-6 relative z-10">
                             <div>
                                 <h1 className="text-3xl font-black text-slate-900 mb-2">{job.category}</h1>
@@ -208,6 +214,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                     </div>
                                 )}
                             </div>
+                            
+                            {/* CUSTOM LABEL LOGIC - RICHIESTA UTENTE */}
                             {(() => {
                                 if (!isPro && (job.status === 'OPEN' || job.status === 'IN_PROGRESS')) {
                                     if (quotes.length > 0) {
@@ -224,6 +232,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                         );
                                     }
                                 }
+                                
+                                // Default labels for Pro or other statuses
                                 return (
                                     <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider ${
                                         job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 
@@ -237,6 +247,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                             })()}
                         </div>
 
+                        {/* Description */}
                         <div className="space-y-6 relative z-10">
                             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                 <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase flex justify-between">
@@ -269,6 +280,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                             )}
                         </div>
 
+                        {/* Client Actions Toolbar */}
                         {!isPro && job.status !== 'COMPLETED' && (
                              <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-3">
                                 {isEditing ? (
@@ -318,8 +330,9 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                         )}
                     </div>
 
+                    {/* CLIENT VIEW: List Quotes */}
                     {!isPro && (
-                        <div className="space-y-4 px-4 md:px-0">
+                        <div className="space-y-4">
                             <h2 className="text-2xl font-black text-slate-900">Preventivi Ricevuti ({quotes.length})</h2>
                             {quotes.length === 0 ? (
                                 <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
@@ -341,7 +354,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                             >
                                                 Dettagli
                                             </button>
-                                            {q.status === 'PENDING' && (job.status === 'OPEN' || job.status === 'IN_PROGRESS') && (
+                                            {q.status === 'PENDING' && job.status === 'OPEN' && (
                                                 <button 
                                                     onClick={() => handleAcceptQuote(q)}
                                                     className="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 text-sm shadow-lg shadow-indigo-100"
@@ -362,9 +375,10 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                     )}
                 </div>
 
+                {/* Right: Action / Quote Form */}
                 <div className="lg:col-span-1">
                     {isPro ? (
-                        <div className="bg-white p-6 md:p-6 rounded-[24px] md:rounded-[32px] mx-4 md:mx-0 border border-slate-100 shadow-xl sticky top-24">
+                        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl sticky top-24">
                             {myQuote ? (
                                 <div className="text-center py-8">
                                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -398,7 +412,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                             )}
                         </div>
                     ) : (
-                        <div className="bg-indigo-50 p-6 rounded-[24px] md:rounded-[32px] mx-4 md:mx-0 sticky top-24">
+                        // Client Side Panel Info
+                        <div className="bg-indigo-50 p-6 rounded-[32px] sticky top-24">
                             <h3 className="font-bold text-indigo-900 mb-2">Consiglio</h3>
                             <p className="text-sm text-indigo-700/80 mb-4">Riceverai una notifica per ogni nuovo preventivo. Controlla spesso questa pagina.</p>
                         </div>
@@ -409,13 +424,12 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
     );
 };
 
-// 2. Quote Detail Page (same as before)
+// 2. Quote Detail Page
 const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro }) => {
-    // ... (same implementation as provided)
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const activeTab = searchParams.get('tab') || (isPro ? 'quotes' : 'my-requests'); 
+    const activeTab = searchParams.get('tab') || (isPro ? 'quotes' : 'my-requests'); // Default fallback based on role
 
     const [quote, setQuote] = useState<Quote | null>(null);
     const [job, setJob] = useState<JobRequest | null>(null);
@@ -432,6 +446,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                 const jobs = await jobService.getJobs();
                 const j = jobs.find(jb => jb.id === q.jobId);
                 setJob(j || null);
+                
                 if (q.status === 'ACCEPTED') {
                     const targetId = isPro ? j?.clientId : q.proId;
                     if (targetId) {
@@ -448,15 +463,10 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     const handleAccept = async () => {
         if (!quote || !job) return;
         if(window.confirm("Sei sicuro di voler accettare questo preventivo e sbloccare i contatti?")) {
-            try {
-                await jobService.updateQuoteStatus(quote, 'ACCEPTED');
-                await jobService.updateJobStatus(job.id, 'IN_PROGRESS');
-                await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
-                window.location.reload();
-            } catch (e: any) {
-                console.error("Accept Error:", e);
-                alert("Impossibile accettare: " + (e.message || "Verifica permessi Supabase."));
-            }
+            await jobService.updateQuoteStatus(quote, 'ACCEPTED');
+            await notificationService.notifyQuoteAccepted(quote.proId, user.name, quote.id);
+            // Reload to fetch contact info
+            window.location.reload();
         }
     };
 
@@ -468,15 +478,17 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
     return (
         <div className="animate-fade-simple max-w-[1250px] mx-auto w-full">
              <button 
+                // Back button goes to the specific tab
                 onClick={() => navigate(`/dashboard?tab=${activeTab}`)} 
-                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors px-6 md:px-0 mt-6 md:mt-0"
+                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
             >
                 <ArrowLeft size={18} className="mr-2" /> Torna indietro
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Side: Original Job Details (Context) */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white p-6 md:p-8 rounded-none md:rounded-[32px] border-x-0 border-y md:border border-slate-100 shadow-none md:shadow-sm">
+                    <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
                         <div className="flex items-center space-x-3 mb-6">
                             <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
                                 <FileText size={24} />
@@ -516,8 +528,9 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                     </div>
                 </div>
 
+                {/* Right Side: Quote Details & Status */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-[24px] md:rounded-[32px] mx-4 md:mx-0 border border-slate-100 overflow-hidden shadow-xl sticky top-24">
+                    <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
                         <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
@@ -536,6 +549,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                         </div>
 
                         <div className="p-8 space-y-8">
+                            {/* Message */}
                             <div>
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Messaggio</h3>
                                 <div className="bg-slate-50 p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-base leading-relaxed">
@@ -543,6 +557,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                                 </div>
                             </div>
 
+                            {/* Contact Info Section */}
                             <div className={`p-6 rounded-[24px] border-2 transition-all ${isAccepted ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-dashed border-slate-200'}`}>
                                 <div className="flex items-center space-x-4 mb-4">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAccepted ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
@@ -598,74 +613,75 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   const [searchParams] = useSearchParams();
   
   const [user, setUser] = useState<User>(initialUser);
+  
+  // Temporary state to allow role switching view without re-login
   const [roleOverride, setRoleOverride] = useState<UserRole | null>(null);
   
   const activeRole = roleOverride || user.role;
   const isPro = activeRole === UserRole.PROFESSIONAL;
   
+  // URL Driven State (Source of Truth)
   const currentTab = searchParams.get('tab') || (isPro ? 'leads' : 'my-requests');
-  // Check specifically for password reset mode
-  const isRecoveryMode = searchParams.get('mode') === 'recovery';
+  const currentTabRef = useRef(currentTab); // Ref to access current tab inside closure
 
-  // Refs for auto-scroll
-  const passwordSectionRef = useRef<HTMLDivElement>(null);
-
-  // If in recovery mode, auto-open profile edit view and scroll to password
-  useEffect(() => {
-      if (isRecoveryMode && currentTab === 'settings') {
-          setSettingsView('profile_edit');
-          // Wait for render then scroll
-          setTimeout(() => {
-              passwordSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, 500);
-      }
-  }, [isRecoveryMode, currentTab]);
-
+  // Filter & Sort State
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  
+  // NEW: Filter specifically for Client requests (All / With Quotes / No Quotes)
   const [clientQuoteFilter, setClientQuoteFilter] = useState<'all' | 'with-quotes' | 'no-quotes'>('all');
 
+  // Data State
   const [matchedLeads, setMatchedLeads] = useState<{ job: JobRequest; matchScore: number }[]>([]);
   const [myJobs, setMyJobs] = useState<JobRequest[]>([]);
   const [sentQuotes, setSentQuotes] = useState<Quote[]>([]);
   const [clientQuotes, setClientQuotes] = useState<Quote[]>([]);
   
+  // UX State
   const [viewedJobs, setViewedJobs] = useState<Set<string>>(new Set());
-  const [viewedWonIds, setViewedWonIds] = useState<Set<string>>(new Set());
+  const [viewedWonIds, setViewedWonIds] = useState<Set<string>>(new Set()); // Tracks seen "Won" quotes
   
+  // Cache to resolve job info for sent quotes
   const [allJobsCache, setAllJobsCache] = useState<JobRequest[]>([]);
 
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   
+  // Realtime New Lead Notification
   const [newLeadsCount, setNewLeadsCount] = useState(0);
-  const [hasUnseenLeads, setHasUnseenLeads] = useState(false);
-  const [hasUnseenWon, setHasUnseenWon] = useState(false);
+  const [hasUnseenLeads, setHasUnseenLeads] = useState(false); // Sidebar notification state
+  const [hasUnseenWon, setHasUnseenWon] = useState(false); // Sidebar notification for Won jobs
 
   // Profile Hub State
   const [settingsView, setSettingsView] = useState<'menu' | 'profile_edit' | 'services'>('menu');
   const [profileForm, setProfileForm] = useState<User>(user);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   
+  // Password Change State
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
 
+  // Reset filters when changing tabs
   useEffect(() => {
       setSortOrder('newest');
       setFilterCategory('all');
       setClientQuoteFilter('all');
   }, [currentTab]);
 
+  // Load categories for filter
   useEffect(() => {
       setAvailableCategories(contentService.getCategories());
   }, []);
+
+  // --- DATA FETCHING ---
 
   const refreshData = useCallback(async (showLoading = true) => {
     if (showLoading) setIsLoadingData(true);
     setFetchError(false);
     
+    // Increased timeout to 15 seconds to handle cold starts better
     const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout')), 15000)
     );
@@ -689,6 +705,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 const allJobs = await jobService.getJobs();
                 const allQuotes = await jobService.getQuotes();
                 
+                // Client Side Logic: Sort jobs by latest activity (received quotes)
                 const myJobsFiltered = allJobs.filter(j => j.clientId === latestUser.id);
                 const myJobIds = new Set(myJobsFiltered.map(j => j.id));
                 const relatedQuotes = allQuotes.filter(q => myJobIds.has(q.jobId));
@@ -711,8 +728,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   useEffect(() => {
     refreshData(true);
+    currentTabRef.current = currentTab;
   }, [currentTab, refreshData]);
 
+  // Load viewed state from localStorage
   useEffect(() => {
     const storedJobs = localStorage.getItem('chiediunpro_viewed_jobs');
     if (storedJobs) {
@@ -724,7 +743,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     }
   }, []);
 
+  // Sync Unseen Notifications
   useEffect(() => {
+      // 1. Unseen Leads (Pro)
       if (isPro && matchedLeads.length > 0) {
           const hasUnread = matchedLeads.some(m => !viewedJobs.has(m.job.id));
           setHasUnseenLeads(hasUnread);
@@ -732,6 +753,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
           setHasUnseenLeads(false);
       }
 
+      // 2. Unseen Won Jobs (Pro)
       if (isPro && sentQuotes.length > 0) {
           const wonQuotes = sentQuotes.filter(q => q.status === 'ACCEPTED');
           const hasUnseenW = wonQuotes.some(q => !viewedWonIds.has(q.id));
@@ -742,6 +764,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
   }, [matchedLeads, viewedJobs, sentQuotes, viewedWonIds, isPro]);
 
+  // --- REALTIME ---
   useEffect(() => {
     const channel = supabase
       .channel('dashboard_realtime_v2')
@@ -767,12 +790,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     return () => { supabase.removeChannel(channel); };
   }, [refreshData, isPro]);
 
+
+  // --- HANDLERS ---
   const handleSaveProfile = async () => {
      setIsSavingProfile(true);
      try {
         await jobService.updateUserProfile(user.id, {
            name: profileForm.name,
-           email: profileForm.email,
            brandName: profileForm.brandName,
            location: profileForm.location,
            phoneNumber: profileForm.phoneNumber,
@@ -803,10 +827,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
           setPasswordMessage("Password aggiornata correttamente.");
           setNewPassword('');
           setConfirmPassword('');
-          // Clear mode after success
-          if (isRecoveryMode) {
-              navigate('/dashboard?tab=settings');
-          }
       } catch (e: any) {
           setPasswordMessage(`Errore: ${e.message}`);
       } finally {
@@ -838,24 +858,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
       }
   };
 
+  // Helper to mark a job as viewed when clicking it
   const handleJobClick = (jobId: string) => {
       if (!viewedJobs.has(jobId)) {
           const newSet = new Set(viewedJobs);
           newSet.add(jobId);
           setViewedJobs(newSet);
           localStorage.setItem('chiediunpro_viewed_jobs', JSON.stringify(Array.from(newSet)));
+          // Update dot state immediately
           setHasUnseenLeads(matchedLeads.some(m => !newSet.has(m.job.id)));
       }
+      // Navigate maintaining the current tab context
       navigate(`/dashboard/job/${jobId}?tab=${currentTab}`);
   };
 
+  // Helper to mark a WON quote as viewed
   const handleQuoteClick = (quote: Quote) => {
       if (quote.status === 'ACCEPTED' && !viewedWonIds.has(quote.id)) {
           const newSet = new Set(viewedWonIds);
           newSet.add(quote.id);
           setViewedWonIds(newSet);
           localStorage.setItem('chiediunpro_viewed_won', JSON.stringify(Array.from(newSet)));
-          setHasUnseenWon(sentQuotes.filter(q => q.status === 'ACCEPTED' && !newSet.has(q.id)).length > 0);
+          // Update dot state
+          const remainingUnseen = sentQuotes.filter(q => q.status === 'ACCEPTED' && !newSet.has(q.id)).length > 0;
+          setHasUnseenWon(remainingUnseen);
       }
       navigate(`/dashboard/quote/${quote.id}?tab=${currentTab}`);
   };
@@ -879,8 +905,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
+  // Filter Bar Component
   const FilterControls = () => (
-      <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-in fade-in px-6 md:px-0">
+      <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-in fade-in">
+          {/* Status Filter (Only for Client Requests) */}
           {currentTab === 'my-requests' && (
               <div className="relative group">
                   <select
@@ -939,8 +967,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
       </div>
   );
 
+  // --- PROCESSING LISTS ---
+  
+  // Leads (Pro) - EXCLUDE jobs already quoted
   const filteredLeads = matchedLeads
-    .filter(item => !sentQuotes.some(q => q.jobId === item.job.id)) 
+    .filter(item => !sentQuotes.some(q => q.jobId === item.job.id)) // Filter out already quoted jobs
     .filter(item => filterCategory === 'all' || item.job.category === filterCategory)
     .sort((a, b) => {
         const dateA = new Date(a.job.createdAt).getTime();
@@ -948,6 +979,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
+  // My Requests (Client) - Active only
   const filteredMyJobs = myJobs
     .filter(job => job.status !== 'ARCHIVED')
     .filter(job => filterCategory === 'all' || job.category === filterCategory)
@@ -963,6 +995,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
     
+  // Archived Requests (Client)
   const filteredArchivedJobs = myJobs
     .filter(job => job.status === 'ARCHIVED')
     .filter(job => filterCategory === 'all' || job.category === filterCategory)
@@ -972,6 +1005,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
+  // Quotes / Won (Pro)
   const filteredQuotes = sentQuotes
     .filter(q => currentTab === 'won' ? q.status === 'ACCEPTED' : q.status !== 'ACCEPTED')
     .filter(q => {
@@ -985,9 +1019,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
+
+  // --- RENDER CONTENT (LISTS) ---
   const renderDashboardContent = () => (
-      <div className="max-w-[1250px] mx-auto w-full p-0 md:p-0">
-        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-8 px-6 pt-6 md:p-0">
+      <div className="max-w-[1250px] mx-auto w-full">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-8">
             <div>
                 <h1 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
                 {currentTab === 'leads' ? 'Opportunità' : 
@@ -996,17 +1033,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     currentTab === 'archived' ? 'Richieste Archiviate' :
                     currentTab === 'won' ? 'I tuoi Successi' :
                     currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
-                    currentTab === 'billing' ? 'Crediti Gratuiti' : 'Dashboard'}
+                    currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
                 </h1>
                 <p className="text-slate-400 font-medium text-lg">
                     {currentTab === 'settings' ? 'Gestisci il tuo profilo e le tue preferenze.' :
                      currentTab === 'won' ? 'Congratulazioni! Ecco i lavori che hai conquistato.' :
                      currentTab === 'archived' ? 'Storico delle tue richieste passate.' :
-                     currentTab === 'billing' ? 'Versione di lancio: i crediti sono offerti da noi.' :
                      newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
             
+            {/* Right Side Header Action */}
             <div className="flex items-center gap-4">
                 {!isPro && currentTab === 'my-requests' && (
                     <Link
@@ -1036,14 +1073,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
             </div>
         </header>
 
+        {/* Filters (Only for list views) */}
         {(currentTab === 'leads' || currentTab === 'my-requests' || currentTab === 'archived' || currentTab === 'quotes' || currentTab === 'won') && (
             <FilterControls />
         )}
 
+        {/* Loading State */}
         {isLoadingData && !fetchError && matchedLeads.length === 0 && myJobs.length === 0 && (
             <div className="py-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div></div>
         )}
 
+        {/* Error State */}
         {fetchError && (
              <div className="py-20 text-center flex flex-col items-center justify-center animate-in fade-in">
                  <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
@@ -1060,22 +1100,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
              </div>
         )}
 
+        {/* Tab Content (Show only if not loading AND no error) */}
         {!isLoadingData && !fetchError && (
-            <div className="px-4 md:px-0 pb-6">
+            <>
                 {currentTab === 'leads' && (
-                    <div className="space-y-6">
+                    <div className="space-y-2">
                         {filteredLeads.length > 0 ? (
                             filteredLeads.map(({ job, matchScore }) => (
-                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                     <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                         {getCategoryIcon(job.category)}
                                     </div>
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-3 mb-1">
                                             <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
-                                            <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                                                <TrendingUp size={10} /> {matchScore}% MATCH
-                                            </span>
+                                            
+                                            {/* New Dot Logic - Individual Card */}
                                             {!viewedJobs.has(job.id) && (
                                                 <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200 shrink-0 self-center" title="Nuova richiesta"></div>
                                             )}
@@ -1103,11 +1143,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {currentTab === 'my-requests' && (
-                    <div className="space-y-6">
+                    <div className="space-y-2">
                          {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group">
                                      <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1115,6 +1155,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
                                         <p className="text-slate-500 text-sm line-clamp-1 mb-2">{job.description}</p>
                                         <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-400">
+                                            {/* LIST VIEW LABELS */}
                                             {job.status === 'OPEN' || job.status === 'IN_PROGRESS' ? (
                                                 quoteCount > 0 ? (
                                                     <span className="px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-700">
@@ -1153,11 +1194,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
                 
                 {currentTab === 'archived' && (
-                    <div className="space-y-6">
+                    <div className="space-y-2">
                          {filteredArchivedJobs.length > 0 ? filteredArchivedJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
-                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-2xl md:rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
+                                <div key={job.id} onClick={() => navigate(`/dashboard/job/${job.id}?tab=${currentTab}`)} className="bg-slate-50 opacity-75 p-6 rounded-[24px] border border-slate-200 hover:border-slate-300 cursor-pointer transition-all flex flex-col md:flex-row gap-6 group grayscale-[0.5] hover:grayscale-0">
                                      <div className="w-14 h-14 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center shrink-0">
                                         {getCategoryIcon(job.category)}
                                     </div>
@@ -1189,13 +1230,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {(currentTab === 'quotes' || currentTab === 'won') && (
-                    <div className="space-y-6">
+                    <div className="space-y-2">
                          {filteredQuotes.length > 0 ? (
                              filteredQuotes.map(quote => {
                                  const job = allJobsCache.find(j => j.id === quote.jobId);
                                  const category = job?.category || 'Servizio';
                                  return (
-                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
+                                     <div key={quote.id} onClick={() => handleQuoteClick(quote)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
                                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             {getCategoryIcon(category)}
                                          </div>
@@ -1214,6 +1255,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                                      </span>
                                                  )}
                                                  
+                                                 {/* Dot for new won jobs */}
                                                  {currentTab === 'won' && !viewedWonIds.has(quote.id) && (
                                                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-200 shrink-0 self-center" title="Nuovo lavoro vinto"></div>
                                                  )}
@@ -1259,10 +1301,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     </div>
                 )}
 
+                {/* --- PROFILE HUB --- */}
                 {currentTab === 'settings' && (
-                     <div className="animate-in fade-in duration-300 px-2 md:px-0">
+                     <div className="animate-in fade-in duration-300">
+                        {/* Profile Header - Visible only in Menu */}
                         {settingsView === 'menu' ? (
-                            <div className="flex items-center justify-between mb-8 px-4 md:px-0 mt-4 md:mt-0">
+                            <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center space-x-4">
                                     <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-200">
                                         {getInitials(user.name)}
@@ -1276,15 +1320,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         ) : (
                             <button 
                                 onClick={() => { setSettingsView('menu'); setPasswordMessage(''); }} 
-                                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors px-4 md:px-0 mt-6 md:mt-0"
+                                className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm transition-colors"
                             >
                                 <ArrowLeft size={18} className="mr-2" /> Torna al menu
                             </button>
                         )}
 
+                        {/* MENU VIEW */}
                         {settingsView === 'menu' && (
-                            <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
                                 <div className="divide-y divide-slate-50">
+                                    {/* Item: Profile */}
                                     <div onClick={() => setSettingsView('profile_edit')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
                                         <div className="flex items-center space-x-4">
                                             <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
@@ -1292,12 +1338,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                             </div>
                                             <div>
                                                 <h3 className="font-bold text-slate-900">Il mio profilo</h3>
-                                                <p className="text-xs text-slate-400">Modifica foto, nome, email, telefono e password.</p>
+                                                <p className="text-xs text-slate-400">Modifica foto, nome, email, telefono e posizione.</p>
                                             </div>
                                         </div>
                                         <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
                                     </div>
 
+                                    {/* Item: Services (Pro Only) */}
                                     {user.role === UserRole.PROFESSIONAL && (
                                         <div onClick={() => setSettingsView('services')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
                                             <div className="flex items-center space-x-4">
@@ -1313,6 +1360,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         </div>
                                     )}
 
+                                    {/* Item: Billing (Pro Only) */}
                                     {user.role === UserRole.PROFESSIONAL && (
                                         <div onClick={() => navigate('/dashboard?tab=billing')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
                                             <div className="flex items-center space-x-4">
@@ -1328,6 +1376,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         </div>
                                     )}
 
+                                    {/* Item: Support */}
                                     <div onClick={() => navigate('/help')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
                                         <div className="flex items-center space-x-4">
                                             <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
@@ -1341,6 +1390,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
                                     </div>
 
+                                    {/* Item: Role Switch */}
                                     <div onClick={handleRoleSwitch} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
                                         <div className="flex items-center space-x-4">
                                             <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
@@ -1354,6 +1404,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
                                     </div>
 
+                                    {/* Item: Privacy */}
                                     <div className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
                                         <div className="flex items-center space-x-4">
                                             <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
@@ -1367,6 +1418,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-600" />
                                     </div>
 
+                                    {/* Item: Logout */}
                                     <div onClick={onLogout} className="p-6 flex items-center justify-between hover:bg-red-50 cursor-pointer transition-colors group border-t border-slate-100">
                                         <div className="flex items-center space-x-4">
                                             <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-red-100 group-hover:text-red-600 transition-colors">
@@ -1381,20 +1433,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                             </div>
                         )}
 
+                        {/* EDIT PROFILE VIEW */}
                         {settingsView === 'profile_edit' && (
-                            <div className="bg-white p-8 rounded-2xl md:rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
+                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto space-y-8">
+                                {/* Title Context */}
                                 <div className="mb-6">
                                     <h2 className="text-3xl font-black text-slate-900">Il mio Profilo</h2>
-                                    <p className="text-slate-500">Gestisci le tue informazioni personali e sicurezza.</p>
-                                    {isRecoveryMode && (
-                                        <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start space-x-3 text-amber-800">
-                                            <Key size={20} className="shrink-0 mt-0.5" />
-                                            <div>
-                                                <p className="font-bold text-sm">Recupero Password Attivo</p>
-                                                <p className="text-xs mt-1">Imposta una nuova password sicura qui sotto per completare il recupero.</p>
-                                            </div>
-                                        </div>
-                                    )}
+                                    <p className="text-slate-500">Gestisci le tue informazioni personali.</p>
                                 </div>
 
                                 <div>
@@ -1432,11 +1477,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                     </div>
                                 </div>
 
-                                <div ref={passwordSectionRef} className={`pt-8 border-t border-slate-100 ${isRecoveryMode ? 'animate-pulse bg-indigo-50/50 p-4 rounded-xl' : ''}`}>
-                                    <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-                                        Sicurezza
-                                        {isRecoveryMode && <span className="text-xs bg-indigo-600 text-white px-2 py-1 rounded-full">Richiesto</span>}
-                                    </h2>
+                                <div className="pt-8 border-t border-slate-100">
+                                    <h2 className="text-xl font-black text-slate-900 mb-6">Sicurezza</h2>
                                     <div className="space-y-4">
                                         <div>
                                             <label className="text-xs font-black text-slate-400 uppercase">Nuova Password</label>
@@ -1452,7 +1494,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                             </p>
                                         )}
                                         <div className="flex gap-4 pt-2">
-                                            <button onClick={handleUpdatePassword} disabled={isSavingProfile || !newPassword} className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all w-full md:w-auto">
+                                            <button onClick={handleUpdatePassword} disabled={isSavingProfile || !newPassword} className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all">
                                                 Aggiorna Password
                                             </button>
                                         </div>
@@ -1466,8 +1508,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                             </div>
                         )}
 
+                        {/* SERVICES VIEW */}
                         {settingsView === 'services' && (
-                            <div className="bg-white p-8 rounded-2xl md:rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
+                            <div className="bg-white p-8 rounded-[32px] border border-slate-100 max-w-2xl mx-auto">
                                 <h2 className="text-3xl font-black text-slate-900 mb-2">Gestisci Servizi</h2>
                                 <p className="text-slate-500 mb-8">Seleziona le categorie di servizi che offri.</p>
                                 
@@ -1507,85 +1550,101 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {currentTab === 'billing' && (
-                    <div className="max-w-2xl mx-auto animate-in fade-in duration-300 px-4 md:px-0">
-                        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 mb-8">
+                    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        
+                        <div>
+                            <h1 className="text-3xl font-black text-slate-900 mb-2">Crediti Gratuiti</h1>
+                            <p className="text-slate-500 font-medium text-lg">Versione di lancio: i crediti sono offerti da noi.</p>
+                        </div>
+
+                        {/* Main Banner */}
+                        <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-[32px] p-8 md:p-12 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
+                            {/* Decorative Background Elements */}
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+
                             <div className="relative z-10">
-                                <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest mb-4 border border-white/20">
-                                    <Zap size={14} className="text-yellow-300 fill-yellow-300" />
-                                    <span>Versione Lancio</span>
+                                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white/10">
+                                    <Zap size={14} className="text-amber-300 fill-amber-300" /> Versione Lancio
                                 </div>
-                                <h2 className="text-4xl font-black mb-4">Crediti Gratuiti per Tutti</h2>
-                                <p className="text-indigo-100 text-lg leading-relaxed max-w-lg mb-8">
+                                
+                                <h2 className="text-3xl md:text-4xl font-black mt-6 mb-4">Crediti Gratuiti per Tutti</h2>
+                                <p className="text-indigo-100 text-lg leading-relaxed max-w-2xl">
                                     In questa fase di lancio, vogliamo supportare la community. 
                                     Ricevi 30 crediti alla registrazione e ricaricali gratis quando finiscono.
                                 </p>
-                                
-                                <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+
+                                {/* Balance Box */}
+                                <div className="mt-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
                                     <div>
-                                        <div className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Il tuo Saldo</div>
-                                        <div className="text-5xl font-black tracking-tighter">{user.credits}</div>
+                                        <div className="text-indigo-200 text-xs font-black uppercase tracking-widest mb-1">Il tuo saldo</div>
+                                        <div className="text-6xl font-black tracking-tighter">{user.credits ?? 0}</div>
                                     </div>
-                                    <div className="text-right">
+                                    
+                                    <div>
                                         {(user.credits || 0) < 30 ? (
                                             <button 
                                                 onClick={handleRefill}
-                                                className="px-6 py-3 bg-white text-indigo-600 font-black rounded-xl hover:bg-indigo-50 transition-all shadow-lg shadow-black/10 flex items-center space-x-2"
+                                                className="px-8 py-4 bg-white text-indigo-600 font-black rounded-2xl shadow-lg hover:bg-indigo-50 transition-all active:scale-95 flex items-center gap-2"
                                             >
-                                                <RefreshCw size={18} />
-                                                <span>Ricarica a 30</span>
+                                                <RefreshCw size={20} /> Ricarica Gratis a 30
                                             </button>
                                         ) : (
-                                            <div className="px-6 py-3 bg-white/20 text-white/50 font-bold rounded-xl cursor-not-allowed border border-white/10">
+                                            <button 
+                                                disabled
+                                                className="px-8 py-4 bg-white/20 text-white/60 font-black rounded-2xl cursor-not-allowed border border-white/10"
+                                            >
                                                 Max Raggiunto
-                                            </div>
+                                            </button>
                                         )}
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-                            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-indigo-900/20 rounded-full blur-3xl"></div>
                         </div>
 
-                        <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
-                            <h3 className="font-bold text-slate-900 mb-6 flex items-center">
-                                <HelpCircle size={20} className="mr-2 text-slate-400" />
-                                Come funzionano i crediti?
+                        {/* Info Card */}
+                        <div className="bg-white rounded-[32px] p-8 md:p-12 border border-slate-100 shadow-sm">
+                            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
+                                <HelpCircle className="text-slate-400" /> Come funzionano i crediti?
                             </h3>
-                            <div className="space-y-6">
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">1</div>
+                            
+                            <div className="space-y-8">
+                                <div className="flex gap-5">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black shrink-0">1</div>
                                     <div>
-                                        <h4 className="font-bold text-slate-900 text-sm">Inviare preventivi costa crediti</h4>
-                                        <p className="text-xs text-slate-500 mt-1">Ogni volta che rispondi a una richiesta di lavoro, utilizzi 1 credito.</p>
+                                        <h4 className="font-bold text-slate-900 text-lg mb-1">Inviare preventivi costa crediti</h4>
+                                        <p className="text-slate-500 leading-relaxed">Ogni volta che rispondi a una richiesta di lavoro, utilizzi 1 credito. Rispondi solo ai lavori che ti interessano davvero.</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">2</div>
+
+                                <div className="flex gap-5">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black shrink-0">2</div>
                                     <div>
-                                        <h4 className="font-bold text-slate-900 text-sm">Ricarica Gratuita (Cap 30)</h4>
-                                        <p className="text-xs text-slate-500 mt-1">Se scendi sotto i 30 crediti, puoi usare il pulsante sopra per tornare a 30 gratuitamente. Non puoi accumulare oltre 30 crediti.</p>
+                                        <h4 className="font-bold text-slate-900 text-lg mb-1">Ricarica Gratuita (Cap 30)</h4>
+                                        <p className="text-slate-500 leading-relaxed">Se scendi sotto i 30 crediti, puoi usare il pulsante sopra per tornare a 30 gratuitamente. Non puoi accumulare oltre 30 crediti.</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">3</div>
+
+                                <div className="flex gap-5">
+                                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black shrink-0">3</div>
                                     <div>
-                                        <h4 className="font-bold text-slate-900 text-sm">Futuro della piattaforma</h4>
-                                        <p className="text-xs text-slate-500 mt-1">In futuro introdurremo piani premium con funzionalità avanzate, ma per ora goditi l'accesso completo gratuito!</p>
+                                        <h4 className="font-bold text-slate-900 text-lg mb-1">Futuro della piattaforma</h4>
+                                        <p className="text-slate-500 leading-relaxed">In futuro introdurremo piani premium con funzionalità avanzate, ma per ora goditi l'accesso completo gratuito!</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
-            </div>
+            </>
         )}
       </div>
   );
 
   return (
     <div className="bg-slate-50 min-h-screen flex">
-        <aside className="hidden lg:flex w-80 border-r border-slate-100 bg-white flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
+        {/* Sidebar */}
+        <aside className="hidden lg:flex lg:w-80 border-r border-slate-100 bg-white flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
              <div className="space-y-2 flex-grow">
                 {[
                     { id: 'leads', label: 'Opportunità', icon: <Star size={20} />, role: 'pro' },
@@ -1600,15 +1659,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 .map((item) => (
                     <Link
                         key={item.id}
-                        to={`/dashboard?tab=${item.id}`} 
+                        to={`/dashboard?tab=${item.id}`} // URL is the source of truth
                         className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all ${currentTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600 font-medium'}`}
                     >
                         <div className="flex items-center space-x-3 w-full">
                             <div className="shrink-0">{item.icon}</div>
                             <span className="font-bold text-sm hidden lg:block whitespace-nowrap">{item.label}</span>
+                            {/* Dots for Leads */}
                             {item.id === 'leads' && hasUnseenLeads && (
                                 <div className="w-2.5 h-2.5 bg-red-500 rounded-full ml-auto animate-pulse shadow-sm shadow-red-200 shrink-0"></div>
                             )}
+                            {/* Dots for Won Jobs */}
                             {item.id === 'won' && hasUnseenWon && (
                                 <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full ml-auto animate-pulse shadow-sm shadow-emerald-200 shrink-0"></div>
                             )}
@@ -1618,7 +1679,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
              </div>
         </aside>
 
-        <main className="flex-grow p-0 md:p-8 lg:p-12 overflow-x-hidden bg-slate-50">
+        {/* Main Content Area - Routes */}
+        <main className="flex-grow p-8 lg:p-12 overflow-x-hidden">
              <Routes>
                  <Route path="/" element={renderDashboardContent()} />
                  <Route path="/job/:id" element={<JobDetailView user={user} isPro={isPro} refreshParent={refreshData} />} />

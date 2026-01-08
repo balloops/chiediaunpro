@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Shield, Check, X } from 'lucide-react';
 
@@ -24,12 +25,12 @@ const GDPRBanner: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 left-6 right-6 z-[200] animate-in slide-in-from-bottom-10 fade-in duration-700">
-      <div className="max-w-4xl mx-auto bg-slate-900 text-white p-6 md:p-8 rounded-[24px] shadow-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-xl relative">
+      <div className="max-w-4xl mx-auto bg-slate-900 text-white p-6 md:p-8 md:pr-16 rounded-[24px] shadow-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-xl relative">
         
         {/* Pulsante di chiusura (X) */}
         <button 
           onClick={handleClose}
-          className="absolute top-3 right-3 md:top-4 md:right-4 p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-full transition-all"
+          className="absolute top-2 right-2 md:top-4 md:right-4 p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-full transition-all"
           aria-label="Chiudi banner"
         >
           <X size={20} />

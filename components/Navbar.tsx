@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Notification, SiteContent } from '../types';
@@ -352,7 +351,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
                       {user.role === UserRole.PROFESSIONAL && (
                         <Link 
-                          to="/dashboard?tab=services" 
+                          to="/dashboard?tab=settings" 
                           onClick={() => setShowProfileDropdown(false)}
                           className="flex items-center px-4 py-3 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
                         >
