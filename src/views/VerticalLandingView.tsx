@@ -1,65 +1,87 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ServiceCategory } from '../../types';
 import { 
   CheckCircle2, 
   ArrowRight, 
-  Star, 
   ShieldCheck, 
   Clock, 
-  Zap,
-  ChevronRight
+  Zap
 } from 'lucide-react';
 
-// Configurazione dei contenuti per ogni verticale
+// Configurazione dei contenuti per ogni verticale con Immagini Multiple
 const LANDING_CONFIG: Record<string, {
   category: string; // Deve corrispondere ai valori in ServiceCategory o stringhe usate nel form
   title: string;
   subtitle: string;
   benefits: string[];
-  heroImage: string;
+  heroImages: string[]; // Array di immagini
 }> = {
   'sito-web': {
     category: ServiceCategory.WEBSITE,
     title: 'Realizza il tuo Sito Web Professionale',
     subtitle: 'Trova sviluppatori esperti per creare il tuo sito vetrina, landing page o portale aziendale. Ricevi preventivi in 24 ore.',
     benefits: ['Siti veloci e ottimizzati SEO', 'Design moderno e responsive', 'Gestione autonoma dei contenuti'],
-    heroImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80'
+    heroImages: [
+      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80', // Coding on laptop
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', // Laptop code close up
+      'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?auto=format&fit=crop&w=800&q=80'  // Developer working
+    ]
   },
   'ecommerce': {
     category: ServiceCategory.ECOMMERCE,
     title: 'Apri il tuo Negozio Online',
     subtitle: 'Esperti in Shopify, WooCommerce e PrestaShop pronti a lanciare il tuo business digitale.',
     benefits: ['Integrazione pagamenti sicuri', 'Gestione magazzino automatizzata', 'Strategie di conversione incluse'],
-    heroImage: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80'
+    heroImages: [
+      'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80', // POS Payment
+      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80', // Online Shopping Laptop
+      'https://images.unsplash.com/photo-1586880244406-556ebe35f28d?auto=format&fit=crop&w=800&q=80'  // Packages/Delivery
+    ]
   },
   'social-media': {
     category: ServiceCategory.MARKETING,
     title: 'Scala il tuo business con il Social Media Marketing',
     subtitle: 'Social Media Manager e Advertiser certificati per gestire le tue campagne Facebook, Instagram e LinkedIn.',
     benefits: ['Piano editoriale su misura', 'Gestione campagne Ads (ROAS positivo)', 'Reportistica mensile dettagliata'],
-    heroImage: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'
+    heroImages: [
+      'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80', // Social Apps
+      'https://images.unsplash.com/photo-1557838352-48f6664bdd37?auto=format&fit=crop&w=800&q=80', // Analytics Team
+      'https://images.unsplash.com/photo-1533750516457-a7f992034fec?auto=format&fit=crop&w=800&q=80'  // Content Creation
+    ]
   },
   'logo-branding': {
     category: ServiceCategory.BRANDING,
     title: 'Logo e Identità Visiva che lasciano il segno',
     subtitle: 'Designer professionisti per creare il logo perfetto e l\'immagine coordinata della tua azienda.',
     benefits: ['Logo vettoriale scalabile', 'Palette colori e font system', 'Brand Guidelines incluse'],
-    heroImage: 'https://images.unsplash.com/photo-1626785774573-4b799314347d?auto=format&fit=crop&w=800&q=80'
+    heroImages: [
+      'https://images.unsplash.com/photo-1626785774573-4b799314347d?auto=format&fit=crop&w=800&q=80', // Color Palettes
+      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=800&q=80', // Sketching Logo
+      'https://images.unsplash.com/photo-1524850011238-e3d235c7d4c9?auto=format&fit=crop&w=800&q=80'  // Design Studio
+    ]
   },
   'sviluppo-app': {
     category: ServiceCategory.SOFTWARE,
     title: 'Sviluppo App iOS e Android',
     subtitle: 'Trasforma la tua idea in un\'applicazione mobile performante. Sviluppatori nativi e cross-platform.',
     benefits: ['UX/UI Design intuitivo', 'Pubblicazione su Store Apple/Google', 'Manutenzione e supporto'],
-    heroImage: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80'
+    heroImages: [
+      'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80', // Mobile Phone
+      'https://images.unsplash.com/photo-1551650975-87bd1e887d67?auto=format&fit=crop&w=800&q=80', // UI Design Screen
+      'https://images.unsplash.com/photo-1526498463720-33a928666327?auto=format&fit=crop&w=800&q=80'  // Coding Mobile
+    ]
   },
   'video-editing': {
     category: ServiceCategory.VIDEO,
     title: 'Video Editing e Motion Graphics',
     subtitle: 'Montaggio video professionale per spot, social media, eventi e presentazioni aziendali.',
     benefits: ['Color Correction cinematografica', 'Sound Design e mixaggio', 'Animazioni e titoli grafici'],
-    heroImage: 'https://images.unsplash.com/photo-1574717432707-c67803b27bba?auto=format&fit=crop&w=800&q=80'
+    heroImages: [
+      'https://images.unsplash.com/photo-1574717432707-c67803b27bba?auto=format&fit=crop&w=800&q=80', // Video Timeline
+      'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80', // Camera Lens
+      'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=800&q=80'  // Editing Studio
+    ]
   }
 };
 
@@ -68,10 +90,23 @@ const VerticalLandingView: React.FC = () => {
   const navigate = useNavigate();
   
   const content = slug && LANDING_CONFIG[slug] ? LANDING_CONFIG[slug] : null;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    setCurrentImageIndex(0); // Reset immagine quando cambia pagina
   }, [slug]);
+
+  // Image Rotation Logic
+  useEffect(() => {
+    if (!content) return;
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % content.heroImages.length);
+    }, 5000); // Cambia ogni 5 secondi
+
+    return () => clearInterval(interval);
+  }, [content]);
 
   if (!content) {
     // Fallback se lo slug non esiste
@@ -134,28 +169,38 @@ const VerticalLandingView: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-2 text-sm text-slate-400 pt-2">
-               <div className="flex text-amber-400">
-                  <Star size={16} fill="currentColor" />
-                  <Star size={16} fill="currentColor" />
-                  <Star size={16} fill="currentColor" />
-                  <Star size={16} fill="currentColor" />
-                  <Star size={16} fill="currentColor" />
+            {/* Social Proof (Updated) */}
+            <div className="flex items-center gap-6 pt-6">
+               <div className="flex -space-x-3">
+                  {[1,2,3,4].map(i => (
+                    <img key={i} src={`https://picsum.photos/100/100?random=${i + 25}`} className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-sm" alt="User" />
+                  ))}
+                  <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm">
+                     +1k
+                  </div>
                </div>
-               <span className="font-bold text-slate-700">4.9/5</span> da 5.000+ clienti soddisfatti
+               <div className="text-sm md:text-base">
+                  <span className="font-black text-slate-900">Meno recensioni,</span> <span className="text-slate-700 font-medium">più lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>
+               </div>
             </div>
           </div>
 
-          <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 delay-200">
-             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 rounded-[32px] blur-3xl transform rotate-3"></div>
-             <img 
-               src={content.heroImage} 
-               alt={content.title} 
-               className="relative rounded-[32px] shadow-2xl border-4 border-white object-cover aspect-[4/3] w-full"
-             />
+          {/* DYNAMIC IMAGE CAROUSEL */}
+          <div className="relative h-[400px] md:h-[500px] w-full rounded-[32px] overflow-hidden shadow-2xl border-4 border-white animate-in fade-in slide-in-from-right-8 duration-1000 delay-200">
+             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 z-10 pointer-events-none"></div>
+             
+             {/* Images Stacked */}
+             {content.heroImages.map((img, idx) => (
+                <img 
+                  key={img}
+                  src={img} 
+                  alt={`${content.title} ${idx + 1}`} 
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
+                />
+             ))}
              
              {/* Floating Badge */}
-             <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-slate-100 hidden md:block">
+             <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-slate-100 hidden md:block z-20">
                 <div className="flex items-center space-x-4">
                    <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600">
                       <Clock size={24} />
