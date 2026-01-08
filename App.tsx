@@ -4,6 +4,7 @@ import { User, UserRole, AuthState } from './types';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LandingPage from './src/views/LandingPage';
+import VerticalLandingView from './src/views/VerticalLandingView'; // Importata nuova view
 import Dashboard from './src/views/Dashboard';
 import LoginView from './src/views/LoginView';
 import RegisterView from './src/views/RegisterView';
@@ -12,7 +13,7 @@ import AdminDashboard from './src/views/AdminDashboard';
 import HowItWorksView from './src/views/HowItWorksView';
 import HelpView from './src/views/HelpView';
 import GDPRBanner from './components/GDPRBanner';
-import RouteTracker from './components/RouteTracker'; // Analytics Tracker
+import RouteTracker from './components/RouteTracker'; 
 import { authService } from './services/authService';
 import { supabase } from './services/supabaseClient';
 import { contentService } from './services/contentService';
@@ -62,16 +63,14 @@ const App: React.FC = () => {
     let mounted = true;
     let authListener: any = null;
 
-    // Safety timeout to prevent infinite loading screen visualization
     const loadingTimeout = setTimeout(() => {
       if (mounted && auth.isLoading) {
         setShowReload(true);
       }
-    }, 5000); // Show reload option after 5 seconds
+    }, 5000); 
 
     const initializeAuth = async () => {
       try {
-        // 1. Check current session
         const user = await authService.getCurrentUser();
         
         if (mounted) {
@@ -90,14 +89,12 @@ const App: React.FC = () => {
         clearTimeout(loadingTimeout);
       }
 
-      // 2. Setup listener
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (!mounted) return;
 
         console.log("Auth Event:", event);
 
         if (event === 'PASSWORD_RECOVERY') {
-            // GESTIONE RECUPERO PASSWORD
             const user = await authService.getCurrentUser();
             setAuth({ user, isAuthenticated: true, isLoading: false });
             window.location.hash = '/dashboard?tab=settings&mode=recovery';
@@ -105,7 +102,6 @@ const App: React.FC = () => {
         else if (event === 'SIGNED_IN' && session) {
            const user = await authService.getCurrentUser();
            setAuth({ user, isAuthenticated: true, isLoading: false });
-           // Track login event
            analyticsService.trackEvent('login', { method: 'email' });
         } else if (event === 'SIGNED_OUT') {
            setAuth({ user: null, isAuthenticated: false, isLoading: false });
@@ -121,14 +117,12 @@ const App: React.FC = () => {
       clearTimeout(loadingTimeout);
       if (authListener) authListener.unsubscribe();
     };
-  }, []); // Run once
+  }, []); 
 
   const handleLogout = async () => {
     await authService.signOut();
-    // State update handled by onAuthStateChange
   };
 
-  // Callback to force update state manually if needed (mostly for registration flow redirection)
   const handleLoginSuccess = (user: User) => {
     setAuth({ user, isAuthenticated: true, isLoading: false });
   };
@@ -162,7 +156,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
-        <RouteTracker /> {/* Traccia le page views */}
+        <RouteTracker /> 
         <Navbar 
           user={auth.user} 
           onLogout={handleLogout} 
@@ -173,6 +167,10 @@ const App: React.FC = () => {
             <Route path="/how-it-works" element={<HowItWorksView />} />
             <Route path="/post-job" element={<PublicPostJobView user={auth.user} onLogin={handleLoginSuccess} />} />
             <Route path="/help" element={<HelpView />} />
+            
+            {/* Nuova Rotta per Landing Verticali */}
+            <Route path="/service/:slug" element={<VerticalLandingView />} />
+
             <Route 
               path="/login" 
               element={!auth.isAuthenticated ? <LoginView onLogin={handleLoginSuccess} /> : <Navigate to={getRedirectPath()} />} 
