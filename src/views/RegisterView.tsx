@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, UserRole, ServiceCategory, SiteContent } from '../../types';
 import { User as UserIcon, Briefcase, Mail, Lock, UserCheck, ArrowRight, ShieldCheck, ArrowLeft, MapPin, Globe, FileText, CreditCard, Zap, AlertCircle, Check, Phone, Star } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { contentService } from '../../services/contentService';
+import { analyticsService } from '../../services/analyticsService'; // Analytics
 
 interface RegisterViewProps {
   onLogin: (user: User) => void;
@@ -76,6 +76,9 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
 
       await authService.signUp(email, password, userData);
       
+      // TRACK SIGN UP
+      analyticsService.trackEvent('sign_up', { role: role });
+
       const profile = await authService.getCurrentUser();
       if (profile) {
         onLogin(profile);
@@ -93,7 +96,6 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
       } else if (err.message && err.message.includes("already registered")) {
          setError("Questa email è già registrata. Vai al login.");
       } else if (err.message && err.message.includes("Database error")) {
-         // Questo non dovrebbe più accadere col nuovo SQL, ma lo gestiamo
          setError("Errore tecnico del database. Riprova tra un istante.");
       } else if (err.message && err.message.includes("Password")) {
          setError("La password deve essere di almeno 6 caratteri.");

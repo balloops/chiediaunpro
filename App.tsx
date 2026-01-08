@@ -12,9 +12,11 @@ import AdminDashboard from './src/views/AdminDashboard';
 import HowItWorksView from './src/views/HowItWorksView';
 import HelpView from './src/views/HelpView';
 import GDPRBanner from './components/GDPRBanner';
+import RouteTracker from './components/RouteTracker'; // Analytics Tracker
 import { authService } from './services/authService';
 import { supabase } from './services/supabaseClient';
 import { contentService } from './services/contentService';
+import { analyticsService } from './services/analyticsService';
 import { RefreshCw } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -24,6 +26,13 @@ const App: React.FC = () => {
     isLoading: true,
   });
   const [showReload, setShowReload] = useState(false);
+
+  // Init Analytics se il consenso è già presente
+  useEffect(() => {
+    if (analyticsService.hasConsent()) {
+      analyticsService.initialize();
+    }
+  }, []);
 
   // Sync Branding Effect (Favicon & Title)
   useEffect(() => {
@@ -89,17 +98,15 @@ const App: React.FC = () => {
 
         if (event === 'PASSWORD_RECOVERY') {
             // GESTIONE RECUPERO PASSWORD
-            // Supabase ha verificato il token nell'hash e ha loggato l'utente.
-            // Ora dobbiamo portarlo alla schermata di cambio password.
             const user = await authService.getCurrentUser();
             setAuth({ user, isAuthenticated: true, isLoading: false });
-            
-            // Forziamo il redirect pulendo l'hash sporco di Supabase
             window.location.hash = '/dashboard?tab=settings&mode=recovery';
         }
         else if (event === 'SIGNED_IN' && session) {
            const user = await authService.getCurrentUser();
            setAuth({ user, isAuthenticated: true, isLoading: false });
+           // Track login event
+           analyticsService.trackEvent('login', { method: 'email' });
         } else if (event === 'SIGNED_OUT') {
            setAuth({ user: null, isAuthenticated: false, isLoading: false });
         }
@@ -155,6 +162,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
+        <RouteTracker /> {/* Traccia le page views */}
         <Navbar 
           user={auth.user} 
           onLogout={handleLogout} 

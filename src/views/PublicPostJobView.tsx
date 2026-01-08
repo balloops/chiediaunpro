@@ -23,6 +23,7 @@ import {
 import { jobService } from '../../services/jobService';
 import { contentService } from '../../services/contentService';
 import { authService } from '../../services/authService'; 
+import { analyticsService } from '../../services/analyticsService'; // Import Analytics
 import ServiceForm from '../../components/ServiceForm';
 
 interface PublicPostJobViewProps {
@@ -91,7 +92,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   const saveAndRedirect = async (currentUser: User) => {
     if (selectedCategory) {
       try {
-        await jobService.createJob({
+        const job = await jobService.createJob({
           clientId: currentUser.id,
           clientName: currentUser.name,
           category: selectedCategory,
@@ -100,6 +101,14 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
           budget: budget,
           location: locationCity ? { city: locationCity } : undefined
         });
+        
+        // TRACK CONVERSION
+        analyticsService.trackEvent('job_posted', {
+            job_id: job.id,
+            category: selectedCategory,
+            budget: budget
+        });
+
         navigate('/dashboard');
       } catch (err: any) {
         console.error("Failed to create job", err);
@@ -117,6 +126,9 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                         budget: budget,
                         location: locationCity ? { city: locationCity } : undefined
                     });
+                    
+                    // Track on retry success too
+                    analyticsService.trackEvent('job_posted', { category: selectedCategory });
                     navigate('/dashboard');
                 } catch (retryErr: any) {
                     setError("Errore finale: " + retryErr.message);
@@ -157,12 +169,19 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
             name: authData.name,
             role: UserRole.CLIENT
          });
+         
+         // Track Sign Up
+         analyticsService.trackEvent('sign_up', { role: 'CLIENT', source: 'post_job_flow' });
+
          // Small delay to ensure DB triggers fire
          await new Promise(resolve => setTimeout(resolve, 500));
          loggedUser = await authService.getCurrentUser();
       } else {
          await authService.signIn(authData.email, authData.password);
          loggedUser = await authService.getCurrentUser();
+         
+         // Track Login
+         analyticsService.trackEvent('login', { source: 'post_job_flow' });
       }
 
       if (loggedUser) {

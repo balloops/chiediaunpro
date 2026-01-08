@@ -13,6 +13,7 @@ import { jobService } from '../../services/jobService';
 import { notificationService } from '../../services/notificationService';
 import { authService } from '../../services/authService';
 import { contentService } from '../../services/contentService';
+import { analyticsService } from '../../services/analyticsService'; // Analytics
 import { supabase } from '../../services/supabaseClient';
 
 interface DashboardProps {
@@ -80,6 +81,14 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                 category: job.category
             });
             await notificationService.notifyNewQuote(job.clientId, user.brandName || user.name, job.category, job.id);
+            
+            // TRACK QUOTE SENT
+            analyticsService.trackEvent('quote_sent', {
+                value: parseFloat(quotePrice),
+                category: job.category,
+                job_id: job.id
+            });
+
             alert("Preventivo inviato!");
             // Redirect to Quotes tab explicitly
             navigate('/dashboard?tab=quotes');

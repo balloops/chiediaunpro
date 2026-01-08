@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Shield, Check, X } from 'lucide-react';
+import { analyticsService } from '../services/analyticsService';
 
 const GDPRBanner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -15,6 +15,10 @@ const GDPRBanner: React.FC = () => {
   const handleAccept = () => {
     localStorage.setItem('chiediunpro_gdpr_consent', new Date().toISOString());
     setIsVisible(false);
+    
+    // Inizializza tracciamento
+    analyticsService.initialize();
+    analyticsService.trackEvent('cookie_consent_given');
   };
 
   const handleClose = () => {
