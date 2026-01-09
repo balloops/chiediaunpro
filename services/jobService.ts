@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { JobRequest, Quote, User, UserRole } from '../types';
 import { emailService } from './emailService';
@@ -342,7 +343,7 @@ export const jobService = {
   async refillCredits(userId: string): Promise<void> {
     const { error } = await supabase
       .from('profiles')
-      .update({ credits: 30 })
+      .update({ credits: 10 })
       .eq('id', userId);
     
     if (error) throw error;

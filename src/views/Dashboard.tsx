@@ -6,7 +6,7 @@ import {
   Code, ShoppingCart, Palette, Camera, Video, BarChart3, AppWindow, Box, 
   Briefcase, HelpCircle, LogOut, Coins, RefreshCw, WifiOff,
   User as UserIcon, TrendingUp, Euro, Filter, ChevronDown, ArrowUp, ArrowDown,
-  Trash2, Edit3, XCircle, Save, X, Ban, Archive, Zap, MessageSquare
+  Trash2, Edit3, XCircle, Save, X, Ban, Archive, Zap, MessageSquare, Info
 } from 'lucide-react';
 import { Link, useNavigate, useLocation, Routes, Route, useParams, useSearchParams } from 'react-router-dom';
 import { jobService } from '../../services/jobService';
@@ -342,7 +342,18 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                     {/* CLIENT VIEW: List Quotes */}
                     {!isPro && (
                         <div className="space-y-4">
-                            <h2 className="text-2xl font-black text-slate-900">Preventivi Ricevuti ({quotes.length})</h2>
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-black text-slate-900 mb-2">Preventivi Ricevuti ({quotes.length})</h2>
+                                <div className="flex items-start gap-2 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 text-slate-600 text-sm leading-relaxed">
+                                    <Info size={18} className="text-indigo-600 shrink-0 mt-0.5" />
+                                    <p>
+                                        Accettando un preventivo, potrai vedere i contatti del professionista e iniziare a collaborare. 
+                                        L'accettazione di un preventivo <strong>non è assolutamente vincolante</strong> né alla realizzazione del lavoro né al contatto del professionista. 
+                                        Puoi accettare più di un preventivo.
+                                    </p>
+                                </div>
+                            </div>
+                            
                             {quotes.length === 0 ? (
                                 <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
                                     Nessun preventivo ancora ricevuto. Modifica la richiesta per renderla più appetibile!
@@ -542,13 +553,6 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                     <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
                         <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                             <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="text-white/60 font-bold uppercase tracking-widest text-xs mb-2">
-                                        {isPro ? 'Il tuo preventivo' : 'Preventivo ricevuto'}
-                                    </div>
-                                    <h1 className="text-4xl font-black">{quote.price} €</h1>
-                                    <div className="text-white/80 font-medium mt-1">Tempistiche: {quote.timeline}</div>
-                                </div>
                                 {isAccepted && (
                                     <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
                                         <Check size={32} className="text-white" />
@@ -844,13 +848,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   };
 
   const handleRefill = async () => {
-    if ((user.credits || 0) >= 30) {
-        alert("Hai già il massimo dei crediti gratuiti (30).");
+    if ((user.credits || 0) >= 10) {
+        alert("Hai già il massimo dei crediti gratuiti (10).");
         return;
     }
     await jobService.refillCredits(user.id);
     refreshData();
-    alert("Crediti ricaricati a 30!");
+    alert("Crediti ricaricati a 10!");
   };
 
   const handleRoleSwitch = () => {
@@ -1042,12 +1046,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     currentTab === 'archived' ? 'Richieste Archiviate' :
                     currentTab === 'won' ? 'I tuoi Successi' :
                     currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
-                    currentTab === 'billing' ? 'Crediti' : 'Dashboard'}
+                    currentTab === 'billing' ? 'Crediti Gratuiti' : 'Dashboard'}
                 </h1>
                 <p className="text-slate-400 font-medium text-lg">
                     {currentTab === 'settings' ? 'Gestisci il tuo profilo e le tue preferenze.' :
                      currentTab === 'won' ? 'Congratulazioni! Ecco i lavori che hai conquistato.' :
                      currentTab === 'archived' ? 'Storico delle tue richieste passate.' :
+                     currentTab === 'billing' ? 'Versione di lancio: i crediti sono offerti da noi.' :
                      newLeadsCount > 0 ? `🔥 ${newLeadsCount} Nuove opportunità appena arrivate!` : 'Bentornato nella tua dashboard.'}
                 </p>
             </div>
@@ -1113,7 +1118,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
         {!isLoadingData && !fetchError && (
             <>
                 {currentTab === 'leads' && (
-                    <div className="space-y-2">
+                    <div className="space-y-6">
                         {filteredLeads.length > 0 ? (
                             filteredLeads.map(({ job, matchScore }) => (
                                 <div key={job.id} onClick={() => handleJobClick(job.id)} className="bg-white p-6 rounded-[24px] border border-slate-100 hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start animate-fade-simple">
@@ -1123,7 +1128,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-3 mb-1">
                                             <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
-                                            
                                             {/* New Dot Logic - Individual Card */}
                                             {!viewedJobs.has(job.id) && (
                                                 <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200 shrink-0 self-center" title="Nuova richiesta"></div>
@@ -1152,7 +1156,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {currentTab === 'my-requests' && (
-                    <div className="space-y-2">
+                    <div className="space-y-6">
                          {filteredMyJobs.length > 0 ? filteredMyJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
@@ -1203,7 +1207,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
                 
                 {currentTab === 'archived' && (
-                    <div className="space-y-2">
+                    <div className="space-y-6">
                          {filteredArchivedJobs.length > 0 ? filteredArchivedJobs.map(job => {
                              const quoteCount = clientQuotes.filter(q => q.jobId === job.id).length;
                              return (
@@ -1239,7 +1243,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {(currentTab === 'quotes' || currentTab === 'won') && (
-                    <div className="space-y-2">
+                    <div className="space-y-6">
                          {filteredQuotes.length > 0 ? (
                              filteredQuotes.map(quote => {
                                  const job = allJobsCache.find(j => j.id === quote.jobId);
@@ -1559,86 +1563,79 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                 )}
 
                 {currentTab === 'billing' && (
-                    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        
-                        <div>
-                            <h1 className="text-3xl font-black text-slate-900 mb-2">Crediti Gratuiti</h1>
-                            <p className="text-slate-500 font-medium text-lg">Versione di lancio: i crediti sono offerti da noi.</p>
-                        </div>
-
-                        {/* Main Banner */}
-                        <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-[32px] p-8 md:p-12 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
-                            {/* Decorative Background Elements */}
-                            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
-
+                    <div className="max-w-4xl animate-fade-simple">
+                        {/* Purple Main Card */}
+                        <div className="bg-gradient-to-br from-[#7c3aed] to-[#2563eb] rounded-[32px] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 mb-10">
+                            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-indigo-400/20 rounded-full blur-2xl"></div>
+                            
                             <div className="relative z-10">
-                                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white/10">
-                                    <Zap size={14} className="text-amber-300 fill-amber-300" /> Versione Lancio
+                                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-8 border border-white/10">
+                                    <Zap size={14} className="fill-current" />
+                                    Versione Lancio
                                 </div>
                                 
-                                <h2 className="text-3xl md:text-4xl font-black mt-6 mb-4">Crediti Gratuiti per Tutti</h2>
-                                <p className="text-indigo-100 text-lg leading-relaxed max-w-2xl">
+                                <h2 className="text-3xl md:text-5xl font-black mb-6">Crediti Gratuiti per Tutti</h2>
+                                <p className="text-indigo-100 text-lg md:text-xl font-medium max-w-2xl leading-relaxed mb-12">
                                     In questa fase di lancio, vogliamo supportare la community. 
-                                    Ricevi 30 crediti alla registrazione e ricaricali gratis quando finiscono.
+                                    Ricevi 10 crediti alla registrazione e ricaricali gratis quando finiscono.
                                 </p>
 
-                                {/* Balance Box */}
-                                <div className="mt-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                                <div className="bg-white/10 backdrop-blur-xl rounded-[24px] p-8 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
                                     <div>
-                                        <div className="text-indigo-200 text-xs font-black uppercase tracking-widest mb-1">Il tuo saldo</div>
-                                        <div className="text-6xl font-black tracking-tighter">{user.credits ?? 0}</div>
+                                        <div className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em] mb-2">Il tuo saldo</div>
+                                        <div className="text-7xl font-black tracking-tighter leading-none">{user.credits ?? 0}</div>
                                     </div>
                                     
-                                    <div>
-                                        {(user.credits || 0) < 30 ? (
-                                            <button 
-                                                onClick={handleRefill}
-                                                className="px-8 py-4 bg-white text-indigo-600 font-black rounded-2xl shadow-lg hover:bg-indigo-50 transition-all active:scale-95 flex items-center gap-2"
-                                            >
-                                                <RefreshCw size={20} /> Ricarica Gratis a 30
-                                            </button>
-                                        ) : (
-                                            <button 
-                                                disabled
-                                                className="px-8 py-4 bg-white/20 text-white/60 font-black rounded-2xl cursor-not-allowed border border-white/10"
-                                            >
-                                                Max Raggiunto
-                                            </button>
-                                        )}
-                                    </div>
+                                    <button 
+                                        onClick={handleRefill}
+                                        disabled={user.credits && user.credits >= 10}
+                                        className={`px-10 py-5 rounded-2xl font-black text-lg transition-all shadow-xl ${
+                                            user.credits && user.credits >= 10 
+                                            ? 'bg-white/20 text-white/50 cursor-not-allowed border border-white/5' 
+                                            : 'bg-white text-indigo-600 hover:bg-indigo-50 hover:scale-[1.02] active:scale-95'
+                                        }`}
+                                    >
+                                        {user.credits && user.credits >= 10 ? 'Max Raggiunto' : 'Ricarica Ora'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Info Card */}
-                        <div className="bg-white rounded-[32px] p-8 md:p-12 border border-slate-100 shadow-sm">
-                            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
-                                <HelpCircle className="text-slate-400" /> Come funzionano i crediti?
+                        {/* Instructions Section */}
+                        <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 md:p-10">
+                            <h3 className="flex items-center gap-3 text-xl font-black text-slate-900 mb-8">
+                                <HelpCircle size={24} className="text-slate-400" />
+                                Come funzionano i crediti?
                             </h3>
                             
                             <div className="space-y-8">
-                                <div className="flex gap-5">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black shrink-0">1</div>
+                                <div className="flex items-start gap-6">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-black shrink-0 border border-emerald-100">1</div>
                                     <div>
-                                        <h4 className="font-bold text-slate-900 text-lg mb-1">Inviare preventivi costa crediti</h4>
-                                        <p className="text-slate-500 leading-relaxed">Ogni volta che rispondi a una richiesta di lavoro, utilizzi 1 credito. Rispondi solo ai lavori che ti interessano davvero.</p>
+                                        <h4 className="font-bold text-slate-900 mb-1">Inviare preventivi costa crediti</h4>
+                                        <p className="text-slate-500 text-sm font-medium">Ogni volta che rispondi a una richiesta di lavoro, utilizzi 1 credito.</p>
                                     </div>
                                 </div>
-
-                                <div className="flex gap-5">
-                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black shrink-0">2</div>
+                                
+                                <div className="flex items-start gap-6">
+                                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black shrink-0 border border-blue-100">2</div>
                                     <div>
-                                        <h4 className="font-bold text-slate-900 text-lg mb-1">Ricarica Gratuita (Cap 30)</h4>
-                                        <p className="text-slate-500 leading-relaxed">Se scendi sotto i 30 crediti, puoi usare il pulsante sopra per tornare a 30 gratuitamente. Non puoi accumulare oltre 30 crediti.</p>
+                                        <h4 className="font-bold text-slate-900 mb-1">Ricarica Gratuita (Cap 10)</h4>
+                                        <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                                            Se scendi sotto i 10 crediti, puoi usare il pulsante sopra per tornare a 10 gratuitamente. 
+                                            In questa fase non puoi accumulare oltre 10 crediti.
+                                        </p>
                                     </div>
                                 </div>
-
-                                <div className="flex gap-5">
-                                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black shrink-0">3</div>
+                                
+                                <div className="flex items-start gap-6">
+                                    <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-black shrink-0 border border-purple-100">3</div>
                                     <div>
-                                        <h4 className="font-bold text-slate-900 text-lg mb-1">Futuro della piattaforma</h4>
-                                        <p className="text-slate-500 leading-relaxed">In futuro introdurremo piani premium con funzionalità avanzate, ma per ora goditi l'accesso completo gratuito!</p>
+                                        <h4 className="font-bold text-slate-900 mb-1">Futuro della piattaforma</h4>
+                                        <p className="text-slate-500 text-sm font-medium">
+                                            In futuro introdurremo piani premium con funzionalità avanzate, ma per ora goditi l'accesso completo gratuito!
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1653,7 +1650,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   return (
     <div className="bg-slate-50 min-h-screen flex">
         {/* Sidebar */}
-        <aside className="hidden lg:flex lg:w-80 border-r border-slate-100 bg-white flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
+        <aside className="w-20 lg:w-80 border-r border-slate-100 bg-white flex flex-col p-6 sticky top-[73px] h-[calc(100vh-73px)] z-20 shrink-0">
              <div className="space-y-2 flex-grow">
                 {[
                     { id: 'leads', label: 'Opportunità', icon: <Star size={20} />, role: 'pro' },

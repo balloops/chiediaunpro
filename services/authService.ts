@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { User, UserRole } from '../types';
 import { emailService } from './emailService';
@@ -36,7 +37,7 @@ export const authService = {
             ...(userData.phoneNumber && { phone_number: userData.phoneNumber }),
             ...(userData.vatNumber && { vat_number: userData.vatNumber }),
             ...(userData.offeredServices && { offered_services: userData.offeredServices }),
-            ...(userRole === 'PROFESSIONAL' ? { credits: 30 } : {})
+            ...(userRole === 'PROFESSIONAL' ? { credits: 10 } : {})
         };
 
         const { error: profileError } = await supabase
@@ -76,11 +77,7 @@ export const authService = {
   },
 
   async resetPasswordForEmail(email: string) {
-    // MODIFICA: Usiamo solo l'origin (es. https://lavorabene.it).
-    // Supabase accoderà il token (#access_token=...).
-    // App.tsx intercetterà l'evento PASSWORD_RECOVERY e farà il routing corretto.
     const redirectTo = window.location.origin;
-    
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo
     });
@@ -106,7 +103,7 @@ export const authService = {
             email: session.user.email,
             name: meta.name || 'Utente Recuperato',
             role: meta.role || 'CLIENT',
-            credits: meta.role === 'PROFESSIONAL' ? 30 : 0
+            credits: meta.role === 'PROFESSIONAL' ? 10 : 0
         };
         
         const { data: newProfile, error: createError } = await supabase
@@ -132,7 +129,7 @@ export const authService = {
       location: profile?.location,
       bio: profile?.bio,
       phoneNumber: profile?.phone_number,
-      credits: profile?.credits ?? (meta.role === 'PROFESSIONAL' ? 30 : 0),
+      credits: profile?.credits ?? (meta.role === 'PROFESSIONAL' ? 10 : 0),
       plan: profile?.plan || 'FREE',
       isVerified: profile?.is_verified || false,
       offeredServices: profile?.offered_services || [],
