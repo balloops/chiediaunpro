@@ -9,7 +9,7 @@ import {
   Zap
 } from 'lucide-react';
 
-// Configurazione dei contenuti per ogni verticale con Immagini Multiple
+// Configurazione dei contenuti per ogni verticale con Immagini Multiple Verificate
 const LANDING_CONFIG: Record<string, {
   category: string; // Deve corrispondere ai valori in ServiceCategory o stringhe usate nel form
   title: string;
@@ -23,9 +23,9 @@ const LANDING_CONFIG: Record<string, {
     subtitle: 'Trova sviluppatori esperti per creare il tuo sito vetrina, landing page o portale aziendale. Ricevi preventivi in 24 ore.',
     benefits: ['Siti veloci e ottimizzati SEO', 'Design moderno e responsive', 'Gestione autonoma dei contenuti'],
     heroImages: [
-      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80', // Coding on laptop
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', // Laptop code close up
-      'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?auto=format&fit=crop&w=800&q=80'  // Developer working
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', // Laptop code
+      'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80', // Workspace
+      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80'  // Coding
     ]
   },
   'ecommerce': {
@@ -34,9 +34,9 @@ const LANDING_CONFIG: Record<string, {
     subtitle: 'Esperti in Shopify, WooCommerce e PrestaShop pronti a lanciare il tuo business digitale.',
     benefits: ['Integrazione pagamenti sicuri', 'Gestione magazzino automatizzata', 'Strategie di conversione incluse'],
     heroImages: [
-      'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80', // POS Payment
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80', // Online Shopping Laptop
-      'https://images.unsplash.com/photo-1586880244406-556ebe35f28d?auto=format&fit=crop&w=800&q=80'  // Packages/Delivery
+      'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80', // Card Payment
+      'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=800&q=80', // POS
+      'https://images.unsplash.com/photo-1472851294608-4155f2118c67?auto=format&fit=crop&w=800&q=80'  // Store
     ]
   },
   'social-media': {
@@ -46,8 +46,8 @@ const LANDING_CONFIG: Record<string, {
     benefits: ['Piano editoriale su misura', 'Gestione campagne Ads (ROAS positivo)', 'Reportistica mensile dettagliata'],
     heroImages: [
       'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80', // Social Apps
-      'https://images.unsplash.com/photo-1557838352-48f6664bdd37?auto=format&fit=crop&w=800&q=80', // Analytics Team
-      'https://images.unsplash.com/photo-1533750516457-a7f992034fec?auto=format&fit=crop&w=800&q=80'  // Content Creation
+      'https://images.unsplash.com/photo-1611926653458-09294b3142bf?auto=format&fit=crop&w=800&q=80', // Social Mix
+      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80'  // Meeting
     ]
   },
   'logo-branding': {
@@ -56,9 +56,9 @@ const LANDING_CONFIG: Record<string, {
     subtitle: 'Designer professionisti per creare il logo perfetto e l\'immagine coordinata della tua azienda.',
     benefits: ['Logo vettoriale scalabile', 'Palette colori e font system', 'Brand Guidelines incluse'],
     heroImages: [
-      'https://images.unsplash.com/photo-1626785774573-4b799314347d?auto=format&fit=crop&w=800&q=80', // Color Palettes
-      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=800&q=80', // Sketching Logo
-      'https://images.unsplash.com/photo-1524850011238-e3d235c7d4c9?auto=format&fit=crop&w=800&q=80'  // Design Studio
+      'https://images.unsplash.com/photo-1626785774573-4b799314347d?auto=format&fit=crop&w=800&q=80', // Branding
+      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=800&q=80', // Sketching
+      'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80'  // Design tools
     ]
   },
   'sviluppo-app': {
@@ -67,9 +67,9 @@ const LANDING_CONFIG: Record<string, {
     subtitle: 'Trasforma la tua idea in un\'applicazione mobile performante. Sviluppatori nativi e cross-platform.',
     benefits: ['UX/UI Design intuitivo', 'Pubblicazione su Store Apple/Google', 'Manutenzione e supporto'],
     heroImages: [
-      'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80', // Mobile Phone
-      'https://images.unsplash.com/photo-1551650975-87bd1e887d67?auto=format&fit=crop&w=800&q=80', // UI Design Screen
-      'https://images.unsplash.com/photo-1526498463720-33a928666327?auto=format&fit=crop&w=800&q=80'  // Coding Mobile
+      'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80', // Mobile hand
+      'https://images.unsplash.com/photo-1551650975-87bd1e887d67?auto=format&fit=crop&w=800&q=80', // UI Design
+      'https://images.unsplash.com/photo-1526498463720-33a928666327?auto=format&fit=crop&w=800&q=80'  // Code Screen
     ]
   },
   'video-editing': {
@@ -78,9 +78,9 @@ const LANDING_CONFIG: Record<string, {
     subtitle: 'Montaggio video professionale per spot, social media, eventi e presentazioni aziendali.',
     benefits: ['Color Correction cinematografica', 'Sound Design e mixaggio', 'Animazioni e titoli grafici'],
     heroImages: [
-      'https://images.unsplash.com/photo-1574717432707-c67803b27bba?auto=format&fit=crop&w=800&q=80', // Video Timeline
-      'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80', // Camera Lens
-      'https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=800&q=80'  // Editing Studio
+      'https://images.unsplash.com/photo-1574717432707-c67803b27bba?auto=format&fit=crop&w=800&q=80', // Editing Timeline
+      'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80', // Lens
+      'https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=800&q=80'  // Filmmaking
     ]
   }
 };
@@ -195,6 +195,11 @@ const VerticalLandingView: React.FC = () => {
                   key={img}
                   src={img} 
                   alt={`${content.title} ${idx + 1}`} 
+                  // Safety: Hide on Error
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
                 />
              ))}
