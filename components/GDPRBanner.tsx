@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Shield, Check, X } from 'lucide-react';
 import { analyticsService } from '../services/analyticsService';
@@ -16,13 +17,14 @@ const GDPRBanner: React.FC = () => {
     localStorage.setItem('chiediunpro_gdpr_consent', new Date().toISOString());
     setIsVisible(false);
     
-    // Inizializza tracciamento
+    // Inizializza tracciamento (GA + Ads)
     analyticsService.initialize();
     analyticsService.trackEvent('cookie_consent_given');
   };
 
+  // Logica modificata: chiudere il banner equivale ad accettare i cookie tecnici (inclusi GA/Ads in questo contesto)
   const handleClose = () => {
-    setIsVisible(false);
+    handleAccept();
   };
 
   if (!isVisible) return null;
@@ -31,11 +33,11 @@ const GDPRBanner: React.FC = () => {
     <div className="fixed bottom-6 left-6 right-6 z-[200] animate-in slide-in-from-bottom-10 fade-in duration-700">
       <div className="max-w-4xl mx-auto bg-slate-900 text-white p-6 md:p-8 md:pr-16 rounded-[24px] shadow-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-xl relative">
         
-        {/* Pulsante di chiusura (X) */}
+        {/* Pulsante di chiusura (X) - Ora attiva i cookie */}
         <button 
           onClick={handleClose}
           className="absolute top-2 right-2 md:top-4 md:right-4 p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-full transition-all"
-          aria-label="Chiudi banner"
+          aria-label="Chiudi e accetta cookie tecnici"
         >
           <X size={20} />
         </button>
@@ -45,10 +47,11 @@ const GDPRBanner: React.FC = () => {
             <Shield size={24} />
           </div>
           <div className="flex-1">
-            <h4 className="font-black text-lg mb-1 pr-8 md:pr-0">La tua privacy è importante</h4>
+            <h4 className="font-black text-lg mb-1 pr-8 md:pr-0">Informativa Privacy e Cookie</h4>
             <p className="text-slate-400 text-sm font-medium leading-relaxed">
-              Utilizziamo i cookie per migliorare la tua esperienza e per fini analitici. 
-              Navigando su LavoraBene accetti i nostri <a href="#" className="text-white underline hover:text-indigo-400 transition-colors">termini di servizio</a>.
+              Chiudendo questo banner, scorrendo questa pagina o cliccando su "Accetto", acconsenti all'uso dei cookie tecnici (che includono Google Analytics e Ads) per migliorare la tua esperienza.
+              <br />
+              <a href="#" className="text-white underline hover:text-indigo-400 transition-colors mt-1 inline-block">Termini di servizio</a>.
             </p>
           </div>
         </div>
