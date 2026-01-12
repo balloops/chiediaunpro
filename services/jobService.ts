@@ -302,6 +302,7 @@ export const jobService = {
     if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
     if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
     if (updates.offeredServices !== undefined) dbUpdates.offered_services = updates.offeredServices;
+    if (updates.vatNumber !== undefined) dbUpdates.vat_number = updates.vatNumber;
 
     // USIAMO UPDATE, NON UPSERT. 
     // Il profilo esiste già. Se usiamo Upsert con politiche RLS restrittive potrebbe fallire.
