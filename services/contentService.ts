@@ -5,7 +5,7 @@ import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } f
 // CAMBIO CHIAVI PER FORZARE IL RESET DELLA CACHE LOCALE
 const PLANS_KEY = 'lavorabene_plans_v2';
 const CATEGORIES_KEY = 'lavorabene_categories_v2';
-const FORMS_KEY = 'lavorabene_forms_v3'; // Aggiornato a v3 per attivare la location ovunque
+const FORMS_KEY = 'lavorabene_forms_v4'; // Aggiornato a v4 per budget "Da Stimare"
 
 const defaultContent: SiteContent = {
   branding: {
@@ -167,7 +167,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'cms', label: 'Preferenza Tecnologia', type: 'select', options: ['WordPress/Elementor', 'Webflow', 'Codice Custom (React/Next.js)', 'Nessuna preferenza (Consigliami tu)'] },
       { id: 'features', label: 'Funzionalità necessarie', type: 'multiselect', options: ['Multilingua', 'Area Riservata', 'Prenotazioni Online', 'Integrazione Newsletter', 'Blog', 'Chatbot'] }
     ],
-    budgetOptions: ['< 500€', '500 - 1.500€', '1.500 - 3.000€', '3.000€+'],
+    budgetOptions: ['Da Stimare', '< 500€', '500 - 1.500€', '1.500 - 3.000€', '3.000€+'],
     askLocation: true,
     descriptionPlaceholder: "Esempio: Vorrei un sito moderno per il mio studio di architettura. Mi piacciono i siti minimalisti. Ho bisogno di una sezione portfolio e contatti. Ho già le foto dei progetti."
   },
@@ -179,7 +179,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'sector', label: 'Settore merceologico', type: 'select', options: ['Abbigliamento/Moda', 'Elettronica', 'Cibo & Bevande', 'Arredamento', 'Servizi Digitali', 'Altro'] },
       { id: 'integrations', label: 'Integrazioni richieste', type: 'multiselect', options: ['Gestionale Magazzino', 'Fatturazione Automatica', 'Amazon/eBay Sync', 'Klarna/Scalapay', 'Spedizioni Automatizzate'] }
     ],
-    budgetOptions: ['< 1.500€', '1.500 - 3.000€', '3.000 - 6.000€', '6.000€+'],
+    budgetOptions: ['Da Stimare', '< 1.500€', '1.500 - 3.000€', '3.000 - 6.000€', '6.000€+'],
     askLocation: true,
     descriptionPlaceholder: "Descrivi il tuo progetto: vendi in Italia o all'estero? Hai bisogno di migrare da un altro sito? Hai già il materiale fotografico?"
   },
@@ -191,7 +191,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'content_creation', label: 'Chi crea i contenuti?', type: 'select', options: ['Li fornisco io (foto/video)', 'Mi serve anche la creazione contenuti', 'Misto (collaborazione)'] },
       { id: 'frequency', label: 'Durata collaborazione', type: 'select', options: ['Progetto Una Tantum (Setup)', 'Gestione Mensile Continuativa', 'Consulenza Strategica'] }
     ],
-    budgetOptions: ['< 500€/mese', '500 - 1.000€/mese', '1.000 - 2.500€/mese', '2.500€+/mese'],
+    budgetOptions: ['Da Stimare', '< 500€/mese', '500 - 1.000€/mese', '1.000 - 2.500€/mese', '2.500€+/mese'],
     askLocation: true,
     descriptionPlaceholder: "Descrivi il tuo target e cosa hai fatto finora. Esempio: Siamo una startup B2B, vogliamo trovare clienti su LinkedIn. Abbiamo un budget mensile per le ads escluso."
   },
@@ -202,7 +202,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'style', label: 'Stile preferito', type: 'select', options: ['Minimal & Moderno', 'Lussuoso & Elegante', 'Giocoso & Colorato', 'Corporate & Serio', 'Non lo so ancora'] },
       { id: 'rebrand', label: 'È un rebranding?', type: 'radio_group', options: ['Sì, rifacimento totale', 'Sì, leggero restyling', 'No, nuovo brand da zero'] }
     ],
-    budgetOptions: ['< 300€', '300 - 800€', '800 - 2.000€', '2.000€+'],
+    budgetOptions: ['Da Stimare', '< 300€', '300 - 800€', '800 - 2.000€', '2.000€+'],
     askLocation: true,
     descriptionPlaceholder: "Racconta i valori del tuo brand. Chi sono i tuoi competitor? Hai colori che odi o che ami? A quale pubblico ti rivolgi?"
   },
@@ -213,7 +213,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'state', label: 'Stato del progetto', type: 'select', options: ['Solo un\'idea', 'Ho le specifiche scritte', 'Ho già il design/prototipo', 'Progetto esistente da modificare'] },
       { id: 'complexity', label: 'Funzioni chiave', type: 'multiselect', options: ['Login Utenti', 'Pagamenti in-app', 'Geolocalizzazione', 'Chat/Messaggistica', 'Integrazione AI'] }
     ],
-    budgetOptions: ['< 2.000€', '2.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
+    budgetOptions: ['Da Stimare', '< 2.000€', '2.000 - 5.000€', '5.000 - 15.000€', '15.000€+'],
     askLocation: true,
     descriptionPlaceholder: "Descrivi cosa deve fare il software. Qual è il problema che risolve? Chi lo userà (dipendenti, clienti finali)? Hai scadenze precise?"
   },
@@ -224,7 +224,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'duration', label: 'Durata stimata', type: 'select', options: ['< 30 secondi', '1 minuto', '2-5 minuti', 'Lungo (> 10 min)'] },
       { id: 'materials', label: 'Materiale di partenza', type: 'select', options: ['Ho già il girato, serve montaggio', 'Serve girare tutto (riprese)', 'Video di stock + grafica', 'Tutto animato (no riprese)'] }
     ],
-    budgetOptions: ['< 400€', '400 - 1.000€', '1.000 - 3.000€', '3.000€+'],
+    budgetOptions: ['Da Stimare', '< 400€', '400 - 1.000€', '1.000 - 3.000€', '3.000€+'],
     askLocation: true,
     descriptionPlaceholder: "Dove verrà pubblicato il video? Qual è il messaggio chiave? Hai bisogno anche di voce narrante o attori?"
   },
@@ -235,7 +235,7 @@ const defaultForms: FormDefinition[] = [
       { id: 'quantity', label: 'Numero foto finali', type: 'select', options: ['1-10', '10-30', '30-100', 'Servizio completo evento'] },
       { id: 'usage', label: 'Utilizzo principale', type: 'multiselect', options: ['Sito Web', 'Social Media', 'Stampa/Catalogo', 'Pubblicità'] }
     ],
-    budgetOptions: ['< 300€', '300 - 600€', '600 - 1.200€', '1.200€+'],
+    budgetOptions: ['Da Stimare', '< 300€', '300 - 600€', '600 - 1.200€', '1.200€+'],
     askLocation: true,
     descriptionPlaceholder: "Descrivi lo stile che cerchi (es. luce naturale, fondo bianco, ambientato). Quando serve realizzare il servizio?"
   }
@@ -386,7 +386,7 @@ export const contentService = {
     // 3. Fallback generic (se la categoria è custom e non ha form)
     return {
       categoryId,
-      budgetOptions: ['< 200€', '200 - 500€', '500 - 1.000€', '1.000€+'],
+      budgetOptions: ['Da Stimare', '< 200€', '200 - 500€', '500 - 1.000€', '1.000€+'],
       askLocation: true, // Default a true per tutte le categorie custom
       descriptionPlaceholder: "Descrivi dettagliatamente cosa ti serve...",
       fields: []
