@@ -529,7 +529,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                         <div className="space-y-6">
                             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                 <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase">Descrizione Progetto</h3>
-                                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{job.description}</p>
+                                <p className="text-slate-700 leading-relaxed whitespace-pre-line whitespace-pre-wrap">{job.description}</p>
                             </div>
                             
                             <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500">
@@ -821,6 +821,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
            location: profileForm.location,
            phoneNumber: profileForm.phoneNumber,
            bio: profileForm.bio,
+           vatNumber: profileForm.vatNumber, // Add vatNumber update
            offeredServices: profileForm.offeredServices
         });
         await refreshData();
@@ -1311,11 +1312,71 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                 <button onClick={() => setSettingsView('menu')} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold text-sm"><ArrowLeft size={18} className="mr-2" /> Torna al menu</button>
                                 {settingsView === 'profile_edit' && (
                                     <div>
+                                        <div className="mb-6">
+                                            <h2 className="text-3xl font-black text-slate-900">Il mio Profilo</h2>
+                                            <p className="text-slate-500">Gestisci le tue informazioni personali.</p>
+                                        </div>
                                         <h2 className="text-xl font-black text-slate-900 mb-6">Dati Personali</h2>
                                         <div className="space-y-4">
-                                            <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="Nome" />
-                                            {isPro && <textarea rows={4} value={profileForm.bio || ''} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" placeholder="Bio" />}
-                                            <button onClick={handleSaveProfile} disabled={isSavingProfile} className="w-full px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700">{isSavingProfile ? 'Salvataggio...' : 'Salva Modifiche'}</button>
+                                            <div>
+                                                <label className="text-xs font-black text-slate-400 uppercase">Nome</label>
+                                                <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                            </div>
+                                            {isPro && (
+                                                <div>
+                                                    <label className="text-xs font-black text-slate-400 uppercase">Brand / Agenzia</label>
+                                                    <input type="text" value={profileForm.brandName || ''} onChange={e => setProfileForm({...profileForm, brandName: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <label className="text-xs font-black text-slate-400 uppercase">Città</label>
+                                                <input type="text" value={profileForm.location || ''} onChange={e => setProfileForm({...profileForm, location: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-black text-slate-400 uppercase">Telefono</label>
+                                                <input type="tel" value={profileForm.phoneNumber || ''} onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                            </div>
+                                            {isPro && (
+                                                <div>
+                                                    <label className="text-xs font-black text-slate-400 uppercase">Partita IVA</label>
+                                                    <input type="text" value={profileForm.vatNumber || ''} onChange={e => setProfileForm({...profileForm, vatNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                                                </div>
+                                            )}
+                                            {isPro && (
+                                                <div>
+                                                    <label className="text-xs font-black text-slate-400 uppercase">Bio</label>
+                                                    <textarea rows={4} value={profileForm.bio || ''} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none" />
+                                                </div>
+                                            )}
+                                            <div className="flex gap-4 pt-4">
+                                                <button onClick={handleSaveProfile} disabled={isSavingProfile} className="flex-1 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
+                                                    {isSavingProfile ? 'Salvataggio...' : 'Salva Modifiche'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-8 border-t border-slate-100 mt-8">
+                                            <h2 className="text-xl font-black text-slate-900 mb-6">Sicurezza</h2>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="text-xs font-black text-slate-400 uppercase">Nuova Password</label>
+                                                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-black text-slate-400 uppercase">Conferma Password</label>
+                                                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
+                                                </div>
+                                                {passwordMessage && (
+                                                    <p className={`text-xs font-bold ${passwordMessage.includes('Errore') || passwordMessage.includes('non coincidono') ? 'text-red-500' : 'text-green-500'}`}>
+                                                        {passwordMessage}
+                                                    </p>
+                                                )}
+                                                <div className="flex gap-4 pt-2">
+                                                    <button onClick={handleUpdatePassword} disabled={isSavingProfile || !newPassword} className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all">
+                                                        Aggiorna Password
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
