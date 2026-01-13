@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ServiceCategory } from '../../types';
+// import SEO from '../../components/SEO';
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -19,8 +21,8 @@ const LANDING_CONFIG: Record<string, {
 }> = {
   'sito-web': {
     category: ServiceCategory.WEBSITE,
-    title: 'Realizza il tuo Sito Web Professionale',
-    subtitle: 'Trova sviluppatori esperti per creare il tuo sito vetrina, landing page o portale aziendale. Ricevi preventivi in 24 ore.',
+    title: 'Realizza il tuo Sito con un professionista',
+    subtitle: 'Trova sviluppatori esperti per creare il tuo sito vetrina, landing page o portale aziendale. Ricevi tanti preventivi in meno di 24 ore.',
     benefits: ['Siti veloci e ottimizzati SEO', 'Design moderno e responsive', 'Gestione autonoma dei contenuti'],
     heroImages: [
       'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', // Laptop code
@@ -30,7 +32,7 @@ const LANDING_CONFIG: Record<string, {
   },
   'ecommerce': {
     category: ServiceCategory.ECOMMERCE,
-    title: 'Apri il tuo Negozio Online',
+    title: 'Trova il professionista giusto per aprire il tuo Negozio Online',
     subtitle: 'Esperti in Shopify, WooCommerce e PrestaShop pronti a lanciare il tuo business digitale.',
     benefits: ['Integrazione pagamenti sicuri', 'Gestione magazzino automatizzata', 'Strategie di conversione incluse'],
     heroImages: [
@@ -111,11 +113,14 @@ const VerticalLandingView: React.FC = () => {
   if (!content) {
     // Fallback se lo slug non esiste
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 flex-col p-6 text-center">
-        <h1 className="text-3xl font-black text-slate-900 mb-4">Pagina non trovata</h1>
-        <p className="text-slate-500 mb-8">La categoria che cerchi non sembra esistere.</p>
-        <Link to="/" className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold">Torna alla Home</Link>
-      </div>
+      <>
+        {/* <SEO title="Pagina non trovata" description="La risorsa richiesta non è disponibile." /> */}
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 flex-col p-6 text-center">
+          <h1 className="text-3xl font-black text-slate-900 mb-4">Pagina non trovata</h1>
+          <p className="text-slate-500 mb-8">La categoria che cerchi non sembra esistere.</p>
+          <Link to="/" className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold">Torna alla Home</Link>
+        </div>
+      </>
     );
   }
 
@@ -126,6 +131,15 @@ const VerticalLandingView: React.FC = () => {
 
   return (
     <div className="bg-white min-h-screen">
+      {/* 
+      <SEO 
+        title={content.title}
+        description={content.subtitle}
+        image={content.heroImages[0]}
+        canonical={`${window.location.origin}/service/${slug}`}
+      />
+      */}
+
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-32 px-6 overflow-hidden">
         <div className="max-w-[1250px] mx-auto grid lg:grid-cols-2 gap-12 items-center">
@@ -160,7 +174,7 @@ const VerticalLandingView: React.FC = () => {
                 onClick={handleCtaClick}
                 className="px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center text-lg group"
               >
-                Richiedi Preventivo
+                Ottieni preventivi
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </button>
               <div className="flex items-center justify-center px-6 py-4 text-slate-500 text-sm font-medium">
@@ -180,7 +194,7 @@ const VerticalLandingView: React.FC = () => {
                   </div>
                </div>
                <div className="text-sm md:text-base">
-                  <span className="font-black text-slate-900">Meno recensioni,</span> <span className="text-slate-700 font-medium">più lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>
+                  <span className="font-black text-slate-900">Preventivi gratis e</span> <span className="text-slate-700 font-medium">lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>
                </div>
             </div>
           </div>
