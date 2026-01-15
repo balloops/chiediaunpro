@@ -211,7 +211,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
              <img 
                src={content.branding.logoUrl} 
                alt={content.branding.platformName} 
-               className="h-8 md:h-10 w-auto object-contain" 
+               className="h-[30px] w-auto object-contain" 
              />
           ) : (
             // Fallback: Icona + Testo
