@@ -6,25 +6,25 @@
 // Cache buster per evitare problemi di cache durante lo sviluppo
 const CACHE_BUSTER = new Date().getTime(); 
 
+// Numero massimo di immagini da cercare nella cartella
+const MAX_IMAGES = 8; 
+
 export const imageLoader = {
   getHomeImages: (): string[] => {
-    // Restituisce i percorsi per le immagini della Home
-    // I file devono trovarsi in: public/assets/images/home/
-    return [
-      `/assets/images/home/1.webp?t=${CACHE_BUSTER}`,
-      `/assets/images/home/2.webp?t=${CACHE_BUSTER}`,
-      `/assets/images/home/3.webp?t=${CACHE_BUSTER}`,
-      `/assets/images/home/4.webp?t=${CACHE_BUSTER}`
-    ];
+    // Restituisce i percorsi per le immagini della Home (home/1.webp ... home/8.webp)
+    const images: string[] = [];
+    for (let i = 1; i <= MAX_IMAGES; i++) {
+        images.push(`/assets/images/home/${i}.webp?t=${CACHE_BUSTER}`);
+    }
+    return images;
   },
 
   getCategoryImages: (folderName: string): string[] => {
-    // I file devono trovarsi in: public/assets/images/[folderName]/
-    return [
-      `/assets/images/${folderName}/1.webp?t=${CACHE_BUSTER}`,
-      `/assets/images/${folderName}/2.webp?t=${CACHE_BUSTER}`,
-      `/assets/images/${folderName}/3.webp?t=${CACHE_BUSTER}`,
-      `/assets/images/${folderName}/4.webp?t=${CACHE_BUSTER}`
-    ];
+    // Restituisce i percorsi per le immagini delle categorie
+    const images: string[] = [];
+    for (let i = 1; i <= MAX_IMAGES; i++) {
+        images.push(`/assets/images/${folderName}/${i}.webp?t=${CACHE_BUSTER}`);
+    }
+    return images;
   }
 };
