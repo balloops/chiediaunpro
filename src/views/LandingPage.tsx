@@ -21,7 +21,7 @@ import {
   AppWindow
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
-import { imageLoader } from '../../utils/imageLoader';
+import { imageLoader } from '../utils/imageLoader'; // CORRETTO: Percorso relativo a src/views
 
 interface LandingPageProps {
   user: User | null;
@@ -50,9 +50,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     } else {
       // Fallback images if folder is empty
       setHeroImages([
-        'https://picsum.photos/800/600?digital',
         'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80'
+        'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80'
       ]);
     }
   }, []);
@@ -201,8 +201,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         <div className="max-w-[1250px] mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-24 items-center">
             <div className="grid grid-cols-2 gap-4">
-              <img src="https://picsum.photos/400/500?worker1" className="rounded-[24px] shadow-lg mt-8" alt="Pro" loading="lazy" />
-              <img src="https://picsum.photos/400/500?worker2" className="rounded-[24px] shadow-lg" alt="Pro" loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" className="rounded-[24px] shadow-lg mt-8" alt="Pro" loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=400&q=80" className="rounded-[24px] shadow-lg" alt="Pro" loading="lazy" />
             </div>
             <div>
               <h2 className="text-4xl font-extrabold text-slate-900 mb-8 leading-tight">

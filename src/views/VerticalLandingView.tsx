@@ -10,7 +10,7 @@ import {
   Clock, 
   Zap
 } from 'lucide-react';
-import { imageLoader } from '../../utils/imageLoader';
+import { imageLoader } from '../utils/imageLoader'; // CORRETTO: Percorso relativo a src/views
 
 // Mappa Slugs to Folder Names in public/assets/images/
 const SLUG_TO_FOLDER: Record<string, string> = {
