@@ -10,7 +10,7 @@ const FORMS_KEY = 'lavorabene_forms_v4'; // Aggiornato a v4 per budget "Da Stima
 const defaultContent: SiteContent = {
   branding: {
     platformName: 'LavoraBene',
-    logoUrl: '',
+    logoUrl: '/assets/logo/logo-lavorabene.webp', // Percorso logo locale
     faviconUrl: ''
   },
   auth: {
