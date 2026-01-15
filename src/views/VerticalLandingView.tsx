@@ -163,17 +163,20 @@ const VerticalLandingView: React.FC = () => {
       const currentSrc = newImages[index];
 
       // Se è un URL esterno (Unsplash), non facciamo nulla (o potremmo ciclare i fallback)
-      if (currentSrc.startsWith('http')) {
+      if (currentSrc.startsWith('http') && !currentSrc.includes(window.location.hostname)) {
          return newImages;
       }
 
-      // Retry Extension Logic
-      if (currentSrc.endsWith('.webp')) {
-        newImages[index] = currentSrc.replace('.webp', '.jpg');
-      } else if (currentSrc.endsWith('.jpg')) {
-        newImages[index] = currentSrc.replace('.jpg', '.png');
-      } else if (currentSrc.endsWith('.png')) {
-        newImages[index] = currentSrc.replace('.png', '.jpeg');
+      // Rimuovi parametri query per il check dell'estensione (es ?t=123)
+      const cleanSrc = currentSrc.split('?')[0].toLowerCase();
+
+      // Retry Extension Logic (Case Insensitive)
+      if (cleanSrc.endsWith('.webp')) {
+        newImages[index] = currentSrc.replace(/webp/i, 'jpg');
+      } else if (cleanSrc.endsWith('.jpg')) {
+        newImages[index] = currentSrc.replace(/jpg/i, 'png');
+      } else if (cleanSrc.endsWith('.png')) {
+        newImages[index] = currentSrc.replace(/png/i, 'jpeg');
       } else {
         // Fallback su Unsplash se anche le estensioni falliscono
         newImages[index] = content.fallbackImages[index % content.fallbackImages.length];

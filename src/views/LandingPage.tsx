@@ -49,9 +49,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     // Async load for freshness
     contentService.fetchContent().then(setContent);
 
-    // Load Local Images (Starts with .webp via imageLoader)
+    // Load Local Images
     const localImages = imageLoader.getHomeImages();
-    setHeroImages(localImages.length > 0 ? localImages : FALLBACK_IMAGES);
+    setHeroImages(localImages);
   }, []);
 
   // Rotation Interval
@@ -59,35 +59,39 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     if (heroImages.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 5000); // 5 secondi
+    }, 5000); 
     return () => clearInterval(interval);
   }, [heroImages]);
 
-  // Gestore errore immagine intelligente (Retry Extensions Strategy)
+  // Gestore errore immagine (Retry Extensions Strategy)
   const handleImageError = (index: number) => {
     setHeroImages(prev => {
+      if (!prev || !prev[index]) return prev;
+
       const newImages = [...prev];
       const currentSrc = newImages[index];
 
-      // Se è un URL esterno (http), vai direttamente al fallback successivo o ferma
-      if (currentSrc.startsWith('http')) {
-         // Se stiamo già usando un fallback di Unsplash, passiamo al prossimo fallback
-         if (FALLBACK_IMAGES.includes(currentSrc)) {
-             const nextFallbackIndex = (FALLBACK_IMAGES.indexOf(currentSrc) + 1) % FALLBACK_IMAGES.length;
-             // Evita loop infinito se è l'ultimo
-             if (nextFallbackIndex === 0 && index > 0) return newImages; 
-             newImages[index] = FALLBACK_IMAGES[nextFallbackIndex];
+      // Se è già un fallback (Unsplash o altro esterno), passa al prossimo fallback
+      if (currentSrc.startsWith('http') && !currentSrc.includes(window.location.hostname)) {
+         // Cerca se l'immagine attuale è nella lista fallback
+         const fbIndex = FALLBACK_IMAGES.findIndex(fb => currentSrc.includes(fb.split('?')[0]));
+         if (fbIndex !== -1) {
+             const nextFb = FALLBACK_IMAGES[(fbIndex + 1) % FALLBACK_IMAGES.length];
+             // Evita loop infinito se è l'unico
+             if (nextFb !== currentSrc) newImages[index] = nextFb;
          }
          return newImages;
       }
 
-      // Logica tentativi estensione locale
-      if (currentSrc.endsWith('.webp')) {
-        newImages[index] = currentSrc.replace('.webp', '.jpg');
-      } else if (currentSrc.endsWith('.jpg')) {
-        newImages[index] = currentSrc.replace('.jpg', '.png');
-      } else if (currentSrc.endsWith('.png')) {
-        newImages[index] = currentSrc.replace('.png', '.jpeg');
+      // Logica tentativi estensione locale (webp -> jpg -> png -> fallback)
+      const cleanSrc = currentSrc.split('?')[0].toLowerCase();
+
+      if (cleanSrc.endsWith('.webp')) {
+        newImages[index] = currentSrc.replace(/webp/i, 'jpg');
+      } else if (cleanSrc.endsWith('.jpg')) {
+        newImages[index] = currentSrc.replace(/jpg/i, 'png');
+      } else if (cleanSrc.endsWith('.png')) {
+        newImages[index] = currentSrc.replace(/png/i, 'jpeg');
       } else {
         // Se tutte le estensioni falliscono, usa Unsplash
         newImages[index] = FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
@@ -97,7 +101,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     });
   };
 
-  // Helper to map category strings to icons (fallback for new dynamic categories)
   const getCategoryIcon = (name: string) => {
     switch(name) {
       case ServiceCategory.WEBSITE: return <Code className="text-blue-500" />;
@@ -171,13 +174,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               <div className="relative w-full h-full rounded-[24px] overflow-hidden shadow-2xl border border-slate-100 bg-slate-100">
                  {heroImages.map((img, idx) => (
                     <img 
-                      key={`${img}-${idx}`} // Force remount on src change
+                      key={`${img}-${idx}`} 
                       src={img} 
                       onError={() => handleImageError(idx)}
                       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
                       alt={`Digital Work ${idx}`}
                       loading={idx === 0 ? "eager" : "lazy"}
-                      fetchPriority={idx === 0 ? "high" : "auto"}
                     />
                  ))}
               </div>
