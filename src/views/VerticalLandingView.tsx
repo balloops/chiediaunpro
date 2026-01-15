@@ -10,35 +10,46 @@ import {
   Clock, 
   Zap
 } from 'lucide-react';
+import { imageLoader } from '../../utils/imageLoader';
 
-// Configurazione dei contenuti per ogni verticale con Immagini Multiple Verificate
+// Mappa Slugs to Folder Names in public/assets/images/
+const SLUG_TO_FOLDER: Record<string, string> = {
+  'sito-web': 'website',
+  'ecommerce': 'ecommerce',
+  'social-media': 'social',
+  'logo-branding': 'branding',
+  'sviluppo-app': 'app',
+  'video-editing': 'video'
+};
+
+// Configurazione dei contenuti (senza immagini hardcoded)
 const LANDING_CONFIG: Record<string, {
-  category: string; // Deve corrispondere ai valori in ServiceCategory o stringhe usate nel form
+  category: string;
   title: string;
   subtitle: string;
   benefits: string[];
-  heroImages: string[]; // Array di immagini
+  fallbackImages: string[]; // Usate se la cartella locale è vuota
 }> = {
   'sito-web': {
     category: ServiceCategory.WEBSITE,
-    title: 'Realizza il tuo Sito con un professionista',
-    subtitle: 'Trova sviluppatori esperti per creare il tuo sito vetrina, landing page o portale aziendale. Ricevi tanti preventivi in meno di 24 ore.',
+    title: 'Realizza il tuo Sito Web Professionale',
+    subtitle: 'Trova sviluppatori esperti per creare il tuo sito vetrina, landing page o portale aziendale. Ricevi preventivi in 24 ore.',
     benefits: ['Siti veloci e ottimizzati SEO', 'Design moderno e responsive', 'Gestione autonoma dei contenuti'],
-    heroImages: [
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', // Laptop code
-      'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80', // Workspace
-      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80'  // Coding
+    fallbackImages: [
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80'
     ]
   },
   'ecommerce': {
     category: ServiceCategory.ECOMMERCE,
-    title: 'Trova il professionista giusto per aprire il tuo Negozio Online',
+    title: 'Apri il tuo Negozio Online',
     subtitle: 'Esperti in Shopify, WooCommerce e PrestaShop pronti a lanciare il tuo business digitale.',
     benefits: ['Integrazione pagamenti sicuri', 'Gestione magazzino automatizzata', 'Strategie di conversione incluse'],
-    heroImages: [
-      'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80', // Card Payment
-      'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=800&q=80', // POS
-      'https://images.unsplash.com/photo-1472851294608-4155f2118c67?auto=format&fit=crop&w=800&q=80'  // Store
+    fallbackImages: [
+      'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1472851294608-4155f2118c67?auto=format&fit=crop&w=800&q=80'
     ]
   },
   'social-media': {
@@ -46,10 +57,10 @@ const LANDING_CONFIG: Record<string, {
     title: 'Scala il tuo business con il Social Media Marketing',
     subtitle: 'Social Media Manager e Advertiser certificati per gestire le tue campagne Facebook, Instagram e LinkedIn.',
     benefits: ['Piano editoriale su misura', 'Gestione campagne Ads (ROAS positivo)', 'Reportistica mensile dettagliata'],
-    heroImages: [
-      'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80', // Social Apps
-      'https://images.unsplash.com/photo-1611926653458-09294b3142bf?auto=format&fit=crop&w=800&q=80', // Social Mix
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80'  // Meeting
+    fallbackImages: [
+      'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1611926653458-09294b3142bf?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80'
     ]
   },
   'logo-branding': {
@@ -57,10 +68,10 @@ const LANDING_CONFIG: Record<string, {
     title: 'Logo e Identità Visiva che lasciano il segno',
     subtitle: 'Designer professionisti per creare il logo perfetto e l\'immagine coordinata della tua azienda.',
     benefits: ['Logo vettoriale scalabile', 'Palette colori e font system', 'Brand Guidelines incluse'],
-    heroImages: [
-      'https://images.unsplash.com/photo-1626785774573-4b799314347d?auto=format&fit=crop&w=800&q=80', // Branding
-      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=800&q=80', // Sketching
-      'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80'  // Design tools
+    fallbackImages: [
+      'https://images.unsplash.com/photo-1626785774573-4b799314347d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80'
     ]
   },
   'sviluppo-app': {
@@ -68,10 +79,10 @@ const LANDING_CONFIG: Record<string, {
     title: 'Sviluppo App iOS e Android',
     subtitle: 'Trasforma la tua idea in un\'applicazione mobile performante. Sviluppatori nativi e cross-platform.',
     benefits: ['UX/UI Design intuitivo', 'Pubblicazione su Store Apple/Google', 'Manutenzione e supporto'],
-    heroImages: [
-      'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80', // Mobile hand
-      'https://images.unsplash.com/photo-1551650975-87bd1e887d67?auto=format&fit=crop&w=800&q=80', // UI Design
-      'https://images.unsplash.com/photo-1526498463720-33a928666327?auto=format&fit=crop&w=800&q=80'  // Code Screen
+    fallbackImages: [
+      'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1551650975-87bd1e887d67?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1526498463720-33a928666327?auto=format&fit=crop&w=800&q=80'
     ]
   },
   'video-editing': {
@@ -79,10 +90,10 @@ const LANDING_CONFIG: Record<string, {
     title: 'Video Editing e Motion Graphics',
     subtitle: 'Montaggio video professionale per spot, social media, eventi e presentazioni aziendali.',
     benefits: ['Color Correction cinematografica', 'Sound Design e mixaggio', 'Animazioni e titoli grafici'],
-    heroImages: [
-      'https://images.unsplash.com/photo-1574717432707-c67803b27bba?auto=format&fit=crop&w=800&q=80', // Editing Timeline
-      'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80', // Lens
-      'https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=800&q=80'  // Filmmaking
+    fallbackImages: [
+      'https://images.unsplash.com/photo-1574717432707-c67803b27bba?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=800&q=80'
     ]
   }
 };
@@ -92,26 +103,43 @@ const VerticalLandingView: React.FC = () => {
   const navigate = useNavigate();
   
   const content = slug && LANDING_CONFIG[slug] ? LANDING_CONFIG[slug] : null;
+  const folderName = slug ? SLUG_TO_FOLDER[slug] : null;
+
+  const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    setCurrentImageIndex(0); // Reset immagine quando cambia pagina
-  }, [slug]);
+    setCurrentImageIndex(0); 
+    
+    // Load Images logic
+    if (content) {
+      let loadedImages: string[] = [];
+      if (folderName) {
+        loadedImages = imageLoader.getCategoryImages(folderName);
+      }
+      
+      // If local images exist, use them. Otherwise fallback.
+      if (loadedImages.length > 0) {
+        setImages(loadedImages);
+      } else {
+        setImages(content.fallbackImages);
+      }
+    }
+  }, [slug, content, folderName]);
 
   // Image Rotation Logic
   useEffect(() => {
-    if (!content) return;
+    if (images.length <= 1) return;
     
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % content.heroImages.length);
-    }, 5000); // Cambia ogni 5 secondi
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, 5000); 
 
     return () => clearInterval(interval);
-  }, [content]);
+  }, [images]);
 
   if (!content) {
-    // Fallback se lo slug non esiste
     return (
       <>
         {/* <SEO title="Pagina non trovata" description="La risorsa richiesta non è disponibile." /> */}
@@ -125,20 +153,12 @@ const VerticalLandingView: React.FC = () => {
   }
 
   const handleCtaClick = () => {
-    // Naviga direttamente al post-job con la categoria pre-selezionata
     navigate('/post-job', { state: { selectedCategory: content.category } });
   };
 
   return (
     <div className="bg-white min-h-screen">
-      {/* 
-      <SEO 
-        title={content.title}
-        description={content.subtitle}
-        image={content.heroImages[0]}
-        canonical={`${window.location.origin}/service/${slug}`}
-      />
-      */}
+      {/* <SEO title={content.title} description={content.subtitle} image={images[0]} canonical={`${window.location.origin}/service/${slug}`} /> */}
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-32 px-6 overflow-hidden">
@@ -174,7 +194,7 @@ const VerticalLandingView: React.FC = () => {
                 onClick={handleCtaClick}
                 className="px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center text-lg group"
               >
-                Ottieni preventivi
+                Richiedi Preventivo
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </button>
               <div className="flex items-center justify-center px-6 py-4 text-slate-500 text-sm font-medium">
@@ -183,7 +203,7 @@ const VerticalLandingView: React.FC = () => {
               </div>
             </div>
             
-            {/* Social Proof (Updated) */}
+            {/* Social Proof */}
             <div className="flex items-center gap-6 pt-6">
                <div className="flex -space-x-3">
                   {[1,2,3,4].map(i => (
@@ -194,7 +214,7 @@ const VerticalLandingView: React.FC = () => {
                   </div>
                </div>
                <div className="text-sm md:text-base">
-                  <span className="font-black text-slate-900">Preventivi gratis e</span> <span className="text-slate-700 font-medium">lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>
+                  <span className="font-black text-slate-900">Meno recensioni,</span> <span className="text-slate-700 font-medium">più lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>
                </div>
             </div>
           </div>
@@ -204,12 +224,12 @@ const VerticalLandingView: React.FC = () => {
              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 z-10 pointer-events-none"></div>
              
              {/* Images Stacked */}
-             {content.heroImages.map((img, idx) => (
+             {images.map((img, idx) => (
                 <img 
                   key={img}
                   src={img} 
                   alt={`${content.title} ${idx + 1}`} 
-                  // Safety: Hide on Error
+                  loading={idx === 0 ? "eager" : "lazy"}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';

@@ -21,6 +21,7 @@ import {
   AppWindow
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
+import { imageLoader } from '../../utils/imageLoader';
 
 interface LandingPageProps {
   user: User | null;
@@ -29,6 +30,10 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   const [content, setContent] = useState<SiteContent>(contentService.getContent());
   const [dynamicCategories, setDynamicCategories] = useState<string[]>(contentService.getCategories());
+  
+  // Image Rotation State
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     // Sync load for fast render
@@ -37,7 +42,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     
     // Async load for freshness
     contentService.fetchContent().then(setContent);
+
+    // Load Local Images
+    const localImages = imageLoader.getHomeImages();
+    if (localImages.length > 0) {
+      setHeroImages(localImages);
+    } else {
+      // Fallback images if folder is empty
+      setHeroImages([
+        'https://picsum.photos/800/600?digital',
+        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80'
+      ]);
+    }
   }, []);
+
+  // Rotation Interval
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000); // 5 secondi
+    return () => clearInterval(interval);
+  }, [heroImages]);
 
   // Helper to map category strings to icons (fallback for new dynamic categories)
   const getCategoryIcon = (name: string) => {
@@ -65,7 +92,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         <div className="absolute top-0 right-0 w-1/3 h-full bg-slate-50 -z-10 hidden lg:block rounded-l-[24px]"></div>
         <div className="max-w-[1250px] mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
+            <div className="space-y-8 relative z-10">
               <div className="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-medium">
                 <Star size={14} className="fill-current" />
                 <span>{content.home.hero.badgeText}</span>
@@ -106,13 +133,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               </div>
             </div>
 
-            <div className="relative">
-              <div className="absolute inset-0 bg-indigo-600/10 rounded-full blur-[100px] animate-pulse"></div>
-              <img 
-                src="https://picsum.photos/800/600?digital" 
-                className="relative rounded-[24px] shadow-2xl z-10 w-full object-cover aspect-[4/3]"
-                alt="Digital Work"
-              />
+            {/* Rotating Hero Image */}
+            <div className="relative h-[400px] md:h-[500px] w-full">
+              <div className="absolute inset-0 bg-indigo-600/10 rounded-[24px] blur-[100px] animate-pulse -z-10"></div>
+              
+              <div className="relative w-full h-full rounded-[24px] overflow-hidden shadow-2xl border border-slate-100 bg-slate-100">
+                 {heroImages.map((img, idx) => (
+                    <img 
+                      key={img}
+                      src={img} 
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
+                      alt={`Digital Work ${idx}`}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      fetchPriority={idx === 0 ? "high" : "auto"}
+                    />
+                 ))}
+              </div>
+
               <div className="absolute -bottom-8 -left-8 bg-white p-6 rounded-[24px] shadow-xl z-20 hidden md:block border border-slate-100">
                 <div className="flex items-center space-x-4">
                   <div className="bg-green-100 text-green-600 p-2 rounded-xl">
@@ -137,7 +174,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             <p className="text-lg text-slate-600">{content.home.categories?.description || 'Esplora le categorie principali e trova il talento ideale per scalare il tuo business digitale.'}</p>
           </div>
 
-          {/* Mobile Optimization: tighter gap (gap-3), 2 cols, reduced padding (p-4) */}
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {dynamicCategories.map((cat, idx) => (
               <Link 
@@ -147,12 +183,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 className="group bg-white p-4 md:p-8 rounded-2xl md:rounded-[24px] border border-slate-100 hover:border-indigo-500 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 cursor-pointer text-left block h-full"
               >
                 <div className="mb-3 md:mb-6 p-3 md:p-4 rounded-2xl bg-slate-50 inline-block group-hover:bg-indigo-50 transition-colors">
-                  {/* Fix: Cast to ReactElement<any> to allow 'size' prop override */}
                   {React.cloneElement(getCategoryIcon(cat) as React.ReactElement<any>, { size: window.innerWidth < 768 ? 24 : 32 })}
                 </div>
                 <h3 className="text-sm md:text-xl font-bold text-slate-900 mb-1 md:mb-2 leading-tight">{cat}</h3>
                 <div className="text-xs md:text-sm text-slate-500 mb-0 md:mb-4">Esperti Disponibili</div>
-                {/* Hide hover text on mobile to save vertical space */}
                 <div className="hidden md:flex items-center text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                   Richiedi proposte <ChevronRight size={16} className="ml-1" />
                 </div>
@@ -167,8 +201,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         <div className="max-w-[1250px] mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-24 items-center">
             <div className="grid grid-cols-2 gap-4">
-              <img src="https://picsum.photos/400/500?worker1" className="rounded-[24px] shadow-lg mt-8" alt="Pro" />
-              <img src="https://picsum.photos/400/500?worker2" className="rounded-[24px] shadow-lg" alt="Pro" />
+              <img src="https://picsum.photos/400/500?worker1" className="rounded-[24px] shadow-lg mt-8" alt="Pro" loading="lazy" />
+              <img src="https://picsum.photos/400/500?worker2" className="rounded-[24px] shadow-lg" alt="Pro" loading="lazy" />
             </div>
             <div>
               <h2 className="text-4xl font-extrabold text-slate-900 mb-8 leading-tight">
