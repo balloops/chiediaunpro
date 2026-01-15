@@ -21,11 +21,17 @@ import {
   AppWindow
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
-import { imageLoader } from '../utils/imageLoader'; // CORRETTO: Percorso relativo a src/views
+import { imageLoader } from '../utils/imageLoader'; 
 
 interface LandingPageProps {
   user: User | null;
 }
+
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80'
+];
 
 const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   const [content, setContent] = useState<SiteContent>(contentService.getContent());
@@ -45,16 +51,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
     // Load Local Images
     const localImages = imageLoader.getHomeImages();
-    if (localImages.length > 0) {
-      setHeroImages(localImages);
-    } else {
-      // Fallback images if folder is empty
-      setHeroImages([
-        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80'
-      ]);
-    }
+    // Usa le immagini locali se definite, altrimenti i fallback
+    setHeroImages(localImages.length > 0 ? localImages : FALLBACK_IMAGES);
   }, []);
 
   // Rotation Interval
@@ -65,6 +63,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     }, 5000); // 5 secondi
     return () => clearInterval(interval);
   }, [heroImages]);
+
+  // Gestore errore immagine (se il file locale non esiste, usa fallback)
+  const handleImageError = (index: number) => {
+    setHeroImages(prev => {
+      const newImages = [...prev];
+      // Sostituisce l'immagine rotta con una di fallback basata sull'indice
+      newImages[index] = FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+      return newImages;
+    });
+  };
 
   // Helper to map category strings to icons (fallback for new dynamic categories)
   const getCategoryIcon = (name: string) => {
@@ -140,8 +148,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               <div className="relative w-full h-full rounded-[24px] overflow-hidden shadow-2xl border border-slate-100 bg-slate-100">
                  {heroImages.map((img, idx) => (
                     <img 
-                      key={img}
+                      key={`${img}-${idx}`}
                       src={img} 
+                      onError={() => handleImageError(idx)}
                       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
                       alt={`Digital Work ${idx}`}
                       loading={idx === 0 ? "eager" : "lazy"}
