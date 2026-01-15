@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole, Notification, SiteContent } from '../types';
@@ -204,17 +205,25 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
       <div className={`${isBackend ? 'w-full' : 'max-w-[1250px] mx-auto'} flex items-center justify-between`}>
         
         {/* LEFT: Logo */}
-        <Link to={logoLink} className="flex items-center space-x-2 z-50 relative">
+        <Link to={logoLink} className="flex items-center z-50 relative">
           {content.branding.logoUrl ? (
-             <img src={content.branding.logoUrl} alt="Logo" className="h-8 md:h-10 w-auto object-contain rounded-lg" />
+             // Logo come immagine completa (es. 212x30)
+             <img 
+               src={content.branding.logoUrl} 
+               alt={content.branding.platformName} 
+               className="h-8 md:h-10 w-auto object-contain" 
+             />
           ) : (
-            <div className="bg-indigo-600 text-white p-1.5 rounded-lg">
-              <LayoutDashboard size={20} className="md:w-6 md:h-6" />
+            // Fallback: Icona + Testo
+            <div className="flex items-center space-x-2">
+                <div className="bg-indigo-600 text-white p-1.5 rounded-lg">
+                  <LayoutDashboard size={20} className="md:w-6 md:h-6" />
+                </div>
+                <span className="text-lg md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500 truncate max-w-[150px] md:max-w-none">
+                  {content.branding.platformName}
+                </span>
             </div>
           )}
-          <span className="text-lg md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500 truncate max-w-[150px] md:max-w-none">
-            {content.branding.platformName}
-          </span>
         </Link>
 
         {/* CENTER: Desktop Links */}
