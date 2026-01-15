@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
+    // Importante: base relativa per supportare deploy in sottocartelle o ambienti preview
+    base: './', 
     define: {
       // Mappa la variabile per renderla accessibile come process.env.API_KEY nel codice
       'process.env.API_KEY': JSON.stringify(env.API_KEY),
