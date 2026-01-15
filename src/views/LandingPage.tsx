@@ -51,7 +51,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
     // Load Local Images
     const localImages = imageLoader.getHomeImages();
-    setHeroImages(localImages);
+    const imagesToUse = localImages.length > 0 ? localImages : FALLBACK_IMAGES;
+    
+    setHeroImages(imagesToUse);
+    
+    // START RANDOM: Imposta un indice casuale all'avvio
+    const randomIndex = Math.floor(Math.random() * imagesToUse.length);
+    setCurrentImageIndex(randomIndex);
+
   }, []);
 
   // Rotation Interval
@@ -179,7 +186,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                       onError={() => handleImageError(idx)}
                       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
                       alt={`Digital Work ${idx}`}
-                      loading={idx === 0 ? "eager" : "lazy"}
+                      // Carica con priorità solo l'immagine corrente (anche se casuale)
+                      loading={idx === currentImageIndex ? "eager" : "lazy"}
+                      fetchPriority={idx === currentImageIndex ? "high" : "auto"}
                     />
                  ))}
               </div>
