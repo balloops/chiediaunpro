@@ -10,7 +10,7 @@ import {
   Clock, 
   Zap
 } from 'lucide-react';
-import { imageLoader } from '../utils/imageLoader'; // CORRETTO: Percorso relativo a src/views
+import { imageLoader } from '../utils/imageLoader'; 
 
 // Mappa Slugs to Folder Names in public/assets/images/
 const SLUG_TO_FOLDER: Record<string, string> = {
@@ -156,6 +156,33 @@ const VerticalLandingView: React.FC = () => {
     navigate('/post-job', { state: { selectedCategory: content.category } });
   };
 
+  // Logica avanzata di fallback estensioni
+  const handleImageError = (index: number) => {
+    setImages(prev => {
+      const newImages = [...prev];
+      const currentSrc = newImages[index];
+
+      // Se è un URL esterno (Unsplash), non facciamo nulla (o potremmo ciclare i fallback)
+      if (currentSrc.startsWith('http')) {
+         return newImages;
+      }
+
+      // Retry Extension Logic
+      if (currentSrc.endsWith('.webp')) {
+        newImages[index] = currentSrc.replace('.webp', '.jpg');
+      } else if (currentSrc.endsWith('.jpg')) {
+        newImages[index] = currentSrc.replace('.jpg', '.png');
+      } else if (currentSrc.endsWith('.png')) {
+        newImages[index] = currentSrc.replace('.png', '.jpeg');
+      } else {
+        // Fallback su Unsplash se anche le estensioni falliscono
+        newImages[index] = content.fallbackImages[index % content.fallbackImages.length];
+      }
+      
+      return newImages;
+    });
+  };
+
   return (
     <div className="bg-white min-h-screen">
       {/* <SEO title={content.title} description={content.subtitle} image={images[0]} canonical={`${window.location.origin}/service/${slug}`} /> */}
@@ -226,14 +253,11 @@ const VerticalLandingView: React.FC = () => {
              {/* Images Stacked */}
              {images.map((img, idx) => (
                 <img 
-                  key={img}
+                  key={`${img}-${idx}`} // Unique key to force update
                   src={img} 
                   alt={`${content.title} ${idx + 1}`} 
                   loading={idx === 0 ? "eager" : "lazy"}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
+                  onError={() => handleImageError(idx)}
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
                 />
              ))}

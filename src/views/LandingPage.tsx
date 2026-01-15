@@ -49,9 +49,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     // Async load for freshness
     contentService.fetchContent().then(setContent);
 
-    // Load Local Images
+    // Load Local Images (Starts with .webp via imageLoader)
     const localImages = imageLoader.getHomeImages();
-    // Usa le immagini locali se definite, altrimenti i fallback
     setHeroImages(localImages.length > 0 ? localImages : FALLBACK_IMAGES);
   }, []);
 
@@ -64,12 +63,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     return () => clearInterval(interval);
   }, [heroImages]);
 
-  // Gestore errore immagine (se il file locale non esiste, usa fallback)
+  // Gestore errore immagine intelligente (Retry Extensions Strategy)
   const handleImageError = (index: number) => {
     setHeroImages(prev => {
       const newImages = [...prev];
-      // Sostituisce l'immagine rotta con una di fallback basata sull'indice
-      newImages[index] = FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+      const currentSrc = newImages[index];
+
+      // Se è un URL esterno (http), vai direttamente al fallback successivo o ferma
+      if (currentSrc.startsWith('http')) {
+         // Se stiamo già usando un fallback di Unsplash, passiamo al prossimo fallback
+         if (FALLBACK_IMAGES.includes(currentSrc)) {
+             const nextFallbackIndex = (FALLBACK_IMAGES.indexOf(currentSrc) + 1) % FALLBACK_IMAGES.length;
+             // Evita loop infinito se è l'ultimo
+             if (nextFallbackIndex === 0 && index > 0) return newImages; 
+             newImages[index] = FALLBACK_IMAGES[nextFallbackIndex];
+         }
+         return newImages;
+      }
+
+      // Logica tentativi estensione locale
+      if (currentSrc.endsWith('.webp')) {
+        newImages[index] = currentSrc.replace('.webp', '.jpg');
+      } else if (currentSrc.endsWith('.jpg')) {
+        newImages[index] = currentSrc.replace('.jpg', '.png');
+      } else if (currentSrc.endsWith('.png')) {
+        newImages[index] = currentSrc.replace('.png', '.jpeg');
+      } else {
+        // Se tutte le estensioni falliscono, usa Unsplash
+        newImages[index] = FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+      }
+      
       return newImages;
     });
   };
@@ -148,7 +171,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               <div className="relative w-full h-full rounded-[24px] overflow-hidden shadow-2xl border border-slate-100 bg-slate-100">
                  {heroImages.map((img, idx) => (
                     <img 
-                      key={`${img}-${idx}`}
+                      key={`${img}-${idx}`} // Force remount on src change
                       src={img} 
                       onError={() => handleImageError(idx)}
                       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
