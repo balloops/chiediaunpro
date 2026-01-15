@@ -1,27 +1,30 @@
 
 // Utility per la gestione delle immagini
 // Punta ai file statici nella cartella public/assets/images/
-// Assumiamo che i file si chiamino 1.webp, 2.webp, ecc. come default
-// Il frontend gestirà il fallback automatico su jpg/png se webp non esiste.
+// IMPORTANTE: Le immagini devono essere nella cartella 'public', non in 'src'.
+
+// Cache buster per evitare problemi di cache durante lo sviluppo
+const CACHE_BUSTER = new Date().getTime(); 
 
 export const imageLoader = {
   getHomeImages: (): string[] => {
-    // Restituisce i percorsi per le immagini della Home (parte da .webp)
+    // Restituisce i percorsi per le immagini della Home
+    // I file devono trovarsi in: public/assets/images/home/
     return [
-      '/assets/images/home/1.webp',
-      '/assets/images/home/2.webp',
-      '/assets/images/home/3.webp',
-      '/assets/images/home/4.webp'
+      `/assets/images/home/1.webp?t=${CACHE_BUSTER}`,
+      `/assets/images/home/2.webp?t=${CACHE_BUSTER}`,
+      `/assets/images/home/3.webp?t=${CACHE_BUSTER}`,
+      `/assets/images/home/4.webp?t=${CACHE_BUSTER}`
     ];
   },
 
   getCategoryImages: (folderName: string): string[] => {
-    // Restituisce i percorsi dinamici per le categorie (parte da .webp)
+    // I file devono trovarsi in: public/assets/images/[folderName]/
     return [
-      `/assets/images/${folderName}/1.webp`,
-      `/assets/images/${folderName}/2.webp`,
-      `/assets/images/${folderName}/3.webp`,
-      `/assets/images/${folderName}/4.webp`
+      `/assets/images/${folderName}/1.webp?t=${CACHE_BUSTER}`,
+      `/assets/images/${folderName}/2.webp?t=${CACHE_BUSTER}`,
+      `/assets/images/${folderName}/3.webp?t=${CACHE_BUSTER}`,
+      `/assets/images/${folderName}/4.webp?t=${CACHE_BUSTER}`
     ];
   }
 };
