@@ -1,16 +1,26 @@
 
 // Utility per la gestione delle immagini
-// Nota: Abbiamo rimosso import.meta.glob per garantire la stabilità in tutti gli ambienti.
-// I componenti useranno le immagini di fallback (Unsplash) se questo array è vuoto.
+// Punta ai file statici nella cartella public/assets/images/
+// Assumiamo che i file si chiamino 1.jpg, 2.jpg, 3.jpg, ecc.
 
 export const imageLoader = {
   getHomeImages: (): string[] => {
-    // Ritorna array vuoto per attivare i fallback in LandingPage.tsx
-    return [];
+    // Restituisce i percorsi per le immagini della Home
+    return [
+      '/assets/images/home/1.jpg',
+      '/assets/images/home/2.jpg',
+      '/assets/images/home/3.jpg',
+      '/assets/images/home/4.jpg'
+    ];
   },
 
   getCategoryImages: (folderName: string): string[] => {
-    // Ritorna array vuoto per attivare i fallback in VerticalLandingView.tsx
-    return [];
+    // Restituisce i percorsi dinamici per le categorie
+    return [
+      `/assets/images/${folderName}/1.jpg`,
+      `/assets/images/${folderName}/2.jpg`,
+      `/assets/images/${folderName}/3.jpg`,
+      `/assets/images/${folderName}/4.jpg`
+    ];
   }
 };
