@@ -49,7 +49,7 @@ const GDPRBanner: React.FC = () => {
           <div className="flex-1">
             <h4 className="font-black text-lg mb-1 pr-8 md:pr-0">Informativa Privacy e Cookie</h4>
             <p className="text-slate-400 text-sm font-medium leading-relaxed">
-              Chiudendo questo banner, scorrendo questa pagina o cliccando su "Accetto", acconsenti all'uso dei cookie tecnici (che includono Google Analytics e Ads) per migliorare la tua esperienza.
+              Chiudendo questo banner o scorrendo questa pagina, acconsenti solo all'uso dei cookie tecnici per migliorare la tua esperienza.
               <br />
               <a href="#" className="text-white underline hover:text-indigo-400 transition-colors mt-1 inline-block">Termini di servizio</a>.
             </p>
