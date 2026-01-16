@@ -32,8 +32,8 @@ const LANDING_CONFIG: Record<string, {
 }> = {
   'sito-web': {
     category: ServiceCategory.WEBSITE,
-    title: 'Realizza il tuo Sito Web Professionale',
-    subtitle: 'Trova sviluppatori esperti per creare il tuo sito vetrina, landing page o portale aziendale. Ricevi preventivi in 24 ore.',
+    title: 'Trova esperti per realizzare il tuo Sito',
+    subtitle: 'Ricevi preventivi da esperti vicino a te e in tutta Italia.',
     benefits: ['Siti veloci e ottimizzati SEO', 'Design moderno e responsive', 'Gestione autonoma dei contenuti'],
     fallbackImages: [
       'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
@@ -43,8 +43,8 @@ const LANDING_CONFIG: Record<string, {
   },
   'ecommerce': {
     category: ServiceCategory.ECOMMERCE,
-    title: 'Apri il tuo Negozio Online',
-    subtitle: 'Esperti in Shopify, WooCommerce e PrestaShop pronti a lanciare il tuo business digitale.',
+    title: 'Trova esperti per il tuo Negozio Online',
+    subtitle: 'Esperti di ecommerce come Shopify, WooCommerce e PrestaShop pronti a lanciare il tuo business digitale.',
     benefits: ['Integrazione pagamenti sicuri', 'Gestione magazzino automatizzata', 'Strategie di conversione incluse'],
     fallbackImages: [
       'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80',
@@ -66,7 +66,7 @@ const LANDING_CONFIG: Record<string, {
   'logo-branding': {
     category: ServiceCategory.BRANDING,
     title: 'Logo e Identità Visiva che lasciano il segno',
-    subtitle: 'Designer professionisti per creare il logo perfetto e l\'immagine coordinata della tua azienda.',
+    subtitle: 'Trova il tuo esperto per creare il logo perfetto e l\'immagine coordinata della tua azienda.',
     benefits: ['Logo vettoriale scalabile', 'Palette colori e font system', 'Brand Guidelines incluse'],
     fallbackImages: [
       'https://images.unsplash.com/photo-1626785774573-4b799314347d?auto=format&fit=crop&w=800&q=80',
@@ -76,7 +76,7 @@ const LANDING_CONFIG: Record<string, {
   },
   'sviluppo-app': {
     category: ServiceCategory.SOFTWARE,
-    title: 'Sviluppo App iOS e Android',
+    title: 'Trova il tuo esperto per Sviluppo App iOS e Android',
     subtitle: 'Trasforma la tua idea in un\'applicazione mobile performante. Sviluppatori nativi e cross-platform.',
     benefits: ['UX/UI Design intuitivo', 'Pubblicazione su Store Apple/Google', 'Manutenzione e supporto'],
     fallbackImages: [
@@ -224,13 +224,9 @@ const VerticalLandingView: React.FC = () => {
                 onClick={handleCtaClick}
                 className="px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center text-lg group"
               >
-                Richiedi Preventivo
+                Trova il tuo esperto
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </button>
-              <div className="flex items-center justify-center px-6 py-4 text-slate-500 text-sm font-medium">
-                <ShieldCheck size={18} className="mr-2 text-slate-400" />
-                Nessun costo per te
-              </div>
             </div>
             
             {/* Social Proof */}
@@ -244,7 +240,7 @@ const VerticalLandingView: React.FC = () => {
                   </div>
                </div>
                <div className="text-sm md:text-base">
-                  <span className="font-black text-slate-900">Meno recensioni,</span> <span className="text-slate-700 font-medium">più lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>
+                  <span className="font-black text-slate-900">Preventivi gratis</span> <span className="text-slate-700 font-medium">e lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>
                </div>
             </div>
           </div>
