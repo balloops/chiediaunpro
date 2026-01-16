@@ -151,6 +151,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const getPublicLinks = () => [
     { to: '/', label: 'Home', icon: <LayoutDashboard size={18} /> },
     { to: '/how-it-works', label: 'Come funziona', icon: <FileText size={18} /> },
+    { to: '/register?role=pro', label: 'Lavora come Pro', icon: <Briefcase size={18} /> },
     { to: '/post-job', label: 'Pubblica Richiesta', icon: <Send size={18} /> },
   ];
 
@@ -231,6 +232,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Home</Link>
             <Link to="/how-it-works" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Come funziona</Link>
+            {!user && (
+                <Link to="/register?role=pro" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Lavora come Pro</Link>
+            )}
             {user?.role === UserRole.PROFESSIONAL && (
               <Link to="/dashboard" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Le mie offerte</Link>
             )}
