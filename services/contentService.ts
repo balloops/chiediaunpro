@@ -43,7 +43,7 @@ const defaultContent: SiteContent = {
       title: 'Trova il professionista giusto per il tuo lavoro.',
       subtitle: 'Siti web, e-commerce, social, marketing, video, AI e molto altro. Ricevi proposte mirate da professionisti selezionati, in modo semplice e veloce.',
       badgeText: 'Il tuo progetto digitale, fatto bene',
-      ctaPrimary: 'Chiedi una proposta',
+      ctaPrimary: 'Trova il tuo esperto',
       ctaSecondary: 'Lavora come Pro',
       reviewScore: 'Preventivi gratis',
       reviewCount: 'fatti bene.',
@@ -72,7 +72,7 @@ const defaultContent: SiteContent = {
     cta: {
       title: 'Pronto a lanciare il tuo progetto?',
       description: 'Unisciti a migliaia di aziende e professionisti che stanno già rivoluzionando il modo di lavorare nel digitale.',
-      buttonClient: 'Chiedi una proposta',
+      buttonClient: 'Trova il tuo esperto',
       buttonPro: 'Crea Profilo Pro'
     }
   },
