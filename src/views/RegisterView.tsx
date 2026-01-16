@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, UserRole, ServiceCategory, SiteContent } from '../../types';
@@ -28,7 +29,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(''); // New Phone Field
+  const [phoneNumber, setPhoneNumber] = useState(''); // Phone Field
   
   // Pro Fields
   const [brandName, setBrandName] = useState('');
@@ -110,6 +111,12 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
   const features = role === UserRole.PROFESSIONAL 
     ? (content.auth?.register?.featuresPro || ['Verifica istantanea', 'Clienti di alta qualità']) 
     : (content.auth?.register?.featuresClient || ['Verifica istantanea', 'Preventivi mirati']);
+
+  // Validation logic updated to include phoneNumber
+  const isFormValid = () => {
+      if (!name || !email || !password || !phoneNumber) return false;
+      return true;
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 bg-white">
@@ -240,7 +247,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                   </div>
 
                   <div>
-                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Telefono (Opzionale)</label>
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Telefono</label>
                     <div className="relative group">
                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
                        <input 
@@ -249,6 +256,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           value={phoneNumber} 
                           onChange={e => setPhoneNumber(e.target.value)} 
                           className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                          required
                         />
                     </div>
                   </div>
@@ -359,7 +367,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
             <div className="mt-10">
               <button 
                 onClick={handleNext}
-                disabled={isLoading || !email || !password}
+                disabled={isLoading || !isFormValid()}
                 className="w-full py-5 bg-indigo-600 text-white font-black rounded-[24px] hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none transition-all shadow-xl shadow-indigo-200 flex items-center justify-center text-lg group"
               >
                 {isLoading ? (

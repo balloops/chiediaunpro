@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ServiceCategory, User, UserRole, FormDefinition } from '../../types';
@@ -18,7 +19,8 @@ import {
   Box,
   AlertCircle,
   LayoutDashboard,
-  Bot
+  Bot,
+  Phone
 } from 'lucide-react';
 import { jobService } from '../../services/jobService';
 import { contentService } from '../../services/contentService';
@@ -49,7 +51,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
   // Auth Interstitial State
   const [authMode, setAuthMode] = useState<'choice' | 'login' | 'register'>('choice');
-  const [authData, setAuthData] = useState({ email: '', password: '', name: '' });
+  const [authData, setAuthData] = useState({ email: '', password: '', name: '', phone: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -167,7 +169,8 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
       if (authMode === 'register') {
          await authService.signUp(authData.email, authData.password, {
             name: authData.name,
-            role: UserRole.CLIENT
+            role: UserRole.CLIENT,
+            phoneNumber: authData.phone // Add mandatory phone
          });
          
          // Track Sign Up
@@ -349,7 +352,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     className="w-full py-5 md:py-7 bg-indigo-600 text-white font-black rounded-[20px] md:rounded-[24px] hover:bg-indigo-700 shadow-[0_20px_60px_-10px_rgba(0,96,227,0.3)] transition-all text-xl md:text-2xl flex items-center justify-center disabled:opacity-50 disabled:shadow-none group"
                     onClick={handleFinalSubmit}
                   >
-                    {isSubmitting ? 'Invio in corso...' : (user ? 'Invia Richiesta' : 'Continua e Pubblica')}
+                    {isSubmitting ? 'Invio in corso...' : (user ? 'Invia richiesta' : 'Invia richiesta')}
                     {!isSubmitting && <ChevronRight className="ml-3 group-hover:translate-x-2 transition-transform" size={28} />}
                   </button>
                   <p className="text-center text-slate-400 text-xs md:text-sm mt-6 font-medium">Riceverai i primi preventivi in meno di 24 ore.</p>
@@ -417,6 +420,19 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                         placeholder="nome@email.it"
                       />
                     </div>
+                    {authMode === 'register' && (
+                      <div className="space-y-2 md:space-y-3">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Telefono</label>
+                        <input 
+                          type="tel" 
+                          required
+                          value={authData.phone}
+                          onChange={e => setAuthData({...authData, phone: e.target.value})}
+                          className="w-full bg-slate-50 border-2 border-slate-100 py-4 md:py-5 px-6 md:px-8 rounded-2xl focus:border-indigo-500 outline-none transition-all text-base md:text-lg font-medium"
+                          placeholder="+39 333 1234567"
+                        />
+                      </div>
+                    )}
                     <div className="space-y-2 md:space-y-3">
                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
                       <input 
