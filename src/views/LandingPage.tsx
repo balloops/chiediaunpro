@@ -135,7 +135,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8 relative z-10">
               <div className="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-medium">
-                <Star size={14} className="fill-current" />
                 <span>{content.home.hero.badgeText}</span>
               </div>
               <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1]">
