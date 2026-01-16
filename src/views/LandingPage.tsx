@@ -193,15 +193,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                  ))}
               </div>
 
-              <div className="absolute -bottom-8 -left-8 bg-white p-6 rounded-[24px] shadow-xl z-20 hidden md:block border border-slate-100">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-green-100 text-green-600 p-2 rounded-xl">
-                    <ShieldCheck size={24} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-900">{content.home.hero.verifiedBadgeTitle || 'Professionisti Verificati'}</div>
-                    <div className="text-xs text-slate-500">{content.home.hero.verifiedBadgeText || 'Solo esperti con partita IVA'}</div>
-                  </div>
+              {/* Badge Professionisti Verificati - Adattivo Mobile/Desktop */}
+              <div className="absolute bottom-4 left-4 right-4 md:right-auto md:bottom-8 md:left-8 bg-white p-4 md:p-6 rounded-2xl md:rounded-[24px] shadow-xl z-20 border border-slate-100 flex items-center gap-4">
+                <div className="bg-green-100 text-green-600 p-2 md:p-2.5 rounded-xl shrink-0">
+                  <ShieldCheck className="w-5 h-5 md:w-6 md:h-6" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-slate-900 leading-tight">{content.home.hero.verifiedBadgeTitle || 'Professionisti Verificati'}</div>
+                  <div className="text-[10px] md:text-xs text-slate-500">{content.home.hero.verifiedBadgeText || 'Solo esperti con partita IVA'}</div>
                 </div>
               </div>
             </div>
