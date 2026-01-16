@@ -153,12 +153,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   {content.home.hero.ctaPrimary}
                   <ChevronRight className="ml-2" />
                 </Link>
-                <Link 
-                  to={user ? "/dashboard" : "/register?role=pro"}
-                  className="px-8 py-4 bg-white border-2 border-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center text-lg"
-                >
-                  {content.home.hero.ctaSecondary}
-                </Link>
               </div>
 
               <div className="flex items-center space-x-8 pt-4">
