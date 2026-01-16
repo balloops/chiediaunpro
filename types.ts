@@ -6,16 +6,16 @@ export enum UserRole {
 }
 
 export enum ServiceCategory {
-  WEBSITE = 'Sito Web',
+  WEBSITE = 'Siti web',
   ECOMMERCE = 'E-commerce',
-  DESIGN = 'UX/UI Design',
-  BRANDING = 'Branding & Grafica',
-  PHOTOGRAPHY = 'Fotografia',
-  VIDEO = 'Video & Motion',
+  BRANDING = 'Branding e Grafica',
+  VIDEO = 'Video e animazioni',
   MARKETING = 'Social Media & Marketing',
   SOFTWARE = 'Sviluppo Software & App',
   AI = 'Intelligenza Artificiale',
+  PHOTOGRAPHY = 'Fotografia',
   THREE_D = '3D & Animazione',
+  DESIGN = 'UX/UI Design',
   CUSTOM = 'Altro'
 }
 
