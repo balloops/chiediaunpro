@@ -40,8 +40,8 @@ const defaultContent: SiteContent = {
   },
   home: {
     hero: {
-      title: 'Trova il Pro giusto per il tuo progetto.',
-      subtitle: 'Dal sito web alla strategia social: ricevi fino a 5 proposte gratuite dai migliori professionisti digitali in meno di 24 ore.',
+      title: 'Trova il professionista giusto per il tuo lavoro.',
+      subtitle: 'Siti web, e-commerce, social, marketing, video, AI e molto altro. Ricevi proposte mirate da professionisti selezionati, in modo semplice e veloce.',
       badgeText: 'Il tuo progetto digitale, fatto bene',
       ctaPrimary: 'Chiedi una proposta',
       ctaSecondary: 'Lavora come Pro',
