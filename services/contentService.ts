@@ -3,9 +3,9 @@ import { supabase } from './supabaseClient';
 import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } from '../types';
 
 // CAMBIO CHIAVI PER FORZARE IL RESET DELLA CACHE LOCALE
-const PLANS_KEY = 'lavorabene_plans_v2';
-const CATEGORIES_KEY = 'lavorabene_categories_v2';
-const FORMS_KEY = 'lavorabene_forms_v4'; // Aggiornato a v4 per budget "Da Stimare"
+const PLANS_KEY = 'lavorabene_plans_v3';
+const CATEGORIES_KEY = 'lavorabene_categories_v3';
+const FORMS_KEY = 'lavorabene_forms_v5'; // Aggiornato per riflettere i nuovi nomi categorie
 
 const defaultContent: SiteContent = {
   branding: {
@@ -160,7 +160,7 @@ const defaultPlans: PricingPlan[] = [
 
 const defaultForms: FormDefinition[] = [
   {
-    categoryId: 'Sito Web',
+    categoryId: 'Siti web', // Aggiornato
     fields: [
       { id: 'type', label: 'Tipologia sito', type: 'radio_group', options: ['Landing Page (1 Pagina)', 'Sito Aziendale (Vetrina)', 'Portale/Web App', 'Blog/Editoriale'] },
       { id: 'status', label: 'Stato attuale', type: 'select', options: ['Parto da zero', 'Ho già il design', 'Ho già un sito vecchio da rifare', 'Ho solo il logo'] },
@@ -196,7 +196,7 @@ const defaultForms: FormDefinition[] = [
     descriptionPlaceholder: "Descrivi il tuo target e cosa hai fatto finora. Esempio: Siamo una startup B2B, vogliamo trovare clienti su LinkedIn. Abbiamo un budget mensile per le ads escluso."
   },
   {
-    categoryId: 'Branding & Grafica',
+    categoryId: 'Branding e Grafica', // Aggiornato
     fields: [
       { id: 'deliverables', label: 'Cosa ti serve?', type: 'multiselect', options: ['Logo Design', 'Brand Identity Completa', 'Brochure/Flyer', 'Packaging', 'Presentazioni Slide', 'Social Media Kit'] },
       { id: 'style', label: 'Stile preferito', type: 'select', options: ['Minimal & Moderno', 'Lussuoso & Elegante', 'Giocoso & Colorato', 'Corporate & Serio', 'Non lo so ancora'] },
@@ -218,7 +218,7 @@ const defaultForms: FormDefinition[] = [
     descriptionPlaceholder: "Descrivi cosa deve fare il software. Qual è il problema che risolve? Chi lo userà (dipendenti, clienti finali)? Hai scadenze precise?"
   },
   {
-    categoryId: 'Video & Motion',
+    categoryId: 'Video e animazioni', // Aggiornato e rinominato
     fields: [
       { id: 'type', label: 'Tipo di video', type: 'radio_group', options: ['Video Corporate/Aziendale', 'Spot Pubblicitario', 'Reels/TikTok (Short)', 'Video Animato 2D/3D', 'Editing Evento'] },
       { id: 'duration', label: 'Durata stimata', type: 'select', options: ['< 30 secondi', '1 minuto', '2-5 minuti', 'Lungo (> 10 min)'] },
