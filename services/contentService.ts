@@ -42,12 +42,12 @@ const defaultContent: SiteContent = {
     hero: {
       title: 'Trova il Pro giusto per il tuo progetto.',
       subtitle: 'Dal sito web alla strategia social: ricevi fino a 5 proposte gratuite dai migliori professionisti digitali in meno di 24 ore.',
-      badgeText: 'La piattaforma #1 per il digital business',
+      badgeText: 'Il tuo progetto digitale, fatto bene',
       ctaPrimary: 'Chiedi una proposta',
       ctaSecondary: 'Lavora come Pro',
-      reviewScore: '4.9/5',
-      reviewCount: '5.000 progetti',
-      reviewText: 'media recensioni su oltre',
+      reviewScore: 'Preventivi gratis',
+      reviewCount: 'fatti bene.',
+      reviewText: 'e lavori',
       verifiedBadgeTitle: 'Professionisti Verificati', // Default
       verifiedBadgeText: 'Solo esperti con partita IVA' // Default
     },
