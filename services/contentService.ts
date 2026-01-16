@@ -176,7 +176,7 @@ const defaultForms: FormDefinition[] = [
     fields: [
       { id: 'products_count', label: 'Quanti prodotti venderai?', type: 'select', options: ['1-10', '10-100', '100-1000', '1000+'] },
       { id: 'platform', label: 'Piattaforma preferita', type: 'radio_group', options: ['Shopify', 'WooCommerce', 'PrestaShop', 'Custom / Altro'] },
-      { id: 'sector', label: 'Settore merceologico', type: 'select', options: ['Abbigliamento/Moda', 'Elettronica', 'Cibo & Bevande', 'Arredamento', 'Servizi Digitali', 'Altro'] },
+      { id: 'sector', label: 'Settore merceologico', type: 'select', options: ['Abbigliamento/Moda', 'Elettronica', 'Cibo & Bevande', 'Arredamento', 'Servizi', 'Altro'] },
       { id: 'integrations', label: 'Integrazioni richieste', type: 'multiselect', options: ['Gestionale Magazzino', 'Fatturazione Automatica', 'Amazon/eBay Sync', 'Klarna/Scalapay', 'Spedizioni Automatizzate'] }
     ],
     budgetOptions: ['Da Stimare', '< 1.500€', '1.500 - 3.000€', '3.000 - 6.000€', '6.000€+'],
