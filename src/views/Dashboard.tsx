@@ -168,8 +168,8 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
         }
     };
 
-    if (loading) return <div className="p-10 text-center">Caricamento...</div>;
-    if (!job) return <div className="p-10 text-center">Richiesta non trovata.</div>;
+    if (loading) return <div className="p-20 flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
+    if (!job) return <div className="p-10 text-center text-slate-500">Richiesta non trovata o rimossa.</div>;
 
     const myQuote = isPro ? quotes.find(q => q.proId === user.id) : null;
     const hasQuotes = quotes.length > 0;
@@ -497,8 +497,8 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
         }
     };
 
-    if (loading) return <div className="p-10 text-center">Caricamento...</div>;
-    if (!quote || !job) return <div className="p-10 text-center">Preventivo non trovato.</div>;
+    if (loading) return <div className="p-20 flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
+    if (!quote || !job) return <div className="p-10 text-center text-slate-500">Preventivo non trovato.</div>;
 
     const isAccepted = quote.status === 'ACCEPTED';
 
