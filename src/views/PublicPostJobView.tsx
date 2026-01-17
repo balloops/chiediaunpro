@@ -46,7 +46,8 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [jobDescription, setJobDescription] = useState('');
   const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
-  const [budget, setBudget] = useState('');
+  // DEFAULT BUDGET impostato a "Da concordare" per bypassare la richiesta ma mantenere coerenza DB
+  const [budget, setBudget] = useState('Da concordare');
   const [locationCity, setLocationCity] = useState('');
 
   // Auth Interstitial State
@@ -297,40 +298,19 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                   setDetails={setJobDetails}
                 />
 
-                <section className="space-y-8 md:space-y-10 px-1 sm:px-4">
-                   <div className="flex items-start space-x-5 mb-6">
-                    <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
-                      <Euro size={24} />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-black text-slate-900 leading-tight uppercase tracking-tight">Budget & Logistica</h4>
-                      <p className="text-base text-slate-500 font-medium mt-1">Informazioni chiave per la fattibilità economica.</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                    <div className="space-y-6">
-                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Budget Stimato</label>
-                      <div className="grid grid-cols-2 gap-4">
-                        {formDefinition.budgetOptions.map(b => (
-                          <button 
-                            key={b}
-                            onClick={() => setBudget(b)}
-                            className={`py-4 md:py-5 px-4 rounded-[20px] md:rounded-[24px] text-xs md:text-sm font-black border-2 transition-all duration-200 ${
-                              budget === b 
-                                ? 'border-indigo-600 bg-indigo-600 text-white shadow-xl shadow-indigo-200 scale-[1.02]' 
-                                : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 bg-white'
-                            }`}
-                          >
-                            {b}
-                          </button>
-                        ))}
+                {formDefinition.askLocation && (
+                  <section className="space-y-8 md:space-y-10 px-1 sm:px-4">
+                     <div className="flex items-start space-x-5 mb-6">
+                      <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
+                        <MapPin size={24} />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-black text-slate-900 leading-tight uppercase tracking-tight">Località</h4>
+                        <p className="text-base text-slate-500 font-medium mt-1">Dove deve essere svolto il lavoro?</p>
                       </div>
                     </div>
-                    
-                    {formDefinition.askLocation && (
-                      <div className="space-y-6">
-                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Città (Opzionale)</label>
+
+                    <div className="w-full">
                         <div className="relative">
                             <MapPin className="absolute top-4 left-4 text-slate-400" size={20} />
                             <input 
@@ -341,14 +321,13 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                               className="w-full bg-white border-2 border-slate-200 rounded-[24px] py-4 pl-12 pr-6 text-sm font-bold text-slate-900 focus:border-indigo-600 outline-none transition-all"
                             />
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </section>
+                    </div>
+                  </section>
+                )}
 
                 <div className="pt-4 px-1 sm:px-4">
                   <button 
-                    disabled={!jobDescription || !budget || isSubmitting}
+                    disabled={!jobDescription || isSubmitting}
                     className="w-full py-5 md:py-7 bg-indigo-600 text-white font-black rounded-[20px] md:rounded-[24px] hover:bg-indigo-700 shadow-[0_20px_60px_-10px_rgba(0,96,227,0.3)] transition-all text-xl md:text-2xl flex items-center justify-center disabled:opacity-50 disabled:shadow-none group"
                     onClick={handleFinalSubmit}
                   >
