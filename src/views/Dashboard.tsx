@@ -560,6 +560,13 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                     <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-xl sticky top-24">
                         <div className={`p-8 text-white ${isAccepted ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                             <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="text-white/60 font-bold uppercase tracking-widest text-xs mb-2">
+                                        {isPro ? 'Il tuo preventivo' : 'Preventivo ricevuto'}
+                                    </div>
+                                    <h1 className="text-4xl font-black">{quote.price} €</h1>
+                                    <div className="text-white/80 font-medium mt-1">Tempistiche: {quote.timeline}</div>
+                                </div>
                                 {isAccepted && (
                                     <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
                                         <Check size={32} className="text-white" />
