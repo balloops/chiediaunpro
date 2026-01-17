@@ -44,10 +44,10 @@ const HowItWorksView: React.FC = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen pt-20 pb-32">
-      <div className="max-w-[1250px] mx-auto px-6">
+      <div className="max-w-[1250px] mx-auto px-0 md:px-6">
         
         {/* Header Section */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-16 px-6 md:px-0">
           <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
             {content.howItWorks.header.title} <span className="text-indigo-600">{content.branding.platformName}</span>
           </h1>
@@ -57,8 +57,8 @@ const HowItWorksView: React.FC = () => {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex justify-center mb-16">
-          <div className="bg-white p-1.5 rounded-full shadow-lg shadow-indigo-500/10 border border-slate-100 inline-grid grid-cols-2 relative min-w-[320px] sm:min-w-[400px]">
+        <div className="flex justify-center mb-16 px-4 md:px-0">
+          <div className="bg-white p-1.5 rounded-full shadow-lg shadow-indigo-500/10 border border-slate-100 inline-grid grid-cols-2 relative min-w-full sm:min-w-[400px]">
             <button
               onClick={() => setActiveTab('client')}
               className={`flex items-center justify-center space-x-2 px-6 py-4 rounded-full text-sm font-bold transition-all duration-300 relative z-10 ${
@@ -92,7 +92,7 @@ const HowItWorksView: React.FC = () => {
         </div>
 
         {/* Steps Content */}
-        <div className="bg-white rounded-[24px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] border border-slate-200 p-8 lg:p-16 overflow-hidden relative">
+        <div className="bg-white rounded-none md:rounded-[24px] shadow-sm md:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] border-y md:border border-slate-200 p-8 lg:p-16 overflow-hidden relative">
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 relative z-10">
             {(activeTab === 'client' ? clientSteps : proSteps).map((step, idx) => (
@@ -120,14 +120,14 @@ const HowItWorksView: React.FC = () => {
           </div>
 
           {/* CTA Section */}
-          <div className="mt-20 text-center animate-in fade-in duration-1000 delay-500">
-            <div className="inline-block p-10 rounded-[24px] bg-slate-50 border border-slate-100">
+          <div className="mt-20 text-center animate-in fade-in duration-1000 delay-500 relative z-20">
+            <div className="inline-block p-10 rounded-[24px] bg-slate-50 border border-slate-100 w-full md:w-auto">
               <h4 className="text-2xl font-black text-slate-900 mb-6">
                 {activeTab === 'client' ? content.howItWorks.cta.titleClient : content.howItWorks.cta.titlePro}
               </h4>
               <Link
                 to={activeTab === 'client' ? '/post-job' : '/register?role=pro'}
-                className="inline-flex items-center px-10 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all text-lg group"
+                className="inline-flex items-center justify-center w-full md:w-auto px-10 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all text-lg group relative z-30"
               >
                 {activeTab === 'client' ? content.howItWorks.cta.buttonClient : content.howItWorks.cta.buttonPro}
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
@@ -136,8 +136,8 @@ const HowItWorksView: React.FC = () => {
           </div>
 
           {/* Background Decorative Blobs */}
-          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl -z-0"></div>
-          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-50/50 rounded-full blur-3xl -z-0"></div>
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl -z-0 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-50/50 rounded-full blur-3xl -z-0 pointer-events-none"></div>
         </div>
 
       </div>
