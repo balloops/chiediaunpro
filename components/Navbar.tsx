@@ -22,6 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [content, setContent] = useState<SiteContent>(contentService.getContent());
+  const [logoError, setLogoError] = useState(false); // New state for logo fallback
   
   const notifDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -207,12 +208,13 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
         
         {/* LEFT: Logo */}
         <Link to={logoLink} className="flex items-center z-50 relative">
-          {content.branding.logoUrl ? (
-             // Logo come immagine completa (es. 212x30)
+          {content.branding.logoUrl && !logoError ? (
+             // Logo come immagine completa
              <img 
                src={content.branding.logoUrl} 
                alt={content.branding.platformName} 
                className="h-[30px] w-auto object-contain" 
+               onError={() => setLogoError(true)} // Fallback to text on error
              />
           ) : (
             // Fallback: Icona + Testo
