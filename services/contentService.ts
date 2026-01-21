@@ -5,13 +5,13 @@ import { PricingPlan, SiteContent, ServiceCategory, PlanType, FormDefinition } f
 // CAMBIO CHIAVI PER FORZARE IL RESET DELLA CACHE LOCALE
 const PLANS_KEY = 'lavorabene_plans_v3';
 const CATEGORIES_KEY = 'lavorabene_categories_v3';
-const FORMS_KEY = 'lavorabene_forms_v5'; // Aggiornato per riflettere i nuovi nomi categorie
+const FORMS_KEY = 'lavorabene_forms_v5'; 
 
 const defaultContent: SiteContent = {
   branding: {
     platformName: 'LavoraBene',
-    // IMPORTANTE: Percorso assoluto (inizia con /) per funzionare in /dashboard e /admin
-    logoUrl: '/assets/logo/logo-lavorabene.webp', 
+    // Percorso relativo: la Navbar aggiungerà il BASE_URL corretto
+    logoUrl: 'assets/logo/logo-lavorabene.webp', 
     faviconUrl: ''
   },
   auth: {
@@ -264,7 +264,6 @@ export const contentService = {
       }
 
       if (data && data.content) {
-        // Deep merge to ensure new fields (like 'ratingLabel') are present even if DB data is old
         const mergedContent: SiteContent = {
             ...defaultContent,
             ...data.content,
@@ -276,7 +275,7 @@ export const contentService = {
                     ...defaultContent.auth.register,
                     ...(data.content.auth?.register || {})
                 }
-            }, // Merge auth deep
+            }, 
             home: {
                 ...defaultContent.home,
                 ...(data.content.home || {}),
