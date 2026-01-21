@@ -10,9 +10,8 @@ const FORMS_KEY = 'lavorabene_forms_v5'; // Aggiornato per riflettere i nuovi no
 const defaultContent: SiteContent = {
   branding: {
     platformName: 'LavoraBene',
-    // IMPORTANTE: Questo file deve esistere in public/assets/logo/logo-lavorabene.webp
-    // Rimosso lo slash iniziale per compatibilità con base: './'
-    logoUrl: 'assets/logo/logo-lavorabene.webp', 
+    // IMPORTANTE: Percorso assoluto (inizia con /) per funzionare in /dashboard e /admin
+    logoUrl: '/assets/logo/logo-lavorabene.webp', 
     faviconUrl: ''
   },
   auth: {
