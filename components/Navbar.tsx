@@ -122,6 +122,14 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
+  // Helper to ensure path is absolute
+  const getSafeLogoUrl = (url: string | undefined) => {
+      if (!url) return '';
+      if (url.startsWith('http') || url.startsWith('data:')) return url;
+      // Ensure it starts with / to be absolute from root domain
+      return url.startsWith('/') ? url : `/${url}`;
+  };
+
   // --- NAVIGATION CONFIG ---
   const getDashboardLinks = () => {
     const links = [];
@@ -211,7 +219,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           {content.branding.logoUrl && !logoError ? (
              // Logo come immagine completa
              <img 
-               src={content.branding.logoUrl} 
+               src={getSafeLogoUrl(content.branding.logoUrl)} 
                alt={content.branding.platformName} 
                className="h-[30px] w-auto object-contain" 
                // AGGIUNTA DIMENSIONI PER CLS
