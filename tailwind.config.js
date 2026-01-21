@@ -3,6 +3,7 @@
 export default {
   content: [
     "./index.html",
+    "./*.{js,ts,jsx,tsx}", // AGGIUNTO: Scansiona file nella root come App.tsx
     "./src/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}"
   ],
