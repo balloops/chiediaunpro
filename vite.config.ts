@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
-    base: './', 
+    base: '/', // CAMBIATO DA './' A '/' PER IL ROUTING CORRETTO
     css: {
       postcss: './postcss.config.js', // Forza la lettura della config PostCSS
     },
