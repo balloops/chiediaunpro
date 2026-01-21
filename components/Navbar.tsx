@@ -122,18 +122,17 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  // ROBUST PATH HANDLING FOR LOGO (FIXED CRASH)
+  // FAIL-SAFE LOGO PATH HANDLING
   const getSafeLogoUrl = (url: string | undefined) => {
       if (!url) return '';
       if (url.startsWith('http') || url.startsWith('data:')) return url;
       
+      // Rimuoviamo slash iniziale se presente per evitare doppi slash o problemi con base relativa
       const cleanPath = url.startsWith('/') ? url.slice(1) : url;
       
-      // Usa optional chaining (?.) per evitare crash se import.meta.env è undefined
-      // Fallback a './' se non definito
-      const baseUrl = import.meta.env?.BASE_URL ?? './';
-      
-      return `${baseUrl}${cleanPath}`;
+      // Usiamo ./ esplicitamente. Poiché vite.config ha base: './', questo risolverà 
+      // correttamente asset relativi alla root (index.html) in HashRouter.
+      return `./${cleanPath}`;
   };
 
   // --- NAVIGATION CONFIG ---
