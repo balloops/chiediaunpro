@@ -122,12 +122,18 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  // Helper to ensure path is absolute
+  // ROBUST PATH HANDLING FOR LOGO (FIXED CRASH)
   const getSafeLogoUrl = (url: string | undefined) => {
       if (!url) return '';
       if (url.startsWith('http') || url.startsWith('data:')) return url;
-      // Ensure it starts with / to be absolute from root domain
-      return url.startsWith('/') ? url : `/${url}`;
+      
+      const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+      
+      // Usa optional chaining (?.) per evitare crash se import.meta.env è undefined
+      // Fallback a './' se non definito
+      const baseUrl = import.meta.env?.BASE_URL ?? './';
+      
+      return `${baseUrl}${cleanPath}`;
   };
 
   // --- NAVIGATION CONFIG ---
@@ -222,10 +228,11 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                src={getSafeLogoUrl(content.branding.logoUrl)} 
                alt={content.branding.platformName} 
                className="h-[30px] w-auto object-contain" 
-               // AGGIUNTA DIMENSIONI PER CLS
+               // Prevent CLS & Safari issues
+               style={{ height: '30px', width: 'auto' }}
                width="150" 
                height="30"
-               onError={() => setLogoError(true)} // Fallback to text on error
+               onError={() => setLogoError(true)} 
              />
           ) : (
             // Fallback: Icona + Testo
