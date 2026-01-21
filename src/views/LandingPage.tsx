@@ -175,18 +175,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                  {heroImages.map((img, idx) => (
                     <img 
                       key={`${img}-${idx}`} 
-                      src={img} 
+                      src={img}
+                      width="600"
+                      height="500" 
                       onError={() => handleImageError(idx)}
                       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
                       alt={`Digital Work ${idx}`}
-                      // Carica con priorità solo l'immagine corrente (anche se casuale)
+                      // Carica con priorità solo l'immagine corrente
                       loading={idx === currentImageIndex ? "eager" : "lazy"}
                       fetchPriority={idx === currentImageIndex ? "high" : "auto"}
                     />
                  ))}
               </div>
 
-              {/* Badge Professionisti Verificati - Adattivo Mobile/Desktop */}
+              {/* Badge Professionisti Verificati */}
               <div className="absolute bottom-4 left-4 right-4 md:right-auto md:bottom-8 md:left-8 bg-white p-4 md:p-6 rounded-2xl md:rounded-[24px] shadow-xl z-20 border border-slate-100 flex items-center gap-4">
                 <div className="bg-green-100 text-green-600 p-2 md:p-2.5 rounded-xl shrink-0">
                   <ShieldCheck className="w-5 h-5 md:w-6 md:h-6" />
@@ -236,8 +238,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         <div className="max-w-[1250px] mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-24 items-center">
             <div className="grid grid-cols-2 gap-4">
-              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" className="rounded-[24px] shadow-lg mt-8" alt="Pro" loading="lazy" />
-              <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=400&q=80" className="rounded-[24px] shadow-lg" alt="Pro" loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" width="400" height="500" className="rounded-[24px] shadow-lg mt-8" alt="Pro" loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=400&q=80" width="400" height="500" className="rounded-[24px] shadow-lg" alt="Pro" loading="lazy" />
             </div>
             <div>
               <h2 className="text-4xl font-extrabold text-slate-900 mb-8 leading-tight">
