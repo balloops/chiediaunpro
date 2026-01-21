@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
-    base: '/', // CAMBIATO DA './' A '/' PER IL ROUTING CORRETTO
+    base: './', // IMPORTANTE: Relativo per supportare HashRouter e sottocartelle
     css: {
       postcss: './postcss.config.js', // Forza la lettura della config PostCSS
     },
