@@ -214,6 +214,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                src={content.branding.logoUrl} 
                alt={content.branding.platformName} 
                className="h-[30px] w-auto object-contain" 
+               // AGGIUNTA DIMENSIONI PER CLS
+               width="150" 
+               height="30"
                onError={() => setLogoError(true)} // Fallback to text on error
              />
           ) : (
