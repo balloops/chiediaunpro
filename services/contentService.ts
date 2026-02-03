@@ -10,7 +10,7 @@ const FORMS_KEY = 'lavorabene_forms_v5';
 const defaultContent: SiteContent = {
   branding: {
     platformName: 'LavoraBene',
-    // Percorso relativo: la Navbar aggiungerà il BASE_URL corretto
+    // IMPORTANTE: Percorso relativo pulito. Navbar aggiungerà ./ automaticamente
     logoUrl: 'assets/logo/logo-lavorabene.webp', 
     faviconUrl: ''
   },
