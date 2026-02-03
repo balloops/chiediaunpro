@@ -22,7 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [content, setContent] = useState<SiteContent>(contentService.getContent());
-  const [logoError, setLogoError] = useState(false); // New state for logo fallback
+  const [logoError, setLogoError] = useState(false);
   
   const notifDropdownRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -38,6 +38,11 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     contentService.fetchContent().then(setContent);
     setIsMobileMenuOpen(false); // Close menu on route change
   }, [location]);
+
+  // Reset Logo Error quando cambia l'URL (es. aggiornamento CMS)
+  useEffect(() => {
+    setLogoError(false);
+  }, [content.branding.logoUrl]);
 
   useEffect(() => {
     if (!user) return;
@@ -122,16 +127,24 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  // FAIL-SAFE LOGO PATH HANDLING
+  // ROBUST LOGO PATH HANDLING
   const getSafeLogoUrl = (url: string | undefined) => {
       if (!url) return '';
       if (url.startsWith('http') || url.startsWith('data:')) return url;
       
-      // Rimuoviamo slash iniziale se presente per evitare doppi slash o problemi con base relativa
-      const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+      let cleanPath = url;
       
-      // Usiamo ./ esplicitamente. Poiché vite.config ha base: './', questo risolverà 
-      // correttamente asset relativi alla root (index.html) in HashRouter.
+      // Rimuove 'public/' se presente (errore comune)
+      if (cleanPath.startsWith('public/')) {
+          cleanPath = cleanPath.replace('public/', '');
+      }
+      
+      // Rimuove slash iniziale per standardizzare
+      if (cleanPath.startsWith('/')) {
+          cleanPath = cleanPath.slice(1);
+      }
+      
+      // Aggiunge ./ per percorso relativo corretto dalla root
       return `./${cleanPath}`;
   };
 
@@ -231,7 +244,10 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                style={{ height: '30px', width: 'auto' }}
                width="150" 
                height="30"
-               onError={() => setLogoError(true)} 
+               onError={(e) => {
+                   console.warn("Logo load error:", e.currentTarget.src);
+                   setLogoError(true);
+               }} 
              />
           ) : (
             // Fallback: Icona + Testo
