@@ -13,6 +13,8 @@ import PublicPostJobView from './src/views/PublicPostJobView';
 import AdminDashboard from './src/views/AdminDashboard';
 import HowItWorksView from './src/views/HowItWorksView';
 import HelpView from './src/views/HelpView';
+import BlogIndexView from './src/views/BlogIndexView';
+import BlogPostView from './src/views/BlogPostView';
 import GDPRBanner from './components/GDPRBanner';
 import RouteTracker from './components/RouteTracker'; 
 import { authService } from './services/authService';
@@ -192,6 +194,8 @@ const App: React.FC = () => {
             <Route path="/how-it-works" element={<HowItWorksView />} />
             <Route path="/post-job" element={<PublicPostJobView user={auth.user} onLogin={handleLoginSuccess} />} />
             <Route path="/help" element={<HelpView />} />
+            <Route path="/blog" element={<BlogIndexView />} />
+            <Route path="/blog/:slug" element={<BlogPostView />} />
             
             {/* Landing Verticali (per servizio, opzionalmente per città) */}
             <Route path="/service/:slug" element={<VerticalLandingView />} />
