@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { User, UserRole, AuthState } from './types';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -39,16 +39,14 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Sync Branding Effect (Favicon & Title)
+  // Sync Branding Effect (Favicon)
+  // Nota: il titolo della pagina NON viene più impostato qui — è gestito dal
+  // componente SEO per-pagina (react-helmet-async). Impostarlo qui in modo
+  // imperativo sovrascriveva i title/meta specifici di ogni route.
   useEffect(() => {
     const loadBranding = async () => {
       const content = await contentService.fetchContent();
-      
-      // Update Title
-      if (content.branding.platformName) {
-        document.title = content.branding.platformName;
-      }
-      
+
       // Update Favicon
       if (content.branding.faviconUrl) {
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -110,7 +108,7 @@ const App: React.FC = () => {
         if (event === 'PASSWORD_RECOVERY') {
             const user = await authService.getCurrentUser();
             setAuth({ user, isAuthenticated: true, isLoading: false });
-            window.location.hash = '/dashboard?tab=settings&mode=recovery';
+            window.location.href = '/dashboard?tab=settings&mode=recovery';
         }
         else if (event === 'SIGNED_IN' && session) {
            const user = await authService.getCurrentUser();

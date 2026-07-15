@@ -27,6 +27,7 @@ import { contentService } from '../../services/contentService';
 import { authService } from '../../services/authService'; 
 import { analyticsService } from '../../services/analyticsService'; // Import Analytics
 import ServiceForm from '../../components/ServiceForm';
+import SEO from '../../components/SEO';
 
 interface PublicPostJobViewProps {
   user: User | null;
@@ -206,6 +207,11 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
 
   return (
     <div className="min-h-screen bg-white md:bg-slate-50 pt-0 md:pt-12 pb-32 px-0 md:px-6">
+      <SEO
+        title="Richiedi un Preventivo Gratuito"
+        description="Descrivi il tuo progetto e ricevi preventivi gratuiti da professionisti digitali verificati: siti web, e-commerce, branding, marketing e altro."
+        path="/post-job"
+      />
       <div className="max-w-[1250px] mx-auto">
         
         {user && (

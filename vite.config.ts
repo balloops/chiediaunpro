@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
-    base: './', // IMPORTANTE: Relativo per supportare HashRouter e sottocartelle
+    base: '/',
     css: {
       postcss: './postcss.config.js', // Forza la lettura della config PostCSS
     },

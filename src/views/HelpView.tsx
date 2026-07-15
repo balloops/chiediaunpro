@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
 import { SiteContent } from '../../types';
+import SEO from '../../components/SEO';
 
 const HelpView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'client' | 'pro'>('client');
@@ -39,6 +40,11 @@ const HelpView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      <SEO
+        title="Centro Assistenza"
+        description="Domande frequenti su LavoraBene: come funzionano i preventivi, i pagamenti, l'account e la fiducia tra clienti e professionisti."
+        path="/help"
+      />
       {/* Hero Search Section */}
       <div className="bg-indigo-600 pt-32 pb-20 px-6 text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>

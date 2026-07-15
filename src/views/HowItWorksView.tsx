@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
 import { SiteContent } from '../../types';
+import SEO from '../../components/SEO';
 
 const HowItWorksView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'client' | 'pro'>('client');
@@ -44,6 +45,11 @@ const HowItWorksView: React.FC = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen pt-20 pb-32">
+      <SEO
+        title="Come Funziona"
+        description="Scopri come richiedere un preventivo gratuito su LavoraBene o come iscriverti come professionista: pubblica il progetto, ricevi proposte, scegli il migliore."
+        path="/how-it-works"
+      />
       <div className="max-w-[1250px] mx-auto px-0 md:px-6">
         
         {/* Header Section */}

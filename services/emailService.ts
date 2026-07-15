@@ -127,7 +127,7 @@ export const emailService = {
    */
   async notifyClientJobPosted(clientEmail: string, clientName: string, jobTitle: string, jobId: string) {
     const baseUrl = getBaseUrl();
-    const link = `${baseUrl}#/dashboard/job/${jobId}?tab=my-requests`;
+    const link = `${baseUrl}/dashboard/job/${jobId}?tab=my-requests`;
     const subject = `Richiesta pubblicata: "${jobTitle}"`;
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
@@ -149,7 +149,7 @@ export const emailService = {
    */
   async notifyClientNewQuote(clientEmail: string, clientName: string, proName: string, jobTitle: string, jobId: string) {
     const baseUrl = getBaseUrl();
-    const link = `${baseUrl}#/dashboard/job/${jobId}?tab=my-requests`;
+    const link = `${baseUrl}/dashboard/job/${jobId}?tab=my-requests`;
     const subject = `Nuovo preventivo per "${jobTitle}"`;
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
@@ -170,7 +170,7 @@ export const emailService = {
    */
   async notifyProQuoteAccepted(proEmail: string, proName: string, clientName: string, jobTitle: string, quoteId: string) {
     const baseUrl = getBaseUrl();
-    const link = `${baseUrl}#/dashboard/quote/${quoteId}?tab=won`;
+    const link = `${baseUrl}/dashboard/quote/${quoteId}?tab=won`;
     const subject = `🎉 Preventivo accettato: "${jobTitle}"`;
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">

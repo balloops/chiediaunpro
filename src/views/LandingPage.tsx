@@ -21,7 +21,8 @@ import {
   AppWindow
 } from 'lucide-react';
 import { contentService } from '../../services/contentService';
-import { imageLoader } from '../utils/imageLoader'; 
+import { imageLoader } from '../utils/imageLoader';
+import SEO from '../../components/SEO';
 
 interface LandingPageProps {
   user: User | null;
@@ -128,6 +129,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
   return (
     <div className="overflow-hidden">
+      <SEO
+        title="LavoraBene - Esperti Digitali al tuo servizio"
+        description="LavoraBene è il marketplace italiano per trovare professionisti digitali verificati: siti web, e-commerce, branding, marketing e sviluppo app. Ricevi preventivi gratuiti."
+        path="/"
+      />
       {/* Hero Section */}
       <section className="relative bg-white pt-16 pb-32">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-slate-50 -z-10 hidden lg:block rounded-l-[24px]"></div>

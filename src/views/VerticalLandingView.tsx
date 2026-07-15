@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ServiceCategory } from '../../types';
-// import SEO from '../../components/SEO';
+import SEO from '../../components/SEO';
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -142,7 +142,7 @@ const VerticalLandingView: React.FC = () => {
   if (!content) {
     return (
       <>
-        {/* <SEO title="Pagina non trovata" description="La risorsa richiesta non è disponibile." /> */}
+        <SEO title="Pagina non trovata" description="La risorsa richiesta non è disponibile." noindex />
         <div className="min-h-screen flex items-center justify-center bg-slate-50 flex-col p-6 text-center">
           <h1 className="text-3xl font-black text-slate-900 mb-4">Pagina non trovata</h1>
           <p className="text-slate-500 mb-8">La categoria che cerchi non sembra esistere.</p>
@@ -188,7 +188,7 @@ const VerticalLandingView: React.FC = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      {/* <SEO title={content.title} description={content.subtitle} image={images[0]} canonical={`${window.location.origin}/service/${slug}`} /> */}
+      <SEO title={content.title} description={content.subtitle} image={images[0]} path={`/service/${slug}`} />
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-32 px-6 overflow-hidden">
