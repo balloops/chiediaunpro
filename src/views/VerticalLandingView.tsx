@@ -3,14 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ServiceCategory } from '../../types';
 import SEO from '../../components/SEO';
-import { 
-  CheckCircle2, 
-  ArrowRight, 
-  ShieldCheck, 
-  Clock, 
-  Zap
+import {
+  CheckCircle2,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
+  Zap,
+  MapPin
 } from 'lucide-react';
-import { imageLoader } from '../utils/imageLoader'; 
+import { imageLoader } from '../utils/imageLoader';
+import { CITIES, getCityBySlug } from '../data/cities';
 
 // Mappa Slugs to Folder Names in public/assets/images/
 const SLUG_TO_FOLDER: Record<string, string> = {
@@ -99,11 +101,13 @@ const LANDING_CONFIG: Record<string, {
 };
 
 const VerticalLandingView: React.FC = () => {
-  const { slug } = useParams();
+  const { slug, citySlug } = useParams();
   const navigate = useNavigate();
-  
+
   const content = slug && LANDING_CONFIG[slug] ? LANDING_CONFIG[slug] : null;
   const folderName = slug ? SLUG_TO_FOLDER[slug] : null;
+  const city = citySlug ? getCityBySlug(citySlug) : undefined;
+  const cityNotFound = !!citySlug && !city;
 
   const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -139,7 +143,7 @@ const VerticalLandingView: React.FC = () => {
     return () => clearInterval(interval);
   }, [images]);
 
-  if (!content) {
+  if (!content || cityNotFound) {
     return (
       <>
         <SEO title="Pagina non trovata" description="La risorsa richiesta non è disponibile." noindex />
@@ -155,6 +159,13 @@ const VerticalLandingView: React.FC = () => {
   const handleCtaClick = () => {
     navigate('/post-job', { state: { selectedCategory: content.category } });
   };
+
+  const pageTitle = city ? `${content.title} a ${city.name}` : content.title;
+  const seoDescription = city
+    ? `Richiedi un preventivo gratuito per ${content.category.toLowerCase()} a ${city.name}. Professionisti selezionati, disponibili in tutta Italia, risposta media in poche ore.`
+    : content.subtitle;
+  const seoPath = city ? `/service/${slug}/${city.slug}` : `/service/${slug}`;
+  const otherCities = city ? CITIES.filter(c => c.slug !== city.slug) : CITIES;
 
   // Logica avanzata di fallback estensioni
   const handleImageError = (index: number) => {
@@ -188,7 +199,7 @@ const VerticalLandingView: React.FC = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      <SEO title={content.title} description={content.subtitle} image={images[0]} path={`/service/${slug}`} />
+      <SEO title={pageTitle} description={seoDescription} image={images[0]} path={seoPath} />
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 lg:pt-24 lg:pb-32 px-6 overflow-hidden">
@@ -196,16 +207,17 @@ const VerticalLandingView: React.FC = () => {
           
           <div className="space-y-8 relative z-10 animate-in fade-in slide-in-from-left-8 duration-700">
             <div className="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide border border-indigo-100">
-              <Zap size={14} className="fill-indigo-700" />
-              <span>Preventivi Gratuiti</span>
+              {city ? <MapPin size={14} /> : <Zap size={14} className="fill-indigo-700" />}
+              <span>{city ? `Preventivi Gratuiti a ${city.name}` : 'Preventivi Gratuiti'}</span>
             </div>
-            
+
             <h1 className="text-4xl lg:text-6xl font-extrabold text-slate-900 leading-[1.1]">
-              {content.title}
+              {pageTitle}
             </h1>
-            
+
             <p className="text-xl text-slate-500 leading-relaxed max-w-lg">
               {content.subtitle}
+              {city && ` Attivo anche per richieste da ${city.name}.`}
             </p>
 
             <ul className="space-y-4">
@@ -316,6 +328,53 @@ const VerticalLandingView: React.FC = () => {
             >
                Pubblica Richiesta Gratis
             </button>
+         </div>
+      </section>
+
+      {/* Internal linking: altre città per lo stesso servizio (aiuta crawlability e navigazione) */}
+      <section className="py-16 px-6 border-t border-slate-100">
+         <div className="max-w-[1250px] mx-auto">
+            <h2 className="text-center text-lg font-bold text-slate-400 uppercase tracking-wide mb-6">
+              {city ? `${content.category} anche in altre città` : `${content.category}: scegli la tua città`}
+            </h2>
+            <div className="flex flex-wrap justify-center gap-3">
+               {!city && (
+                 <Link
+                   to={`/service/${slug}`}
+                   className="px-4 py-2 rounded-full bg-indigo-600 text-white text-sm font-bold"
+                 >
+                   Tutta Italia
+                 </Link>
+               )}
+               {otherCities.map(c => (
+                  <Link
+                     key={c.slug}
+                     to={`/service/${slug}/${c.slug}`}
+                     className="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                  >
+                     {c.name}
+                  </Link>
+               ))}
+            </div>
+
+            {city && (
+              <>
+                <h2 className="text-center text-lg font-bold text-slate-400 uppercase tracking-wide mt-12 mb-6">
+                  Altri servizi a {city.name}
+                </h2>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {Object.keys(LANDING_CONFIG).filter(s => s !== slug).map(s => (
+                    <Link
+                      key={s}
+                      to={`/service/${s}/${city.slug}`}
+                      className="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                    >
+                      {LANDING_CONFIG[s].category}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
          </div>
       </section>
     </div>

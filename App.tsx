@@ -193,8 +193,9 @@ const App: React.FC = () => {
             <Route path="/post-job" element={<PublicPostJobView user={auth.user} onLogin={handleLoginSuccess} />} />
             <Route path="/help" element={<HelpView />} />
             
-            {/* Nuova Rotta per Landing Verticali */}
+            {/* Landing Verticali (per servizio, opzionalmente per città) */}
             <Route path="/service/:slug" element={<VerticalLandingView />} />
+            <Route path="/service/:slug/:citySlug" element={<VerticalLandingView />} />
 
             <Route 
               path="/login" 
