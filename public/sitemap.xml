@@ -21,6 +21,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://lavorabene.it/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://lavorabene.it/service/sito-web</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -49,6 +54,31 @@
     <loc>https://lavorabene.it/service/video-editing</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://lavorabene.it/blog/quanto-costa-sito-web</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://lavorabene.it/blog/come-scegliere-professionista-digitale</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://lavorabene.it/blog/quanto-costa-ecommerce</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://lavorabene.it/blog/prezzo-logo-brand-identity</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://lavorabene.it/blog/social-media-manager-quanto-costa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://lavorabene.it/service/sito-web/milano</loc>

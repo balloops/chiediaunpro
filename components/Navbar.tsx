@@ -267,6 +267,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Home</Link>
             <Link to="/how-it-works" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Come funziona</Link>
+            <Link to="/blog" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Blog</Link>
             {!user && (
                 <Link to="/register?role=pro" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Lavora come Pro</Link>
             )}
