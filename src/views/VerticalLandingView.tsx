@@ -247,9 +247,6 @@ const VerticalLandingView: React.FC = () => {
                   {[1,2,3,4].map(i => (
                     <img key={i} src={`https://picsum.photos/100/100?random=${i + 25}`} className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-sm" alt="User" />
                   ))}
-                  <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm">
-                     +1k
-                  </div>
                </div>
                <div className="text-sm md:text-base">
                   <span className="font-black text-slate-900">Preventivi gratis</span> <span className="text-slate-700 font-medium">e lavori</span> <span className="font-black text-indigo-600">fatti bene.</span>

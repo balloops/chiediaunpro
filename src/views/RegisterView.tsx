@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, UserRole, ServiceCategory, SiteContent } from '../../types';
-import { User as UserIcon, Briefcase, Mail, Lock, UserCheck, ArrowRight, ShieldCheck, ArrowLeft, MapPin, Globe, FileText, CreditCard, Zap, AlertCircle, Check, Phone, Star } from 'lucide-react';
+import { User as UserIcon, Briefcase, Mail, Lock, UserCheck, ArrowRight, ShieldCheck, ArrowLeft, MapPin, Globe, FileText, CreditCard, Zap, AlertCircle, Check, Phone } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { contentService } from '../../services/contentService';
 import { analyticsService } from '../../services/analyticsService'; // Analytics
@@ -155,26 +155,15 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
 
            <div className="relative z-10 mt-auto pt-10 animate-in slide-in-from-bottom-8 duration-700">
               <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-2xl">
-                  <div className="flex items-center gap-1 mb-3">
-                      {[1,2,3,4,5].map(i => <Star key={i} size={16} className="fill-amber-400 text-amber-400" />)}
-                      <span className="text-xs font-bold text-indigo-100 ml-2">
-                        {content.auth?.register?.ratingLabel || '4.9/5 da 10k+ utenti'}
+                  <div className="flex items-center gap-2 mb-3">
+                      <ShieldCheck size={18} className="text-white" />
+                      <span className="text-xs font-bold text-indigo-100 uppercase tracking-wider">
+                        Piattaforma appena lanciata
                       </span>
                   </div>
-                  <blockquote className="text-lg font-medium leading-relaxed mb-6 text-white">
-                      {content.auth?.register?.testimonial?.text || '"Il miglior strumento per scalare la mia agenzia. Clienti seri e pagamenti sempre puntuali."'}
-                  </blockquote>
-                  <div className="flex items-center gap-4 border-t border-white/10 pt-4">
-                      <div className="flex -space-x-3 shrink-0">
-                          <img src="https://i.pravatar.cc/100?img=33" className="w-10 h-10 rounded-full border-2 border-indigo-500" alt="User" />
-                          <img src="https://i.pravatar.cc/100?img=47" className="w-10 h-10 rounded-full border-2 border-indigo-500" alt="User" />
-                          <div className="w-10 h-10 rounded-full border-2 border-indigo-500 bg-white flex items-center justify-center text-indigo-600 text-[10px] font-black">+2k</div>
-                      </div>
-                      <div>
-                          <div className="text-xs font-bold text-white">{content.auth?.register?.testimonial?.author || 'Unisciti ai Pro'}</div>
-                          <div className="text-[10px] text-indigo-200 uppercase tracking-wider font-bold">{content.auth?.register?.testimonial?.role || 'Verifica immediata'}</div>
-                      </div>
-                  </div>
+                  <p className="text-lg font-medium leading-relaxed text-white">
+                      Zero commissioni sui lavori trovati tramite LavoraBene, e verifica manuale prima della pubblicazione di ogni profilo.
+                  </p>
               </div>
            </div>
         </div>

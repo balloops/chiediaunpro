@@ -165,7 +165,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   {[1,2,3,4].map(i => (
                     <img key={i} src={`https://picsum.photos/100/100?random=${i}`} className="w-10 h-10 rounded-full border-2 border-white object-cover" alt="User" />
                   ))}
-                  <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white">{content.home.stats.users}</div>
                 </div>
                 <div className="text-sm">
                   <span className="font-bold text-slate-900">{content.home.hero.reviewScore}</span> {content.home.hero.reviewText || 'media recensioni su oltre'} <span className="font-bold text-indigo-600">{content.home.hero.reviewCount}</span>

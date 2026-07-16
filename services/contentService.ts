@@ -31,11 +31,11 @@ const defaultContent: SiteContent = {
         'Pagamenti sicuri',
         'Zero costi fissi'
       ],
-      ratingLabel: '4.9/5 da 10k+ utenti',
+      ratingLabel: 'Piattaforma italiana per professionisti digitali',
       testimonial: {
-        text: '"Il miglior strumento per scalare la mia agenzia. Clienti seri e pagamenti sempre puntuali."',
-        author: 'Unisciti ai Pro',
-        role: 'Verifica immediata'
+        text: 'Zero commissioni sui lavori trovati tramite LavoraBene.',
+        author: 'LavoraBene',
+        role: 'Piattaforma appena lanciata'
       }
     }
   },
@@ -53,9 +53,9 @@ const defaultContent: SiteContent = {
       verifiedBadgeText: 'Solo esperti con partita IVA' // Default
     },
     stats: {
-      users: '+1k',
-      projects: '500+',
-      rating: '4.9'
+      users: 'Nuovo',
+      projects: 'Zero commissioni',
+      rating: 'Verificati'
     },
     categories: { 
       title: 'Di cosa hai bisogno?',
@@ -66,13 +66,13 @@ const defaultContent: SiteContent = {
       description: 'Velocità, qualità e sicurezza. Abbiamo ridefinito il modo di trovare esperti digitali.',
       items: [
         { title: 'Velocità Ibrida', description: 'Ricevi proposte mirate in poche ore, non giorni.' },
-        { title: 'Qualità Certificata', description: 'Verifichiamo manualmente ogni singolo professionista iscritto.' },
+        { title: 'Qualità Certificata', description: 'Ogni professionista passa una verifica prima di essere pubblicato sulla piattaforma.' },
         { title: 'Zero Commissioni', description: 'Non paghi commissioni sui lavori trovati tramite noi.' }
       ]
     },
     cta: {
       title: 'Pronto a lanciare il tuo progetto?',
-      description: 'Unisciti a migliaia di aziende e professionisti che stanno già rivoluzionando il modo di lavorare nel digitale.',
+      description: 'Pubblica la tua richiesta gratuitamente e ricevi le prime proposte da professionisti selezionati.',
       buttonClient: 'Trova il tuo esperto',
       buttonPro: 'Crea Profilo Pro'
     }
