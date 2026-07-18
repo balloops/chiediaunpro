@@ -15,6 +15,7 @@ import HowItWorksView from './src/views/HowItWorksView';
 import HelpView from './src/views/HelpView';
 import BlogIndexView from './src/views/BlogIndexView';
 import BlogPostView from './src/views/BlogPostView';
+import BandiView from './src/views/BandiView';
 import GDPRBanner from './components/GDPRBanner';
 import RouteTracker from './components/RouteTracker'; 
 import { authService } from './services/authService';
@@ -196,6 +197,7 @@ const App: React.FC = () => {
             <Route path="/help" element={<HelpView />} />
             <Route path="/blog" element={<BlogIndexView />} />
             <Route path="/blog/:slug" element={<BlogPostView />} />
+            <Route path="/bandi" element={<BandiView />} />
             
             {/* Landing Verticali (per servizio, opzionalmente per città) */}
             <Route path="/service/:slug" element={<VerticalLandingView />} />
