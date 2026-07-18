@@ -21,19 +21,22 @@ const renderBlock = (block: BlogBlock, idx: number) => {
     case 'links':
       return (
         <ul key={idx} className="space-y-2 my-4">
-          {block.items.map((item, i) => (
-            <li key={i}>
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-2"
-              >
-                {item.label}
-                <ExternalLink size={14} className="ml-1.5 shrink-0" />
-              </a>
-            </li>
-          ))}
+          {block.items.map((item, i) => {
+            const isInternal = item.url.startsWith('/');
+            const linkClass = 'inline-flex items-center text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-2';
+            return (
+              <li key={i}>
+                {isInternal ? (
+                  <Link to={item.url} className={linkClass}>{item.label}</Link>
+                ) : (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                    {item.label}
+                    <ExternalLink size={14} className="ml-1.5 shrink-0" />
+                  </a>
+                )}
+              </li>
+            );
+          })}
         </ul>
       );
     case 'p':

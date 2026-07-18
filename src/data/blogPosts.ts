@@ -145,9 +145,13 @@ export const BLOG_POSTS: BlogPost[] = [
     title: 'Bandi e voucher 2026 per digitalizzare la tua azienda: la guida',
     excerpt: 'Molte aziende italiane non sanno di avere diritto a contributi, spesso a fondo perduto, per rifare il sito, aprire un e-commerce o digitalizzare i processi. Ecco dove guardare.',
     publishedAt: '2026-07-18',
-    published: false,
+    published: true,
     body: [
       { type: 'p', text: 'Se stai valutando di rifare il sito aziendale, aprire un e-commerce o digitalizzare qualche processo interno, prima di guardare al budget vale la pena controllare se esiste un contributo pubblico che copre parte della spesa. In Italia esistono diversi programmi attivi nel 2026, alcuni nazionali e alcuni regionali: ecco un punto di partenza, non un elenco definitivo — i dettagli cambiano spesso, quindi ogni sezione include il link ufficiale da controllare prima di procedere.' },
+      { type: 'p', text: 'Per un elenco sempre aggiornato, filtrabile per regione e categoria, con data di verifica su ogni scheda, trovi la versione completa nella nostra sezione dedicata:' },
+      { type: 'links', items: [
+        { label: 'Bandi e Voucher su LavoraBene', url: '/bandi' },
+      ] },
 
       { type: 'h2', text: 'Il Voucher Doppia Transizione (rete nazionale dei PID)' },
       { type: 'p', text: 'È il programma promosso dai Punti Impresa Digitale delle Camere di Commercio insieme a Unioncamere: 150 milioni di euro stanziati per il triennio 2026-2029, con contributi a fondo perduto fino al 70% delle spese per tecnologie digitali, formazione e consulenza, con un focus su intelligenza artificiale e transizione ecologica.' },

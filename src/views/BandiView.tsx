@@ -67,7 +67,7 @@ const BandiView: React.FC = () => {
       const matchesQuery = searchQuery.trim() === '' ||
         b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRegion = region === 'Tutte' || b.region === region || b.region === 'Nazionale';
+      const matchesRegion = region === 'Tutte' || b.region === region;
       const matchesCategories = activeCategories.length === 0 ||
         activeCategories.some(cat => b.categories.includes(cat as any));
       return matchesQuery && matchesRegion && matchesCategories;
@@ -138,7 +138,17 @@ const BandiView: React.FC = () => {
 
         {/* Results */}
         {filtered.length === 0 ? (
-          <p className="text-center text-slate-400 py-12">Nessun bando trovato con questi filtri.</p>
+          <div className="text-center py-16 bg-white rounded-[24px] border border-slate-200">
+            <Search className="mx-auto text-slate-300 mb-4" size={32} />
+            <p className="text-slate-500 font-bold mb-1">Nessun bando trovato con questi filtri</p>
+            <p className="text-slate-400 text-sm mb-6">Prova a rimuovere qualche filtro o a modificare la ricerca.</p>
+            <button
+              onClick={() => { setSearchQuery(''); setRegion('Tutte'); setActiveCategories([]); }}
+              className="px-5 py-2.5 bg-indigo-50 text-indigo-700 font-bold text-sm rounded-xl hover:bg-indigo-100 transition-colors"
+            >
+              Rimuovi tutti i filtri
+            </button>
+          </div>
         ) : (
           <div className="space-y-6">
             {filtered.map(b => <BandoCard key={b.id} bando={b} />)}
