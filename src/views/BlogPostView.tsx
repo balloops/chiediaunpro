@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { getPostBySlug, BlogBlock } from '../data/blogPosts';
 
@@ -16,6 +16,24 @@ const renderBlock = (block: BlogBlock, idx: number) => {
       return (
         <ul key={idx} className="space-y-2 my-4 list-disc list-inside text-slate-600">
           {block.items.map((item, i) => <li key={i}>{item}</li>)}
+        </ul>
+      );
+    case 'links':
+      return (
+        <ul key={idx} className="space-y-2 my-4">
+          {block.items.map((item, i) => (
+            <li key={i}>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-2"
+              >
+                {item.label}
+                <ExternalLink size={14} className="ml-1.5 shrink-0" />
+              </a>
+            </li>
+          ))}
         </ul>
       );
     case 'p':

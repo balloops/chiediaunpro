@@ -2,7 +2,8 @@
 export type BlogBlock =
   | { type: 'p'; text: string }
   | { type: 'h2'; text: string }
-  | { type: 'list'; items: string[] };
+  | { type: 'list'; items: string[] }
+  | { type: 'links'; items: { label: string; url: string }[] };
 
 export interface BlogPost {
   slug: string;
@@ -137,6 +138,57 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: 'p', text: 'Come per altri servizi digitali, un freelance offre in genere un costo più contenuto e un rapporto diretto, mentre un\'agenzia può garantire competenze diverse (grafica, copywriting, media buying) sotto lo stesso progetto. La scelta dipende dalla complessità della strategia che vuoi mettere in piedi.' },
       { type: 'h2', text: 'Come iniziare' },
       { type: 'p', text: 'Descrivi obiettivi, canali e budget indicativo nella tua richiesta su LavoraBene: riceverai proposte da professionisti specializzati in social media marketing, gratuitamente e senza impegno.' },
+    ],
+  },
+  {
+    slug: 'bandi-voucher-digitalizzazione-2026',
+    title: 'Bandi e voucher 2026 per digitalizzare la tua azienda: la guida',
+    excerpt: 'Molte aziende italiane non sanno di avere diritto a contributi, spesso a fondo perduto, per rifare il sito, aprire un e-commerce o digitalizzare i processi. Ecco dove guardare.',
+    publishedAt: '2026-07-18',
+    published: false,
+    body: [
+      { type: 'p', text: 'Se stai valutando di rifare il sito aziendale, aprire un e-commerce o digitalizzare qualche processo interno, prima di guardare al budget vale la pena controllare se esiste un contributo pubblico che copre parte della spesa. In Italia esistono diversi programmi attivi nel 2026, alcuni nazionali e alcuni regionali: ecco un punto di partenza, non un elenco definitivo — i dettagli cambiano spesso, quindi ogni sezione include il link ufficiale da controllare prima di procedere.' },
+
+      { type: 'h2', text: 'Il Voucher Doppia Transizione (rete nazionale dei PID)' },
+      { type: 'p', text: 'È il programma promosso dai Punti Impresa Digitale delle Camere di Commercio insieme a Unioncamere: 150 milioni di euro stanziati per il triennio 2026-2029, con contributi a fondo perduto fino al 70% delle spese per tecnologie digitali, formazione e consulenza, con un focus su intelligenza artificiale e transizione ecologica.' },
+      { type: 'p', text: 'Un dettaglio importante: per accedere serve prima completare gratuitamente una "valutazione di maturità digitale" sul portale PID, nei tre mesi precedenti la domanda. Non tutte le Camere di Commercio aderiscono al bando nazionale, quindi il primo passo è controllare se la tua territoriale partecipa.' },
+      { type: 'links', items: [
+        { label: 'Punto Impresa Digitale — portale ufficiale', url: 'https://www.puntoimpresadigitale.camcom.it/' },
+      ] },
+
+      { type: 'h2', text: 'I voucher digitalizzazione regionali' },
+      { type: 'p', text: 'Molte regioni hanno un proprio bando dedicato, con importi e regole diverse tra loro. Alcuni esempi attivi nel 2026 (importi indicativi, da verificare sempre sulla fonte ufficiale prima di fare domanda):' },
+      { type: 'list', items: [
+        'Lombardia — Voucher Digitali 4.0: contributo a fondo perduto fino a 10.000€ (50% delle spese) per tecnologie digitali avanzate.',
+        'Lazio — Voucher Digitalizzazione PMI: fino a 50.000€ per micro imprese, 100.000€ per piccole, 150.000€ per medie imprese.',
+        'Piemonte — nuova misura regionale per la transizione digitale approvata nel 2026, dettagli e importi in definizione.',
+        'Veneto, Campania ed Emilia-Romagna hanno bandi analoghi attivi o in apertura nel corso del 2026.',
+      ] },
+      { type: 'links', items: [
+        { label: 'Lombardia — Unioncamere Lombardia, bandi e incentivi', url: 'https://www.unioncamerelombardia.it/bandi-e-incentivi-alle-imprese' },
+        { label: 'Lazio — Regione Lazio, Voucher Digitalizzazione PMI', url: 'https://fesr.regione.lazio.it/' },
+        { label: 'Piemonte — bandi Regione Piemonte', url: 'https://bandi.regione.piemonte.it/' },
+        { label: 'Catalogo nazionale incentivi per la digitalizzazione', url: 'https://www.incentivi.gov.it/it/catalogo/voucher-la-digitalizzazione-delle-pmi' },
+      ] },
+
+      { type: 'h2', text: 'Cosa si può finanziare, in genere' },
+      { type: 'p', text: 'Le voci ammissibili variano da bando a bando, ma ricorrono spesso queste categorie:' },
+      { type: 'list', items: [
+        'Sviluppo o rifacimento di siti web ed e-commerce',
+        'Software gestionali, CRM, soluzioni cloud',
+        'Cybersecurity',
+        'Formazione digitale del personale',
+        'Automazione dei processi',
+      ] },
+
+      { type: 'h2', text: 'Come muoversi in pratica' },
+      { type: 'list', items: [
+        'Controlla se la Camera di Commercio della tua provincia aderisce al Voucher Doppia Transizione e completa la valutazione di maturità digitale gratuita.',
+        'Controlla il bando specifico della tua regione tramite i link sopra: cambia da regione a regione, sia per importi che per scadenze.',
+        'Una volta individuato un bando compatibile, verifica i requisiti formali (iscrizione al Registro Imprese, DURC in regola, quota associativa versata) prima di preparare la domanda.',
+        'Trova il professionista che realizza il progetto finanziato: puoi pubblicare una richiesta gratuita su LavoraBene e ricevere preventivi da professionisti selezionati per siti web, e-commerce, software o marketing digitale.',
+      ] },
+      { type: 'p', text: 'Un\'ultima nota: questi programmi cambiano spesso — si aprono, si esauriscono, vengono rifinanziati con condizioni diverse. Considera questa pagina un punto di partenza per orientarti, non l\'ultima parola: verifica sempre importi, scadenze e requisiti sulla fonte ufficiale prima di investire tempo in una domanda.' },
     ],
   },
 ];
