@@ -277,7 +277,7 @@ const VerticalLandingView: React.FC = () => {
                       <Clock size={24} />
                    </div>
                    <div>
-                      <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Tempo di risposta</div>
+                      <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Tempo di risposta</div>
                       <div className="text-lg font-black text-slate-900">Media &lt; 4 ore</div>
                    </div>
                 </div>
@@ -331,7 +331,7 @@ const VerticalLandingView: React.FC = () => {
       {/* Internal linking: altre città per lo stesso servizio (aiuta crawlability e navigazione) */}
       <section className="py-16 px-6 border-t border-slate-100">
          <div className="max-w-[1250px] mx-auto">
-            <h2 className="text-center text-lg font-bold text-slate-400 uppercase tracking-wide mb-6">
+            <h2 className="text-center text-lg font-bold text-slate-500 uppercase tracking-wide mb-6">
               {city ? `${content.category} anche in altre città` : `${content.category}: scegli la tua città`}
             </h2>
             <div className="flex flex-wrap justify-center gap-3">
@@ -356,7 +356,7 @@ const VerticalLandingView: React.FC = () => {
 
             {city && (
               <>
-                <h2 className="text-center text-lg font-bold text-slate-400 uppercase tracking-wide mt-12 mb-6">
+                <h2 className="text-center text-lg font-bold text-slate-500 uppercase tracking-wide mt-12 mb-6">
                   Altri servizi a {city.name}
                 </h2>
                 <div className="flex flex-wrap justify-center gap-3">

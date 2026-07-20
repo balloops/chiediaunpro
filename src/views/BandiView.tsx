@@ -16,7 +16,7 @@ const BandoCard: React.FC<{ bando: Bando }> = ({ bando }) => (
         {bando.region}
       </span>
       {bando.categories.map(cat => (
-        <span key={cat} className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
+        <span key={cat} className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
           {cat}
         </span>
       ))}
@@ -33,7 +33,7 @@ const BandoCard: React.FC<{ bando: Bando }> = ({ bando }) => (
     )}
 
     <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
-      <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
         <Calendar size={12} />
         Verificato al {formatDate(bando.lastVerifiedAt)}
       </div>
@@ -97,7 +97,7 @@ const BandiView: React.FC = () => {
               placeholder="Cerca per parola chiave (es. e-commerce, cybersecurity...)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-4 pl-14 pr-6 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-indigo-200 focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 transition-all font-medium text-lg shadow-xl"
+              className="w-full py-4 pl-14 pr-6 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-indigo-100 focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 transition-all font-medium text-lg shadow-xl"
             />
           </div>
         </div>
@@ -107,13 +107,13 @@ const BandiView: React.FC = () => {
         {/* Filters */}
         <div className="bg-white p-6 rounded-[20px] shadow-lg shadow-indigo-500/10 border border-slate-100 mb-10 space-y-4">
           <div>
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Regione</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Regione</label>
             <div className="flex flex-wrap gap-2">
               {['Tutte', ...BANDO_REGIONS].map(r => (
                 <button
                   key={r}
                   onClick={() => setRegion(r)}
-                  className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${region === r ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'}`}
+                  className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${region === r ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'}`}
                 >
                   {r}
                 </button>
@@ -121,13 +121,13 @@ const BandiView: React.FC = () => {
             </div>
           </div>
           <div>
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Categoria</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Categoria</label>
             <div className="flex flex-wrap gap-2">
               {BANDO_CATEGORIES.map(cat => (
                 <button
                   key={cat}
                   onClick={() => toggleCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${activeCategories.includes(cat) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'}`}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${activeCategories.includes(cat) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'}`}
                 >
                   {cat}
                 </button>
@@ -141,7 +141,7 @@ const BandiView: React.FC = () => {
           <div className="text-center py-16 bg-white rounded-[24px] border border-slate-200">
             <Search className="mx-auto text-slate-300 mb-4" size={32} />
             <p className="text-slate-500 font-bold mb-1">Nessun bando trovato con questi filtri</p>
-            <p className="text-slate-400 text-sm mb-6">Prova a rimuovere qualche filtro o a modificare la ricerca.</p>
+            <p className="text-slate-500 text-sm mb-6">Prova a rimuovere qualche filtro o a modificare la ricerca.</p>
             <button
               onClick={() => { setSearchQuery(''); setRegion('Tutte'); setActiveCategories([]); }}
               className="px-5 py-2.5 bg-indigo-50 text-indigo-700 font-bold text-sm rounded-xl hover:bg-indigo-100 transition-colors"
@@ -156,7 +156,7 @@ const BandiView: React.FC = () => {
         )}
 
         {/* Disclaimer */}
-        <p className="text-xs text-slate-400 text-center mt-10 max-w-lg mx-auto leading-relaxed">
+        <p className="text-xs text-slate-500 text-center mt-10 max-w-lg mx-auto leading-relaxed">
           Questi programmi cambiano spesso — si aprono, si esauriscono, vengono rifinanziati con condizioni diverse.
           Considera questa pagina un punto di partenza per orientarti, non l'ultima parola: verifica sempre importi,
           scadenze e requisiti sulla fonte ufficiale prima di fare domanda.

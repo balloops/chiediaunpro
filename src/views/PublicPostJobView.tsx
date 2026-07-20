@@ -234,7 +234,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                      else setStep('category');
                      window.scrollTo(0, 0);
                   }} 
-                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-50 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/10 text-slate-400 hover:text-indigo-600 rounded-xl md:rounded-[18px] transition-all border border-transparent hover:border-indigo-100 shrink-0"
+                  className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-50 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/10 text-slate-500 hover:text-indigo-600 rounded-xl md:rounded-[18px] transition-all border border-transparent hover:border-indigo-100 shrink-0"
                 >
                   <ArrowLeft size={20} />
                 </button>
@@ -244,7 +244,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                   {step === 'category' ? 'Di cosa hai bisogno?' : 
                    step === 'details' ? selectedCategory : 'Ultimo passaggio!'}
                 </h2>
-                <p className="text-slate-400 text-xs md:text-base mt-1 font-medium">
+                <p className="text-slate-500 text-xs md:text-base mt-1 font-medium">
                   {step === 'category' ? 'Seleziona una categoria per iniziare.' : 
                    step === 'details' ? 'Definiamo insieme i contorni della tua idea.' : 
                    'Accedi per salvare la tua richiesta.'}
@@ -275,7 +275,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                       </div>
                       <div className="flex-1 md:mt-8">
                         <div className="font-black text-slate-900 text-lg md:text-2xl group-hover:text-indigo-600 transition-colors leading-tight">{cat}</div>
-                        <div className="text-xs md:text-sm text-slate-400 font-medium mt-1 md:mt-2">{info.desc}</div>
+                        <div className="text-xs md:text-sm text-slate-500 font-medium mt-1 md:mt-2">{info.desc}</div>
                         <div className="hidden md:flex items-center text-[10px] text-indigo-600 font-black uppercase tracking-widest mt-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                           Seleziona categoria <ChevronRight size={12} className="ml-1" />
                         </div>
@@ -340,7 +340,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     {isSubmitting ? 'Invio in corso...' : (user ? 'Invia richiesta' : 'Invia richiesta')}
                     {!isSubmitting && <ChevronRight className="ml-3 group-hover:translate-x-2 transition-transform" size={28} />}
                   </button>
-                  <p className="text-center text-slate-400 text-xs md:text-sm mt-6 font-medium">Riceverai i primi preventivi in meno di 24 ore.</p>
+                  <p className="text-center text-slate-500 text-xs md:text-sm mt-6 font-medium">Riceverai i primi preventivi in meno di 24 ore.</p>
                 </div>
               </div>
             )}
@@ -383,7 +383,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     
                     {authMode === 'register' && (
                       <div className="space-y-2 md:space-y-3">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nome e Cognome</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Nome e Cognome</label>
                         <input 
                           type="text" 
                           required
@@ -395,7 +395,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                       </div>
                     )}
                     <div className="space-y-2 md:space-y-3">
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Email</label>
                       <input 
                         type="email" 
                         required
@@ -407,7 +407,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     </div>
                     {authMode === 'register' && (
                       <div className="space-y-2 md:space-y-3">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Telefono</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Telefono</label>
                         <input 
                           type="tel" 
                           required
@@ -419,7 +419,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                       </div>
                     )}
                     <div className="space-y-2 md:space-y-3">
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
                       <input 
                         type="password" 
                         required
@@ -436,7 +436,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     >
                       {isSubmitting ? 'Elaborazione...' : (authMode === 'register' ? 'Registrati e Chiedi' : 'Accedi e Chiedi')}
                     </button>
-                    <p className="text-center text-sm text-slate-400 font-medium">
+                    <p className="text-center text-sm text-slate-500 font-medium">
                       {authMode === 'register' ? 'Hai già un account?' : 'Non hai un account?'} 
                       <button type="button" onClick={() => setAuthMode(authMode === 'register' ? 'login' : 'register')} className="ml-2 text-indigo-600 font-bold hover:underline">
                         {authMode === 'register' ? 'Accedi' : 'Registrati'}

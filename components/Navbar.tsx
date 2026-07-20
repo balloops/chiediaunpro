@@ -321,7 +321,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                             <div className="flex-grow">
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{n.title}</span>
-                                <span className="text-[8px] font-bold text-slate-400 flex items-center">
+                                <span className="text-[8px] font-bold text-slate-500 flex items-center">
                                   <Clock size={8} className="mr-1" />
                                   {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
@@ -335,7 +335,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                           <div className="w-12 h-12 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Bell size={24} />
                           </div>
-                          <p className="text-sm text-slate-400 font-medium">Ancora nessuna notifica</p>
+                          <p className="text-sm text-slate-500 font-medium">Ancora nessuna notifica</p>
                         </div>
                       )}
                     </div>

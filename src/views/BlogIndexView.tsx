@@ -31,7 +31,7 @@ const BlogIndexView: React.FC = () => {
         </div>
 
         {posts.length === 0 ? (
-          <p className="text-center text-slate-400">Nuovi articoli in arrivo a breve.</p>
+          <p className="text-center text-slate-500">Nuovi articoli in arrivo a breve.</p>
         ) : (
           <div className="grid gap-6">
             {posts.map(post => (
@@ -40,7 +40,7 @@ const BlogIndexView: React.FC = () => {
                 to={`/blog/${post.slug}`}
                 className="block bg-white rounded-[24px] border border-slate-200 p-8 hover:border-indigo-200 hover:shadow-lg transition-all group"
               >
-                <div className="flex items-center space-x-2 text-xs text-slate-400 font-bold uppercase tracking-wide mb-3">
+                <div className="flex items-center space-x-2 text-xs text-slate-500 font-bold uppercase tracking-wide mb-3">
                   <Calendar size={14} />
                   <span>{formatDate(post.publishedAt)}</span>
                 </div>

@@ -139,7 +139,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                     : (content.auth?.register?.titleClient || 'Racconta cosa ti serve.')}
               </h1>
               
-              <p className="text-indigo-100 text-lg leading-relaxed max-w-md opacity-90">
+              <p className="text-indigo-50 text-lg leading-relaxed max-w-md">
                 {content.auth?.register?.subtitle || "La community di esperti digitali più attiva d'Italia ti aspetta."}
               </p>
 
@@ -157,7 +157,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
               <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-2xl">
                   <div className="flex items-center gap-2 mb-3">
                       <ShieldCheck size={18} className="text-white" />
-                      <span className="text-xs font-bold text-indigo-100 uppercase tracking-wider">
+                      <span className="text-xs font-bold text-indigo-50 uppercase tracking-wider">
                         Piattaforma appena lanciata
                       </span>
                   </div>
@@ -192,7 +192,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                   >
                     <UserIcon size={28} className={`mb-4 ${role === UserRole.CLIENT ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
                     <div className="font-black text-slate-900">Sono un Cliente</div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Cerco Professionisti</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">Cerco Professionisti</div>
                   </button>
                   <button 
                     onClick={() => setRole(UserRole.PROFESSIONAL)} 
@@ -200,7 +200,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                   >
                     <Briefcase size={28} className={`mb-4 ${role === UserRole.PROFESSIONAL ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
                     <div className="font-black text-slate-900">Sono un Pro</div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Offro Servizi Digitali</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">Offro Servizi Digitali</div>
                   </button>
                 </div>
 
@@ -214,7 +214,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           placeholder="Mario Rossi" 
                           value={name} 
                           onChange={e => setName(e.target.value)} 
-                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-500" 
                           required 
                         />
                     </div>
@@ -229,7 +229,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           placeholder="email@esempio.it" 
                           value={email} 
                           onChange={e => setEmail(e.target.value)} 
-                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-500" 
                           required 
                         />
                     </div>
@@ -244,7 +244,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           placeholder="+39 333 1234567" 
                           value={phoneNumber} 
                           onChange={e => setPhoneNumber(e.target.value)} 
-                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-500" 
                           required
                         />
                     </div>
@@ -259,7 +259,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           placeholder="••••••••" 
                           value={password} 
                           onChange={e => setPassword(e.target.value)} 
-                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-500" 
                           required 
                         />
                     </div>
@@ -271,7 +271,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
             {step === 2 && role === UserRole.PROFESSIONAL && (
                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex items-center space-x-3 mb-4">
-                     <button onClick={handleBack} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 transition-colors">
+                     <button onClick={handleBack} className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors">
                         <ArrowLeft size={20} />
                      </button>
                      <h3 className="font-bold text-xl text-slate-800">Dettagli Profilo Pro</h3>
@@ -284,7 +284,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                       placeholder="es. Digital Studio Srl" 
                       value={brandName} 
                       onChange={e => setBrandName(e.target.value)} 
-                      className="w-full px-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                      className="w-full px-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-500" 
                     />
                   </div>
 
@@ -297,7 +297,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                           placeholder="Milano" 
                           value={location} 
                           onChange={e => setLocation(e.target.value)} 
-                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                          className="w-full pl-14 pr-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-500" 
                        />
                     </div>
                   </div>
@@ -309,7 +309,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                        value={bio} 
                        onChange={e => setBio(e.target.value)} 
                        rows={3}
-                       className="w-full px-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-medium text-slate-800 placeholder:text-slate-400 resize-none" 
+                       className="w-full px-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-medium text-slate-800 placeholder:text-slate-500 resize-none" 
                     />
                   </div>
                   
@@ -320,7 +320,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
                       placeholder="IT00000000000" 
                       value={vatNumber} 
                       onChange={e => setVatNumber(e.target.value)} 
-                      className="w-full px-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400" 
+                      className="w-full px-6 py-4 bg-[#f0f0f0] border-2 border-transparent focus:bg-white focus:border-indigo-600 rounded-2xl outline-none transition-all font-bold text-slate-800 placeholder:text-slate-500" 
                     />
                   </div>
                </div>
@@ -329,7 +329,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
             {step === 3 && role === UserRole.PROFESSIONAL && (
                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex items-center space-x-3 mb-6">
-                     <button onClick={handleBack} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 transition-colors">
+                     <button onClick={handleBack} className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors">
                         <ArrowLeft size={20} />
                      </button>
                      <h3 className="font-bold text-xl text-slate-800">Le tue Competenze</h3>
@@ -371,7 +371,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onLogin }) => {
             </div>
             
             <div className="mt-8 text-center">
-              <span className="text-slate-400 font-medium text-sm">Hai già un account?</span>{' '}
+              <span className="text-slate-500 font-medium text-sm">Hai già un account?</span>{' '}
               <Link to="/login" className="text-indigo-600 font-black text-sm hover:underline">Accedi</Link>
             </div>
           </div>

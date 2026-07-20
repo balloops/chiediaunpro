@@ -232,7 +232,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           <div className={`p-4 rounded-b-xl md:rounded-b-[24px] border-t flex items-center justify-between ${isDescError ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
              
              {/* Text Helper Left */}
-             <div className="text-xs text-slate-400 font-medium">
+             <div className="text-xs text-slate-500 font-medium">
                 {isDescError ? (
                     <span className="text-red-500 font-bold">Campo obbligatorio</span>
                 ) : (
@@ -241,7 +241,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
              </div>
 
              {/* Character Count Right */}
-            <div className="text-[10px] text-slate-400 font-mono font-bold bg-white px-2 py-1 rounded-md border border-slate-200">
+            <div className="text-[10px] text-slate-500 font-mono font-bold bg-white px-2 py-1 rounded-md border border-slate-200">
               {description.length} caratteri
             </div>
           </div>

@@ -72,12 +72,12 @@ const BlogPostView: React.FC = () => {
     <div className="min-h-screen bg-white pt-20 pb-32">
       <SEO title={post.title} description={post.excerpt} path={`/blog/${post.slug}`} />
       <article className="max-w-[750px] mx-auto px-6">
-        <Link to="/blog" className="inline-flex items-center text-slate-400 hover:text-indigo-600 font-bold text-sm mb-8 transition-colors">
+        <Link to="/blog" className="inline-flex items-center text-slate-500 hover:text-indigo-600 font-bold text-sm mb-8 transition-colors">
           <ArrowLeft size={16} className="mr-1" />
           Tutti gli articoli
         </Link>
 
-        <div className="flex items-center space-x-2 text-xs text-slate-400 font-bold uppercase tracking-wide mb-4">
+        <div className="flex items-center space-x-2 text-xs text-slate-500 font-bold uppercase tracking-wide mb-4">
           <Calendar size={14} />
           <span>{formatDate(post.publishedAt)}</span>
         </div>

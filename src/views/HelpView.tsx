@@ -59,7 +59,7 @@ const HelpView: React.FC = () => {
               placeholder="Cerca una risposta (es. crediti, pagamenti, account...)"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setOpenFaq(null); }}
-              className="w-full py-4 pl-14 pr-6 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-indigo-200 focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 transition-all font-medium text-lg shadow-xl"
+              className="w-full py-4 pl-14 pr-6 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-indigo-100 focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 transition-all font-medium text-lg shadow-xl"
             />
           </div>
         </div>
@@ -70,14 +70,14 @@ const HelpView: React.FC = () => {
         <div className="bg-white p-2 rounded-[20px] shadow-lg shadow-indigo-500/10 border border-slate-100 flex mb-12 max-w-md mx-auto">
           <button 
             onClick={() => { setActiveTab('client'); setOpenFaq(null); }}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-2xl transition-all font-bold text-sm ${activeTab === 'client' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-2xl transition-all font-bold text-sm ${activeTab === 'client' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-600'}`}
           >
             <User size={18} />
             <span>Per i Clienti</span>
           </button>
           <button 
             onClick={() => { setActiveTab('pro'); setOpenFaq(null); }}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-2xl transition-all font-bold text-sm ${activeTab === 'pro' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-2xl transition-all font-bold text-sm ${activeTab === 'pro' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-600'}`}
           >
             <Briefcase size={18} />
             <span>Per i Professionisti</span>
@@ -100,7 +100,7 @@ const HelpView: React.FC = () => {
                       className="w-full flex items-center justify-between p-6 text-left"
                     >
                       <div>
-                        <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1 block">{faq.category}</span>
+                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1 block">{faq.category}</span>
                         <span className="font-bold text-slate-800 text-sm md:text-base">{faq.question}</span>
                       </div>
                       {openFaq === index ? <ChevronUp className="text-indigo-600 shrink-0 ml-4" /> : <ChevronDown className="text-slate-400 shrink-0 ml-4" />}
@@ -116,7 +116,7 @@ const HelpView: React.FC = () => {
                 ))
               ) : (
                 <div className="text-center py-10 bg-white rounded-[24px] border border-dashed border-slate-200">
-                   <p className="text-slate-400 font-medium">Nessun risultato trovato per "{searchQuery}"</p>
+                   <p className="text-slate-500 font-medium">Nessun risultato trovato per "{searchQuery}"</p>
                 </div>
               )}
            </div>
@@ -141,7 +141,7 @@ const HelpView: React.FC = () => {
                     <ShieldCheck size={16} className="mr-2 text-indigo-600" />
                     Sicurezza
                  </h4>
-                 <p className="text-[11px] text-slate-500 leading-relaxed">
+                 <p className="text-[11px] text-slate-600 leading-relaxed">
                     Non condividere mai la tua password o i dati della carta di credito via chat. Il supporto di {content.branding.platformName} non ti chiederà mai queste informazioni.
                  </p>
               </div>
