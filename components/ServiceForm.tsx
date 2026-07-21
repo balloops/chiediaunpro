@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { FormDefinition, FormField } from '../types';
 import { ChevronDown, FileEdit } from 'lucide-react';
 
@@ -14,13 +14,19 @@ interface ServiceFormProps {
   isRefining?: boolean;
 }
 
-const ServiceForm: React.FC<ServiceFormProps> = ({ 
+export interface ServiceFormHandle {
+  // Segna tutti i campi come "toccati" e restituisce true solo se tutti i campi
+  // obbligatori (inclusa la descrizione) sono compilati. Da chiamare al submit.
+  validate: () => boolean;
+}
+
+const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(({
   formDefinition,
-  description, 
-  setDescription, 
-  details, 
+  description,
+  setDescription,
+  details,
   setDetails
-}) => {
+}, ref) => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [descTouched, setDescTouched] = useState(false);
 
@@ -39,6 +45,24 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     const isEmpty = Array.isArray(val) ? val.length === 0 : !val;
     return touched[fieldId] && isEmpty;
   };
+
+  useImperativeHandle(ref, () => ({
+    validate: () => {
+      const allTouched: Record<string, boolean> = {};
+      let isValid = !!description;
+      formDefinition.fields.forEach(field => {
+        allTouched[field.id] = true;
+        const required = field.required !== false;
+        if (!required) return;
+        const val = details[field.id];
+        const isEmpty = Array.isArray(val) ? val.length === 0 : !val;
+        if (isEmpty) isValid = false;
+      });
+      setTouched(allTouched);
+      setDescTouched(true);
+      return isValid;
+    }
+  }));
 
   const renderField = (field: FormField) => {
     const isError = isFieldInvalid(field.id, field.required);
@@ -73,7 +97,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         return (
           <div key={field.id} className="space-y-4">
             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
-            <div className="grid grid-cols-2 gap-3 md:gap-4" onMouseLeave={() => handleBlur(field.id)}>
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
               {field.options?.map(opt => {
                 const isSelected = details[field.id] === opt;
                 return (
@@ -101,7 +125,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         return (
           <div key={field.id} className="space-y-4">
             <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
-            <div className="flex flex-wrap gap-2 md:gap-3" onMouseLeave={() => handleBlur(field.id)}>
+            <div className="flex flex-wrap gap-2 md:gap-3">
               {field.options?.map(opt => {
                 const currentVal = details[field.id] || [];
                 const isChecked = Array.isArray(currentVal) ? currentVal.includes(opt) : currentVal === opt;
@@ -133,7 +157,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         return (
            <div key={field.id} className="space-y-4">
               <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3" onMouseLeave={() => handleBlur(field.id)}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
                  {field.options?.map(opt => {
                     const current = details[field.id] || [];
                     const isSelected = current.includes(opt);
@@ -249,6 +273,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       </section>
     </div>
   );
-};
+});
+
+ServiceForm.displayName = 'ServiceForm';
 
 export default ServiceForm;

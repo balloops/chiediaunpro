@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ServiceCategory, User, UserRole, FormDefinition } from '../../types';
 import { 
@@ -26,7 +26,7 @@ import { jobService } from '../../services/jobService';
 import { contentService } from '../../services/contentService';
 import { authService } from '../../services/authService'; 
 import { analyticsService } from '../../services/analyticsService'; // Import Analytics
-import ServiceForm from '../../components/ServiceForm';
+import ServiceForm, { ServiceFormHandle } from '../../components/ServiceForm';
 import SEO from '../../components/SEO';
 
 interface PublicPostJobViewProps {
@@ -38,6 +38,7 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState<'category' | 'details' | 'auth'>('category');
+  const serviceFormRef = useRef<ServiceFormHandle>(null);
   
   // Data State
   const [categories, setCategories] = useState<string[]>(contentService.getCategories());
@@ -150,6 +151,12 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
   };
 
   const handleFinalSubmit = async () => {
+    if (!serviceFormRef.current?.validate()) {
+      setError('Compila tutti i campi obbligatori prima di continuare.');
+      window.scrollTo(0, 0);
+      return;
+    }
+
     if (!user) {
       setStep('auth');
       window.scrollTo(0, 0);
@@ -296,7 +303,8 @@ const PublicPostJobView: React.FC<PublicPostJobViewProps> = ({ user, onLogin }) 
                     </div>
                 )}
 
-                <ServiceForm 
+                <ServiceForm
+                  ref={serviceFormRef}
                   formDefinition={formDefinition}
                   description={jobDescription}
                   setDescription={setJobDescription}
