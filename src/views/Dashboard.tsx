@@ -204,7 +204,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 ) : (
                                     <div className="flex flex-wrap gap-4 mt-2">
                                          <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-200">
-                                            <MapPin size={14} className="text-slate-400 mr-2"/>
+                                            <MapPin size={14} className="text-slate-500 mr-2"/>
                                             <input 
                                                 value={editData.city} 
                                                 onChange={e => setEditData({...editData, city: e.target.value})}
@@ -213,7 +213,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                             />
                                          </div>
                                          <div className="flex items-center bg-slate-50 rounded-lg px-2 border border-slate-200">
-                                            <Wallet size={14} className="text-slate-400 mr-2"/>
+                                            <Wallet size={14} className="text-slate-500 mr-2"/>
                                             <input 
                                                 value={editData.budget} 
                                                 onChange={e => setEditData({...editData, budget: e.target.value})}
@@ -281,7 +281,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {Object.entries(job.details).map(([k, v]) => (
                                             <div key={k} className="p-3 border border-slate-200 rounded-xl bg-white">
-                                                <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">{k}</div>
+                                                <div className="text-[10px] font-bold text-slate-500 uppercase mb-1">{k}</div>
                                                 <div className="font-medium text-slate-800 text-sm">{Array.isArray(v) ? v.join(', ') : v}</div>
                                             </div>
                                         ))}
@@ -325,12 +325,12 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                             </button>
                                         )}
                                         {job.status === 'CANCELLED' && (
-                                            <span className="px-4 py-2 bg-slate-50 text-slate-400 rounded-xl text-sm font-bold flex items-center gap-2 cursor-not-allowed">
+                                            <span className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-sm font-bold flex items-center gap-2 cursor-not-allowed">
                                                 <Ban size={16} /> Richiesta Chiusa
                                             </span>
                                         )}
                                         {job.status === 'ARCHIVED' && (
-                                            <span className="px-4 py-2 bg-slate-50 text-slate-400 rounded-xl text-sm font-bold flex items-center gap-2 cursor-not-allowed">
+                                            <span className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-sm font-bold flex items-center gap-2 cursor-not-allowed">
                                                 <Archive size={16} /> Richiesta Archiviata
                                             </span>
                                         )}
@@ -356,7 +356,7 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                             </div>
                             
                             {quotes.length === 0 ? (
-                                <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
+                                <div className="p-8 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-500">
                                     Nessun preventivo ancora ricevuto. Modifica la richiesta per renderla più appetibile!
                                 </div>
                             ) : (
@@ -415,15 +415,15 @@ const JobDetailView: React.FC<{ user: User, isPro: boolean, refreshParent: () =>
                                 <div className="space-y-5">
                                     <h3 className="font-black text-xl text-slate-900">Invia Preventivo</h3>
                                     <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">Prezzo (€)</label>
+                                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1 block">Prezzo (€)</label>
                                         <input type="number" value={quotePrice} onChange={e=>setQuotePrice(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="0.00" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">Tempistiche</label>
+                                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1 block">Tempistiche</label>
                                         <input type="text" value={quoteTimeline} onChange={e=>setQuoteTimeline(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="Es. 2 settimane" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">Messaggio (Rispetta gli a capo)</label>
+                                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1 block">Messaggio (Rispetta gli a capo)</label>
                                         <textarea 
                                             value={quoteMessage} 
                                             onChange={e=>setQuoteMessage(e.target.value)} 
@@ -522,7 +522,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                             </div>
                             <div>
                                 <h2 className="text-2xl font-black text-slate-900">{job.category}</h2>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Richiesta Originale Cliente</p>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Richiesta Originale Cliente</p>
                             </div>
                         </div>
 
@@ -544,7 +544,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {Object.entries(job.details).map(([k, v]) => (
                                             <div key={k} className="p-3 border border-slate-200 rounded-xl bg-white">
-                                                <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">{k}</div>
+                                                <div className="text-[10px] font-bold text-slate-500 uppercase mb-1">{k}</div>
                                                 <div className="font-medium text-slate-800 text-sm">{Array.isArray(v) ? v.join(', ') : v}</div>
                                             </div>
                                         ))}
@@ -578,7 +578,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                         <div className="p-6 md:p-8 space-y-8">
                             {/* Message */}
                             <div>
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Messaggio</h3>
+                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Messaggio</h3>
                                 <div className="bg-slate-50 p-6 rounded-2xl text-slate-700 italic border border-slate-100 text-base leading-relaxed whitespace-pre-wrap">
                                     "{quote.message}"
                                 </div>
@@ -587,7 +587,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                             {/* Contact Info Section */}
                             <div className={`p-6 rounded-[24px] border-2 transition-all ${isAccepted ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-dashed border-slate-200'}`}>
                                 <div className="flex items-center space-x-4 mb-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAccepted ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAccepted ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
                                         {isAccepted ? <Phone size={20} /> : <Lock size={20} />}
                                     </div>
                                     <div>
@@ -621,7 +621,7 @@ const QuoteDetailView: React.FC<{ user: User, isPro: boolean }> = ({ user, isPro
                                     </button>
                                 )}
                                 {isPro && !isAccepted && (
-                                    <p className="text-xs text-slate-400">I contatti del cliente saranno visibili solo se accetta il tuo preventivo.</p>
+                                    <p className="text-xs text-slate-500">I contatti del cliente saranno visibili solo se accetta il tuo preventivo.</p>
                                 )}
                             </div>
                         </div>
@@ -942,16 +942,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                   <select
                       value={clientQuoteFilter}
                       onChange={(e) => setClientQuoteFilter(e.target.value as any)}
+                      aria-label="Filtra per stato"
                       className="appearance-none bg-white border border-slate-200 text-slate-700 py-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:border-indigo-300 w-full sm:w-auto"
                   >
                       <option value="all">Tutti gli stati</option>
                       <option value="with-quotes">Con preventivi</option>
                       <option value="no-quotes">In attesa</option>
                   </select>
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-indigo-600 transition-colors">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-hover:text-indigo-600 transition-colors">
                       <MessageSquare size={16} />
                   </div>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
                       <ChevronDown size={16} />
                   </div>
               </div>
@@ -961,15 +962,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
               <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as any)}
+                  aria-label="Ordina per"
                   className="appearance-none bg-white border border-slate-200 text-slate-700 py-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:border-indigo-300 w-full sm:w-auto"
               >
                   <option value="newest">Più recenti</option>
                   <option value="oldest">Meno recenti</option>
               </select>
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-indigo-600 transition-colors">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-hover:text-indigo-600 transition-colors">
                   {sortOrder === 'newest' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
               </div>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
                   <ChevronDown size={16} />
               </div>
           </div>
@@ -978,6 +980,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
               <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
+                  aria-label="Filtra per categoria"
                   className="appearance-none bg-white border border-slate-200 text-slate-700 py-3 pl-10 pr-10 rounded-xl font-bold text-sm focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:border-indigo-300 w-full sm:w-auto"
               >
                   <option value="all">Tutte le categorie</option>
@@ -985,10 +988,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                       <option key={cat} value={cat}>{cat}</option>
                   ))}
               </select>
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-indigo-600 transition-colors">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-hover:text-indigo-600 transition-colors">
                   <Filter size={16} />
               </div>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
                   <ChevronDown size={16} />
               </div>
           </div>
@@ -1063,7 +1066,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     currentTab === 'settings' ? `Ciao, ${user.name.split(' ')[0]}` :
                     currentTab === 'billing' ? 'Crediti Gratuiti' : 'Dashboard'}
                 </h1>
-                <p className="text-slate-400 font-medium text-lg">
+                <p className="text-slate-500 font-medium text-lg">
                     {currentTab === 'settings' ? 'Gestisci il tuo profilo e le tue preferenze.' :
                      currentTab === 'won' ? 'Congratulazioni! Ecco i lavori che hai conquistato.' :
                      currentTab === 'archived' ? 'Storico delle tue richieste passate.' :
@@ -1087,7 +1090,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                     <div className="bg-white px-6 py-3 rounded-[24px] border border-slate-100 shadow-sm flex items-center min-w-[220px]">
                         <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mr-4"><Coins size={20} /></div>
                         <div className="mr-4">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Crediti</div>
+                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Crediti</div>
                             <div className="text-xl font-black text-slate-900 leading-none mt-1">{user.credits}</div>
                         </div>
                         <div className="h-8 w-px bg-slate-100 mr-4"></div>
@@ -1148,21 +1151,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                             )}
                                         </div>
                                         <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">{job.description}</p>
-                                        <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                             <span className="flex items-center gap-1"><MapPin size={12}/> {job.location?.city || 'Remoto'}</span>
                                             <span className="flex items-center gap-1"><Wallet size={12}/> {job.budget}</span>
                                             <span className="flex items-center gap-1"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</span>
                                         </div>
                                     </div>
                                     <div className="self-center">
-                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
+                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
                                             <ChevronRight size={20} />
                                         </div>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">
+                            <div className="text-center py-20 text-slate-500 border-2 border-dashed border-slate-100 rounded-[24px]">
                                 Nessuna opportunità trovata con i filtri attuali.
                             </div>
                         )}
@@ -1181,7 +1184,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{job.category}</h3>
                                         <p className="text-slate-500 text-sm line-clamp-1 mb-2">{job.description}</p>
-                                        <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-400">
+                                        <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-500">
                                             {job.status === 'OPEN' || job.status === 'IN_PROGRESS' ? (
                                                 quoteCount > 0 ? (
                                                     <span className="px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-700">
@@ -1205,14 +1208,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         </div>
                                     </div>
                                     <div className="self-center">
-                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
+                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
                                             <ChevronRight size={20} />
                                         </div>
                                     </div>
                                 </div>
                              );
                          }) : (
-                            <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">
+                            <div className="text-center py-20 text-slate-500 border-2 border-dashed border-slate-100 rounded-[24px]">
                                 Nessuna richiesta trovata.
                             </div>
                          )}
@@ -1231,12 +1234,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                 <div className="flex-grow">
                                     <h3 className="text-lg font-black text-slate-700">{job.category}</h3>
                                     <p className="text-slate-500 text-sm line-clamp-1 mb-2">{job.description}</p>
-                                    <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                                    <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
                                         <span className="px-2 py-0.5 rounded uppercase bg-slate-200 text-slate-500">Archiviata</span>
                                     </div>
                                 </div>
                              </div>
-                         )) : <div className="text-center py-20 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]"><Archive size={48} className="mx-auto mb-4 text-slate-300" /><p>Nessuna richiesta archiviata.</p></div>}
+                         )) : <div className="text-center py-20 text-slate-500 border-2 border-dashed border-slate-100 rounded-[24px]"><Archive size={48} className="mx-auto mb-4 text-slate-300" /><p>Nessuna richiesta archiviata.</p></div>}
                     </div>
                 )}
 
@@ -1265,7 +1268,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                          <p className="text-slate-600 text-sm mb-4 line-clamp-2 font-medium">{job?.description || quote.message}</p>
                                          
                                          {/* Added details to match screenshot */}
-                                         <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                         <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                             <span className="flex items-center gap-1"><MapPin size={12}/> {job?.location?.city || 'Remoto'}</span>
                                             <span className="flex items-center gap-1 text-indigo-600"><Euro size={12}/> Tua Offerta: {quote.price}€</span>
                                             <span className="flex items-center gap-1"><Clock size={12}/> Inviato: {new Date(quote.createdAt).toLocaleDateString()}</span>
@@ -1274,13 +1277,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                      
                                      {/* Added Chevron */}
                                      <div className="self-center">
-                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
+                                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
                                             <ChevronRight size={20} />
                                         </div>
                                     </div>
                                  </div>
                              );
-                         }) : <div className="text-center py-12 text-slate-400 border-2 border-dashed border-slate-100 rounded-[24px]">Nessun preventivo trovato.</div>}
+                         }) : <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-100 rounded-[24px]">Nessun preventivo trovato.</div>}
                     </div>
                 )}
 
@@ -1290,7 +1293,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                         {settingsView === 'menu' ? (
                             <>
                                 <div className="flex items-center space-x-4 mb-8">
-                                    <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-emerald-200 shrink-0">
+                                    <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-emerald-200 shrink-0">
                                         {getInitials(user.name)}
                                     </div>
                                     <div>
@@ -1302,14 +1305,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                 <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
                                     <div className="divide-y divide-slate-50">
                                         <div onClick={() => setSettingsView('profile_edit')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group">
-                                            <div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><UserIcon size={20} /></div><div><h3 className="font-bold text-slate-900">Il mio profilo</h3><p className="text-xs text-slate-400 mt-0.5">Modifica foto, nome, email, telefono e posizione.</p></div></div>
+                                            <div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><UserIcon size={20} /></div><div><h3 className="font-bold text-slate-900">Il mio profilo</h3><p className="text-xs text-slate-500 mt-0.5">Modifica foto, nome, email, telefono e posizione.</p></div></div>
                                             <ChevronRight size={20} className="text-slate-300" />
                                         </div>
-                                        {user.role === UserRole.PROFESSIONAL && <div onClick={() => setSettingsView('services')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Briefcase size={20} /></div><div><h3 className="font-bold text-slate-900">I miei servizi</h3><p className="text-xs text-slate-400 mt-0.5">Gestisci e visualizza i servizi offerti.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>}
-                                        {user.role === UserRole.PROFESSIONAL && <div onClick={() => navigate('/dashboard?tab=billing')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Wallet size={20} /></div><div><h3 className="font-bold text-slate-900">Il mio conto</h3><p className="text-xs text-slate-400 mt-0.5">Ricarica il tuo conto, controlla il saldo.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>}
-                                        <div onClick={() => navigate('/help')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><HelpCircle size={20} /></div><div><h3 className="font-bold text-slate-900">Assistenza</h3><p className="text-xs text-slate-400 mt-0.5">Hai bisogno di aiuto?</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>
-                                        <div onClick={handleRoleSwitch} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><RefreshCw size={20} /></div><div><h3 className="font-bold text-slate-900">Passa al profilo {activeRole === UserRole.PROFESSIONAL ? 'Cliente' : 'Pro'}</h3><p className="text-xs text-slate-400 mt-0.5">Cambia modalità di visualizzazione.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>
-                                        <div className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Lock size={20} /></div><div><h3 className="font-bold text-slate-900">Dati e privacy</h3><p className="text-xs text-slate-400 mt-0.5">Gestisci i tuoi dati personali.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>
+                                        {user.role === UserRole.PROFESSIONAL && <div onClick={() => setSettingsView('services')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Briefcase size={20} /></div><div><h3 className="font-bold text-slate-900">I miei servizi</h3><p className="text-xs text-slate-500 mt-0.5">Gestisci e visualizza i servizi offerti.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>}
+                                        {user.role === UserRole.PROFESSIONAL && <div onClick={() => navigate('/dashboard?tab=billing')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Wallet size={20} /></div><div><h3 className="font-bold text-slate-900">Il mio conto</h3><p className="text-xs text-slate-500 mt-0.5">Ricarica il tuo conto, controlla il saldo.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>}
+                                        <div onClick={() => navigate('/help')} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><HelpCircle size={20} /></div><div><h3 className="font-bold text-slate-900">Assistenza</h3><p className="text-xs text-slate-500 mt-0.5">Hai bisogno di aiuto?</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>
+                                        <div onClick={handleRoleSwitch} className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><RefreshCw size={20} /></div><div><h3 className="font-bold text-slate-900">Passa al profilo {activeRole === UserRole.PROFESSIONAL ? 'Cliente' : 'Pro'}</h3><p className="text-xs text-slate-500 mt-0.5">Cambia modalità di visualizzazione.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>
+                                        <div className="p-6 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Lock size={20} /></div><div><h3 className="font-bold text-slate-900">Dati e privacy</h3><p className="text-xs text-slate-500 mt-0.5">Gestisci i tuoi dati personali.</p></div></div><ChevronRight size={20} className="text-slate-300" /></div>
                                         <div onClick={onLogout} className="p-6 flex items-center justify-between hover:bg-red-50 cursor-pointer transition-colors group border-t border-slate-100"><div className="flex items-center space-x-4"><div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-red-100 group-hover:text-red-600"><LogOut size={20} /></div><div><h3 className="font-bold text-slate-900 group-hover:text-red-600">Esci</h3></div></div></div>
                                     </div>
                                 </div>
@@ -1326,32 +1329,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                         <h2 className="text-xl font-black text-slate-900 mb-6">Dati Personali</h2>
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="text-xs font-black text-slate-400 uppercase">Nome</label>
+                                                <label className="text-xs font-black text-slate-500 uppercase">Nome</label>
                                                 <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                                             </div>
                                             {isPro && (
                                                 <div>
-                                                    <label className="text-xs font-black text-slate-400 uppercase">Brand / Agenzia</label>
+                                                    <label className="text-xs font-black text-slate-500 uppercase">Brand / Agenzia</label>
                                                     <input type="text" value={profileForm.brandName || ''} onChange={e => setProfileForm({...profileForm, brandName: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                                                 </div>
                                             )}
                                             <div>
-                                                <label className="text-xs font-black text-slate-400 uppercase">Città</label>
+                                                <label className="text-xs font-black text-slate-500 uppercase">Città</label>
                                                 <input type="text" value={profileForm.location || ''} onChange={e => setProfileForm({...profileForm, location: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                                             </div>
                                             <div>
-                                                <label className="text-xs font-black text-slate-400 uppercase">Telefono</label>
+                                                <label className="text-xs font-black text-slate-500 uppercase">Telefono</label>
                                                 <input type="tel" value={profileForm.phoneNumber || ''} onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                                             </div>
                                             {isPro && (
                                                 <div>
-                                                    <label className="text-xs font-black text-slate-400 uppercase">Partita IVA</label>
+                                                    <label className="text-xs font-black text-slate-500 uppercase">Partita IVA</label>
                                                     <input type="text" value={profileForm.vatNumber || ''} onChange={e => setProfileForm({...profileForm, vatNumber: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                                                 </div>
                                             )}
                                             {isPro && (
                                                 <div>
-                                                    <label className="text-xs font-black text-slate-400 uppercase">Bio</label>
+                                                    <label className="text-xs font-black text-slate-500 uppercase">Bio</label>
                                                     <textarea rows={4} value={profileForm.bio || ''} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none" />
                                                 </div>
                                             )}
@@ -1366,11 +1369,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
                                             <h2 className="text-xl font-black text-slate-900 mb-6">Sicurezza</h2>
                                             <div className="space-y-4">
                                                 <div>
-                                                    <label className="text-xs font-black text-slate-400 uppercase">Nuova Password</label>
+                                                    <label className="text-xs font-black text-slate-500 uppercase">Nuova Password</label>
                                                     <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-black text-slate-400 uppercase">Conferma Password</label>
+                                                    <label className="text-xs font-black text-slate-500 uppercase">Conferma Password</label>
                                                     <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" placeholder="••••••••" />
                                                 </div>
                                                 {passwordMessage && (
@@ -1432,7 +1435,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
 
                         <div className="bg-white p-10 rounded-[32px] border border-slate-100 shadow-sm">
                             <div className="flex items-center space-x-3 mb-8">
-                                <HelpCircle size={24} className="text-slate-400" />
+                                <HelpCircle size={24} className="text-slate-500" />
                                 <h3 className="text-xl font-black text-slate-900">Come funzionano i crediti?</h3>
                             </div>
                             

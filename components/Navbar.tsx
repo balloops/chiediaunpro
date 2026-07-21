@@ -284,8 +284,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             <>
               {/* Notification Bell */}
               <div className="relative" ref={notifDropdownRef}>
-                <button 
+                <button
                   onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+                  aria-label={unreadCount > 0 ? `Notifiche (${unreadCount} non lette)` : 'Notifiche'}
                   className={`p-2 rounded-xl transition-all relative ${showNotifDropdown ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-indigo-600'}`}
                 >
                   <Bell size={20} />
@@ -450,6 +451,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               {/* Mobile Menu Toggle - Placed at the end */}
               <button 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? "Chiudi menu" : "Apri menu"}
                 className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
               >
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -465,8 +467,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 Inizia ora
               </Link>
               {/* Mobile Menu Toggle for Public */}
-              <button 
+              <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? "Chiudi menu" : "Apri menu"}
                 className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
               >
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
