@@ -255,11 +255,11 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
              <img 
                src={getSafeLogoUrl(content.branding.logoUrl)} 
                alt={content.branding.platformName} 
-               className="h-[30px] w-auto object-contain" 
+               className="h-[26px] w-auto object-contain"
                // Prevent CLS & Safari issues
-               style={{ height: '30px', width: 'auto' }}
-               width="150" 
-               height="30"
+               style={{ height: '26px', width: 'auto' }}
+               width="130"
+               height="26"
                onError={(e) => {
                    console.warn("Logo load error:", e.currentTarget.src);
                    setLogoError(true);
