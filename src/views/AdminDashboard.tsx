@@ -370,7 +370,7 @@ const AdminDashboard: React.FC = () => {
 
   const CmsInput = ({ label, value, onChange, type = 'text', rows = 3 }: any) => (
     <div className="space-y-2">
-      <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
+      <label className="text-xs font-black text-slate-500 uppercase tracking-widest">{label}</label>
       {type === 'textarea' ? (
         <textarea 
           rows={rows} 
@@ -401,7 +401,7 @@ const AdminDashboard: React.FC = () => {
           </div>
           <h3 className="font-black text-xl text-slate-900">{title}</h3>
         </div>
-        {openSection === id ? <ChevronUp size={20} className="text-indigo-600" /> : <ChevronDown size={20} className="text-slate-400" />}
+        {openSection === id ? <ChevronUp size={20} className="text-indigo-600" /> : <ChevronDown size={20} className="text-slate-500" />}
       </button>
       
       {openSection === id && (
@@ -447,7 +447,7 @@ const AdminDashboard: React.FC = () => {
                     {React.cloneElement(s.icon as React.ReactElement<any>, { size: 24 })}
                   </div>
                   <div className="text-3xl font-black text-slate-900 mb-1">{s.value}</div>
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">{s.label}</div>
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">{s.label}</div>
                   <div className="mt-4 pt-4 border-t border-slate-50 text-[10px] text-slate-500 font-medium">
                     {s.sub}
                   </div>
@@ -461,7 +461,7 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'users' && (
           <div className="space-y-6 animate-in fade-in duration-500">
              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-              <Search className="text-slate-400 ml-2" size={20} />
+              <Search className="text-slate-500 ml-2" size={20} />
               <input 
                 type="text" 
                 placeholder="Cerca utente..." 
@@ -476,10 +476,10 @@ const AdminDashboard: React.FC = () => {
                 <table className="w-full text-left">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Utente</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Ruolo</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Verificato</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-right">Azioni</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase">Utente</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase">Ruolo</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase">Verificato</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase text-right">Azioni</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -522,7 +522,7 @@ const AdminDashboard: React.FC = () => {
                            {u.role === UserRole.PROFESSIONAL ? (
                              <button 
                                onClick={() => handleVerifyUser(u.id, !u.isVerified)}
-                               className={`flex items-center space-x-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all ${u.isVerified ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                               className={`flex items-center space-x-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all ${u.isVerified ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                              >
                                {u.isVerified ? <CheckCircle size={12} /> : <XCircle size={12} />}
                                <span>{u.isVerified ? 'Verificato' : 'Non Verificato'}</span>
@@ -532,7 +532,7 @@ const AdminDashboard: React.FC = () => {
                            )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                          <button onClick={() => handleDeleteUser(u.id)} className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
                             <Trash2 size={18} />
                           </button>
                         </td>
@@ -553,7 +553,7 @@ const AdminDashboard: React.FC = () => {
                  <div key={job.id} className="bg-white p-6 rounded-[24px] border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center space-x-4">
                        <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center shrink-0">
-                          <Briefcase className="text-slate-400" size={24} />
+                          <Briefcase className="text-slate-500" size={24} />
                        </div>
                        <div>
                           <div className="font-bold text-slate-900">{job.title}</div>
@@ -564,13 +564,13 @@ const AdminDashboard: React.FC = () => {
                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${job.status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
                          {job.status}
                        </span>
-                       <button onClick={() => handleDeleteJob(job.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl">
+                       <button onClick={() => handleDeleteJob(job.id)} className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl">
                           <Trash2 size={18} />
                        </button>
                     </div>
                  </div>
                )) : (
-                 <div className="text-center py-10 text-slate-400">Nessuna richiesta trovata.</div>
+                 <div className="text-center py-10 text-slate-500">Nessuna richiesta trovata.</div>
                )}
              </div>
            </div>
@@ -614,7 +614,7 @@ const AdminDashboard: React.FC = () => {
                            <button onClick={handleSaveEditCategory} className="text-emerald-500 hover:text-emerald-700 p-1">
                              <Check size={18} />
                            </button>
-                           <button onClick={handleCancelEditCategory} className="text-slate-400 hover:text-slate-600 p-1">
+                           <button onClick={handleCancelEditCategory} className="text-slate-500 hover:text-slate-600 p-1">
                              <X size={18} />
                            </button>
                          </div>
@@ -672,7 +672,7 @@ const AdminDashboard: React.FC = () => {
                    </div>
 
                    <div>
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Opzioni Budget (Separate da virgola)</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-2">Opzioni Budget (Separate da virgola)</label>
                       <input 
                         type="text" 
                         value={formDefinition.budgetOptions.join(', ')}
@@ -682,7 +682,7 @@ const AdminDashboard: React.FC = () => {
                    </div>
 
                    <div>
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Placeholder Descrizione</label>
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-2">Placeholder Descrizione</label>
                       <input 
                         type="text" 
                         value={formDefinition.descriptionPlaceholder || ''}
@@ -713,7 +713,7 @@ const AdminDashboard: React.FC = () => {
                                </div>
                                <button 
                                  onClick={() => handleDeleteField(field.id)}
-                                 className="text-slate-400 hover:text-red-500 p-1"
+                                 className="text-slate-500 hover:text-red-500 p-1"
                                >
                                   <Trash2 size={16} />
                                </button>
@@ -810,9 +810,9 @@ const AdminDashboard: React.FC = () => {
                           <CreditCard size={100} />
                        </div>
                        <div className="relative z-10 space-y-4">
-                          <div className="text-xs font-black text-slate-400 uppercase tracking-widest">{plan.id} PLAN</div>
+                          <div className="text-xs font-black text-slate-500 uppercase tracking-widest">{plan.id} PLAN</div>
                           <div>
-                             <label className="text-[10px] font-bold text-slate-400 uppercase">Nome Piano</label>
+                             <label className="text-[10px] font-bold text-slate-500 uppercase">Nome Piano</label>
                              <input 
                                type="text" 
                                value={plan.name}
@@ -821,7 +821,7 @@ const AdminDashboard: React.FC = () => {
                              />
                           </div>
                           <div>
-                             <label className="text-[10px] font-bold text-slate-400 uppercase">Prezzo (€)</label>
+                             <label className="text-[10px] font-bold text-slate-500 uppercase">Prezzo (€)</label>
                              <input 
                                type="number" 
                                value={plan.price}
@@ -830,7 +830,7 @@ const AdminDashboard: React.FC = () => {
                              />
                           </div>
                           <div>
-                             <label className="text-[10px] font-bold text-slate-400 uppercase">Crediti Inclusi</label>
+                             <label className="text-[10px] font-bold text-slate-500 uppercase">Crediti Inclusi</label>
                              <input 
                                type="text" 
                                value={plan.credits}
@@ -871,7 +871,7 @@ const AdminDashboard: React.FC = () => {
                     />
                     
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Logo Piattaforma</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Logo Piattaforma</label>
                         <div className="flex items-center space-x-4">
                             {cmsContent.branding.logoUrl && (
                                 <div className="w-12 h-12 bg-white border border-slate-200 rounded-lg flex items-center justify-center p-1 relative group">
@@ -886,7 +886,7 @@ const AdminDashboard: React.FC = () => {
                             )}
                             <label className="flex-grow cursor-pointer group">
                                 <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center space-x-2 group-hover:border-indigo-400 transition-colors">
-                                    <Upload size={20} className="text-slate-400 group-hover:text-indigo-600" />
+                                    <Upload size={20} className="text-slate-500 group-hover:text-indigo-600" />
                                     <span className="text-sm font-bold text-slate-500 group-hover:text-indigo-600">Carica Logo</span>
                                 </div>
                                 <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
@@ -895,7 +895,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Favicon</label>
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Favicon</label>
                         <div className="flex items-center space-x-4">
                             {cmsContent.branding.faviconUrl && (
                                 <div className="w-12 h-12 bg-white border border-slate-200 rounded-lg flex items-center justify-center p-1 relative group">
@@ -910,7 +910,7 @@ const AdminDashboard: React.FC = () => {
                             )}
                             <label className="flex-grow cursor-pointer group">
                                 <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center space-x-2 group-hover:border-indigo-400 transition-colors">
-                                    <Upload size={20} className="text-slate-400 group-hover:text-indigo-600" />
+                                    <Upload size={20} className="text-slate-500 group-hover:text-indigo-600" />
                                     <span className="text-sm font-bold text-slate-500 group-hover:text-indigo-600">Carica Favicon</span>
                                 </div>
                                 <input type="file" className="hidden" accept="image/x-icon,image/png,image/svg+xml" onChange={handleFaviconUpload} />
@@ -952,7 +952,7 @@ const AdminDashboard: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Lista Vantaggi Cliente (uno per riga)</label>
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Lista Vantaggi Cliente (uno per riga)</label>
                             <textarea 
                                 rows={4} 
                                 value={cmsContent.auth?.register?.featuresClient?.join('\n') || ''} 
@@ -961,7 +961,7 @@ const AdminDashboard: React.FC = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Lista Vantaggi Pro (uno per riga)</label>
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Lista Vantaggi Pro (uno per riga)</label>
                             <textarea 
                                 rows={4} 
                                 value={cmsContent.auth?.register?.featuresPro?.join('\n') || ''} 
@@ -1113,7 +1113,7 @@ const AdminDashboard: React.FC = () => {
                  <div className="space-y-6 mt-4 border-t border-slate-100 pt-6">
                     {cmsContent.home.features.items.map((item, idx) => (
                        <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                          <h4 className="font-bold text-xs uppercase text-slate-400 mb-3">Vantaggio {idx + 1}</h4>
+                          <h4 className="font-bold text-xs uppercase text-slate-500 mb-3">Vantaggio {idx + 1}</h4>
                           <div className="space-y-4">
                              <input 
                                type="text" 
