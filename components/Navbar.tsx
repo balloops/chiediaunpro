@@ -70,8 +70,24 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               isRead: payload.new.is_read,
               createdAt: payload.new.created_at
           } as Notification;
-          
+
           setNotifications(prev => [newNotif, ...prev].slice(0, 8));
+        }
+      )
+      .on(
+        // Tiene sincronizzato lo stato "letta" (es. segnata come letta da un'altra
+        // scheda o dispositivo con la stessa sessione) senza bisogno di ricaricare.
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setNotifications(prev => prev.map(n =>
+            n.id === payload.new.id ? { ...n, isRead: payload.new.is_read } : n
+          ));
         }
       )
       .subscribe();
