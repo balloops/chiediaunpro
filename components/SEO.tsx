@@ -12,7 +12,7 @@ interface SEOProps {
 
 const SITE_NAME = 'LavoraBene';
 const SITE_URL = 'https://lavorabene.it';
-const DEFAULT_IMAGE = `${SITE_URL}/assets/images/logo/logo-lavorabene.webp`;
+const DEFAULT_IMAGE = `${SITE_URL}/assets/images/logo/logo-lavorabene.png`;
 
 const SEO: React.FC<SEOProps> = ({ title, description, path = '', image = DEFAULT_IMAGE, noindex = false }) => {
   const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;

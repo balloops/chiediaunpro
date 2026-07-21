@@ -11,7 +11,7 @@ const defaultContent: SiteContent = {
   branding: {
     platformName: 'LavoraBene',
     // IMPORTANTE: Percorso relativo pulito. Navbar aggiungerà ./ automaticamente
-    logoUrl: 'assets/images/logo/logo-lavorabene.webp', 
+    logoUrl: 'assets/images/logo/logo-lavorabene.png', 
     faviconUrl: ''
   },
   auth: {
