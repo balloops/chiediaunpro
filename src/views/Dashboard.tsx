@@ -773,8 +773,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
   // Sync Unseen Notifications
   useEffect(() => {
       // 1. Unseen Leads (Pro)
+      // Nota: esclude i job già preventivati, con lo stesso criterio di filteredLeads —
+      // altrimenti un job nascosto dalla lista (perché già quotato) può restare "non visto"
+      // per sempre, perché l'utente non ha modo di aprirlo per segnarlo come letto.
       if (isPro && matchedLeads.length > 0) {
-          const hasUnread = matchedLeads.some(m => !viewedJobs.has(m.job.id));
+          const hasUnread = matchedLeads
+              .filter(m => !sentQuotes.some(q => q.jobId === m.job.id))
+              .some(m => !viewedJobs.has(m.job.id));
           setHasUnseenLeads(hasUnread);
       } else {
           setHasUnseenLeads(false);
@@ -893,8 +898,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user: initialUser, onLogout }) =>
           newSet.add(jobId);
           setViewedJobs(newSet);
           localStorage.setItem('chiediunpro_viewed_jobs', JSON.stringify(Array.from(newSet)));
-          // Update dot state immediately
-          setHasUnseenLeads(matchedLeads.some(m => !newSet.has(m.job.id)));
+          // Update dot state immediately (stesso criterio di esclusione di filteredLeads)
+          setHasUnseenLeads(
+              matchedLeads
+                  .filter(m => !sentQuotes.some(q => q.jobId === m.job.id))
+                  .some(m => !newSet.has(m.job.id))
+          );
       }
       // Navigate maintaining the current tab context
       navigate(`/dashboard/job/${jobId}?tab=${currentTab}`);
